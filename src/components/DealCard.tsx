@@ -1,0 +1,78 @@
+import Link from 'next/link';
+import FlipScoreBadge from './FlipScoreBadge';
+import { FLIP_CATEGORY_LABEL } from '@/types/flip';
+
+export interface DealCardData {
+  analysisId: string;
+  productTitle: string;
+  category: string | null;
+  marketplace: string | null;
+  askingPrice: number;
+  estimatedResaleValue: number;
+  estimatedProfit: number;
+  flipScore: number;
+  flipCategory: string;
+  demand: string;
+  riskFactorCount: number;
+}
+
+const DEMAND_LABEL: Record<string, string> = { HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' };
+
+function riskLabel(count: number) {
+  if (count === 0) return 'Low';
+  if (count <= 2) return 'Medium';
+  return 'High';
+}
+
+export default function DealCard({ deal }: { deal: DealCardData }) {
+  const profitPositive = deal.estimatedProfit >= 0;
+
+  return (
+    <Link
+      href={`/analysis/${deal.analysisId}`}
+      className="group block rounded-card border border-line bg-paper p-4 text-ink transition-transform hover:-translate-y-0.5 sm:p-5"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-wide text-graphite">
+            {deal.category ?? 'Uncategorized'}
+            {deal.marketplace ? ` · ${deal.marketplace}` : ''}
+          </p>
+          <h3 className="font-display text-lg font-bold leading-tight">{deal.productTitle}</h3>
+        </div>
+        <FlipScoreBadge score={deal.flipScore} category={deal.flipCategory} size="sm" />
+      </div>
+
+      <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono">
+        <div>
+          <dt className="text-xs text-graphite">Buy</dt>
+          <dd className="text-base font-semibold">${deal.askingPrice.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-graphite">Resale</dt>
+          <dd className="text-base font-semibold">${deal.estimatedResaleValue.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-graphite">Profit</dt>
+          <dd className={`text-base font-semibold ${profitPositive ? 'text-profit' : 'text-risk'}`}>
+            {profitPositive ? '+' : ''}${deal.estimatedProfit.toLocaleString()}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-3 flex items-center justify-between text-xs">
+        <div className="flex gap-2">
+          <span className="rounded-full bg-profit-soft px-2 py-0.5 text-profit">
+            Demand: {DEMAND_LABEL[deal.demand] ?? deal.demand}
+          </span>
+          <span className="rounded-full bg-caution-soft px-2 py-0.5 text-caution">
+            Risk: {riskLabel(deal.riskFactorCount)}
+          </span>
+        </div>
+        <span className="font-medium text-graphite group-hover:text-ink">
+          {FLIP_CATEGORY_LABEL[deal.flipCategory]} →
+        </span>
+      </div>
+    </Link>
+  );
+}
