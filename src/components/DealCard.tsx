@@ -7,6 +7,7 @@ export interface DealCardData {
   productTitle: string;
   category: string | null;
   marketplace: string | null;
+  imageUrl: string | null;
   askingPrice: number;
   estimatedResaleValue: number;
   estimatedProfit: number;
@@ -31,9 +32,18 @@ export default function DealCard({ deal }: { deal: DealCardData }) {
   return (
     <Link href={`/analysis/${deal.analysisId}`} className="surface block p-4 text-ink transition-shadow hover:shadow-tight sm:p-5">
       <div className="flex items-start gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-canvas text-lg font-bold text-graphite">
-          {initial}
-        </div>
+        {deal.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={deal.imageUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-control bg-canvas object-cover"
+          />
+        ) : (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-canvas text-lg font-bold text-graphite">
+            {initial}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] text-graphite">
             {deal.category ?? 'Uncategorized'}

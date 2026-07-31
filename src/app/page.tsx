@@ -20,6 +20,7 @@ export default async function HomePage() {
     productTitle: a.identifiedProduct,
     category: a.category,
     marketplace: a.listing.marketplace,
+    imageUrl: a.listing.imageUrls[0] ?? null,
     askingPrice: a.listing.askingPrice,
     estimatedResaleValue: Math.round((a.estimatedResaleValueLow + a.estimatedResaleValueHigh) / 2),
     estimatedProfit: Math.round(a.estimatedProfit),

@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { analyzeListing } from '@/lib/ai';
-import { computeFinancials, flipCategoryFromScore } from '@/types/flip';
+import { searchEbayListings, EbayNotConfiguredError } from '@/lib/ebay';
+import { computeFinancials, flipCategoryFromScore, type FlipAnalysisResult } from '@/types/flip';
 
 const RequestSchema = z.object({
   title: z.string().min(1),
@@ -19,7 +20,34 @@ const RequestSchema = z.object({
     )
     .max(6)
     .optional(),
+  // Known photo URL for the listing (e.g. promoted from an eBay search result) -
+  // display-only, separate from `images` which are sent to Claude for vision.
+  imageUrl: z.string().url().optional(),
 });
+
+type AnalyzeRequest = z.infer<typeof RequestSchema>;
+
+// Best-effort photo for the saved listing: the user's own upload wins, then a
+// known source photo (e.g. the eBay result this was promoted from), then - if
+// neither exists - a quick eBay lookup by product name as a representative
+// reference photo. Never blocks or fails the analysis if this comes up empty.
+async function resolveImageUrls(input: AnalyzeRequest, result: FlipAnalysisResult): Promise<string[]> {
+  if (input.images && input.images.length > 0) {
+    return input.images.map((img) => `data:${img.mediaType};base64,${img.base64}`);
+  }
+  if (input.imageUrl) {
+    return [input.imageUrl];
+  }
+  try {
+    const [found] = await searchEbayListings({ query: result.product.identifiedProduct, limit: 1 });
+    return found?.imageUrl ? [found.imageUrl] : [];
+  } catch (err) {
+    if (!(err instanceof EbayNotConfiguredError)) {
+      console.error('Reference image lookup failed', err);
+    }
+    return [];
+  }
+}
 
 export async function POST(req: NextRequest) {
   const parsed = RequestSchema.safeParse(await req.json());
@@ -45,6 +73,7 @@ export async function POST(req: NextRequest) {
   }
 
   const financials = computeFinancials(input.askingPrice, result);
+  const imageUrls = await resolveImageUrls(input, result);
 
   const listing = await db.listing.create({
     data: {
@@ -53,8 +82,7 @@ export async function POST(req: NextRequest) {
       description: input.description,
       askingPrice: input.askingPrice,
       marketplace: input.marketplace,
-      // Photos aren't persisted to storage in Phase 1 (no object storage wired up yet) -
-      // they're used for the analysis call only. Add S3/R2 + imageUrls before launch.
+      imageUrls,
     },
   });
 

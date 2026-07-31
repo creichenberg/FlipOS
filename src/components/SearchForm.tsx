@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { EBAY_CATEGORIES } from '@/lib/ebayCategories';
 import EbayDealCard, { type EbayDeal } from './EbayDealCard';
 
@@ -12,6 +13,7 @@ export interface InitialPreferences {
 }
 
 export default function SearchForm({ initialPreferences }: { initialPreferences: InitialPreferences | null }) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [categoryLabel, setCategoryLabel] = useState(initialPreferences?.categories[0] ?? EBAY_CATEGORIES[0].label);
   const [maxPrice, setMaxPrice] = useState(initialPreferences?.maxPurchasePrice?.toString() ?? '');
@@ -22,6 +24,42 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
   const [status, setStatus] = useState<'idle' | 'searching' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [deals, setDeals] = useState<EbayDeal[] | null>(null);
+  const [savingAlert, setSavingAlert] = useState(false);
+
+  async function handleSaveAlert() {
+    if (!query.trim()) {
+      setError('Enter a search term before saving an alert.');
+      return;
+    }
+    const name = window.prompt('Name this alert', query);
+    if (!name) return;
+
+    const category = EBAY_CATEGORIES.find((c) => c.label === categoryLabel);
+    setSavingAlert(true);
+    try {
+      const res = await fetch('/api/saved-searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          query,
+          categoryId: category?.categoryId,
+          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          minProfit: minProfit ? parseFloat(minProfit) : undefined,
+          minROI: minROI ? parseFloat(minROI) : undefined,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Could not save this alert.');
+      }
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setSavingAlert(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -149,9 +187,19 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             <input type="checkbox" checked={saveDefaults} onChange={(e) => setSaveDefaults(e.target.checked)} />
             Save these as my default filters
           </label>
-          <button type="submit" disabled={status === 'searching'} className="pill-primary w-full px-6 sm:w-auto">
-            {status === 'searching' ? 'Searching...' : 'Find Deals'}
-          </button>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <button
+              type="button"
+              onClick={handleSaveAlert}
+              disabled={savingAlert}
+              className="pill-secondary flex-1 px-4 text-sm sm:flex-none"
+            >
+              {savingAlert ? 'Saving...' : 'Save as alert'}
+            </button>
+            <button type="submit" disabled={status === 'searching'} className="pill-primary flex-1 px-6 text-sm sm:flex-none">
+              {status === 'searching' ? 'Searching...' : 'Find Deals'}
+            </button>
+          </div>
         </div>
 
         {error && <p className="text-sm text-risk">{error}</p>}

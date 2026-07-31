@@ -42,8 +42,15 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
     }
   }
 
+  const imageUrl = analysis.listing.imageUrls[0];
+
   return (
     <div className="mx-auto max-w-2xl space-y-4">
+      {imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt="" className="aspect-video w-full rounded-card bg-canvas object-cover shadow-soft" />
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-graphite">

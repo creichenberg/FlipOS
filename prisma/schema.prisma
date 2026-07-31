@@ -15,9 +15,10 @@ model User {
   name      String?
   createdAt DateTime @default(now())
 
-  preferences UserPreference?
-  listings    Listing[]
-  savedFlips  SavedFlip[]
+  preferences   UserPreference?
+  listings      Listing[]
+  savedFlips    SavedFlip[]
+  savedSearches SavedSearch[]
 }
 
 model UserPreference {
@@ -102,24 +103,59 @@ model FlipAnalysis {
 // ---------- Saved Flips / Completed Sales ----------
 
 model SavedFlip {
-  id         String  @id @default(cuid())
+  id         String       @id @default(cuid())
   userId     String
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  analysisId String  @unique
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysisId String       @unique
   analysis   FlipAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
   status FlipStatus @default(SAVED)
 
-  purchasedAt     DateTime?
-  purchasePrice   Float?
-  listedAt        DateTime?
-  soldAt          DateTime?
+  purchasedAt   DateTime?
+  purchasePrice Float?
+  listedAt      DateTime?
+  soldAt        DateTime?
 
   actualSalePrice Float?
   actualProfit    Float?
   actualROI       Float?
 
   createdAt DateTime @default(now())
+}
+
+// ---------- Deal Alerts (Phase 3) ----------
+
+// A standing eBay search the cron job re-runs periodically. Distinct from
+// UserPreference (which is just default *filter values* pre-filled into the
+// manual /search form) - a SavedSearch is an actual query the system runs
+// on its own and alerts on.
+model SavedSearch {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  query         String
+  categoryId    String?
+  maxPrice      Float?
+  minProfit     Float?
+  minROI        Float?
+  alertsEnabled Boolean   @default(true)
+  lastRunAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  alertedListings AlertedListing[]
+}
+
+// One row per eBay item ID already alerted on for a given saved search, so
+// the cron job never emails the same listing twice.
+model AlertedListing {
+  id            String      @id @default(cuid())
+  savedSearchId String
+  savedSearch   SavedSearch @relation(fields: [savedSearchId], references: [id], onDelete: Cascade)
+  ebayItemId    String
+  alertedAt     DateTime    @default(now())
+
+  @@unique([savedSearchId, ebayItemId])
 }
 
 enum FlipStatus {

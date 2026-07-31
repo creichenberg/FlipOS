@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import SearchForm from '@/components/SearchForm';
+import SavedSearchList from '@/components/SavedSearchList';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,7 @@ export default async function SearchPage() {
 
   const user = await getCurrentUser();
   const preferences = await db.userPreference.findUnique({ where: { userId: user.id } });
+  const savedSearches = await db.savedSearch.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } });
 
   return (
     <div>
@@ -26,18 +28,32 @@ export default async function SearchPage() {
           </p>
         </div>
       ) : (
-        <SearchForm
-          initialPreferences={
-            preferences
-              ? {
-                  categories: preferences.categories,
-                  maxPurchasePrice: preferences.maxPurchasePrice,
-                  minProfit: preferences.minProfit,
-                  minROI: preferences.minROI,
-                }
-              : null
-          }
-        />
+        <>
+          <SearchForm
+            initialPreferences={
+              preferences
+                ? {
+                    categories: preferences.categories,
+                    maxPurchasePrice: preferences.maxPurchasePrice,
+                    minProfit: preferences.minProfit,
+                    minROI: preferences.minROI,
+                  }
+                : null
+            }
+          />
+          <SavedSearchList
+            initialSearches={savedSearches.map((s) => ({
+              id: s.id,
+              name: s.name,
+              query: s.query,
+              maxPrice: s.maxPrice,
+              minProfit: s.minProfit,
+              minROI: s.minROI,
+              alertsEnabled: s.alertsEnabled,
+              lastRunAt: s.lastRunAt ? s.lastRunAt.toISOString() : null,
+            }))}
+          />
+        </>
       )}
     </div>
   );

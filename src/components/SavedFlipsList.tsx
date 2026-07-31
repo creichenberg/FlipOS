@@ -15,7 +15,7 @@ export interface SavedFlipRow {
     id: string;
     identifiedProduct: string;
     flipScore: number;
-    listing: { askingPrice: number };
+    listing: { askingPrice: number; imageUrls: string[] };
   };
 }
 
@@ -80,11 +80,21 @@ export default function SavedFlipsList({ initialFlips }: { initialFlips: SavedFl
       {flips.map((flip) => (
         <div key={flip.id} className="surface p-4 text-ink sm:p-5">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <Link href={`/analysis/${flip.analysis.id}`} className="font-display font-semibold hover:underline">
-                {flip.analysis.identifiedProduct}
-              </Link>
-              <p className="mt-0.5 text-xs text-graphite">Flip Score {flip.analysis.flipScore}/100</p>
+            <div className="flex min-w-0 items-start gap-3">
+              {flip.analysis.listing.imageUrls[0] && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={flip.analysis.listing.imageUrls[0]}
+                  alt=""
+                  className="h-11 w-11 shrink-0 rounded-control bg-canvas object-cover"
+                />
+              )}
+              <div className="min-w-0">
+                <Link href={`/analysis/${flip.analysis.id}`} className="font-display font-semibold hover:underline">
+                  {flip.analysis.identifiedProduct}
+                </Link>
+                <p className="mt-0.5 text-xs text-graphite">Flip Score {flip.analysis.flipScore}/100</p>
+              </div>
             </div>
             <StatusBadge status={flip.status} />
           </div>

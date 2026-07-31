@@ -13,8 +13,16 @@ Phase 2 is built: `/search` searches live eBay listings (Browse API, client-cred
 quick-scores a page of results in one batched Claude call (`quickScoreListings()` in
 `src/lib/ai.ts`), ranks/filters by category/max price/min profit/min ROI, and lets a result be
 promoted into the full `analyzeListing()` flow with one click. `UserPreference` now backs
-save-able default filters via `src/app/api/preferences/route.ts`. Not yet started: Phase 3 (deal
-alerts, more marketplaces).
+save-able default filters via `src/app/api/preferences/route.ts`.
+
+Phase 3 (deal alerts) is built: `SavedSearch` is a standing eBay query a user creates from
+"Save as alert" on `/search`. `src/app/api/cron/deal-alerts/route.ts` - triggered by Vercel Cron,
+see `vercel.json` - re-runs every enabled saved search, quick-scores new results, dedupes against
+`AlertedListing` (unique per `savedSearchId`+`ebayItemId`, so nothing is emailed twice), and
+sends matches via Resend (`src/lib/email.ts`). Listings now carry real photos too:
+`resolveImageUrls()` in `src/app/api/analyze/route.ts` uses the user's upload, or the source eBay
+listing's photo, or (as a last resort) a quick eBay search-by-product-name lookup. Not yet
+started: more marketplace integrations, portfolio analytics.
 
 ## Non-negotiable design decisions - don't relitigate these without discussion
 
@@ -65,6 +73,9 @@ npm run db:studio   # inspect data
   for batched Phase 2 search triage), system prompts, and tool schemas
 - `src/types/flip.ts` - the shared schema/types (`FlipAnalysisSchema` for full analysis,
   `QuickScoreSchema` for triage; both feed `computeFinancialsFromRange()`)
-- `src/app/api/analyze/route.ts` - how a full analysis becomes DB rows
+- `src/app/api/analyze/route.ts` - how a full analysis becomes DB rows, and how a listing photo
+  gets resolved (`resolveImageUrls()`)
 - `src/lib/ebay.ts` - eBay Browse API client (OAuth token cache + search), used by
-  `src/app/api/ebay/search/route.ts`
+  `src/app/api/ebay/search/route.ts` and the cron job
+- `src/app/api/cron/deal-alerts/route.ts` - the saved-search alert loop; `src/lib/email.ts` is
+  the Resend send + template
