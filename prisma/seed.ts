@@ -2,6 +2,734 @@ import { PrismaClient } from '@prisma/client';
 
 const db = new PrismaClient();
 
+// Mirrors flipCategoryFromScore()/computeFinancialsFromRange() in src/types/flip.ts.
+// Duplicated (not imported) because this script runs under tsx outside Next's
+// module resolution, so the `@/` path alias isn't guaranteed to resolve here.
+function flipCategoryFromScore(score: number) {
+  if (score >= 90) return 'EXCEPTIONAL';
+  if (score >= 75) return 'STRONG';
+  if (score >= 50) return 'AVERAGE';
+  if (score >= 25) return 'WEAK';
+  return 'AVOID';
+}
+
+type Demand = 'HIGH' | 'MEDIUM' | 'LOW';
+type Competition = 'HIGH' | 'MEDIUM' | 'LOW';
+type Confidence = 'HIGH' | 'MEDIUM' | 'LOW';
+type BuyDecision = 'BUY' | 'NEGOTIATE' | 'PASS';
+
+interface SampleFlip {
+  title: string;
+  description: string;
+  askingPrice: number;
+  marketplace: string;
+  analysis: {
+    identifiedProduct: string;
+    brand: string | null;
+    category: string;
+    conditionAssessed: string;
+    estimatedResaleValueLow: number;
+    estimatedResaleValueHigh: number;
+    demand: Demand;
+    competition: Competition;
+    confidence: Confidence;
+    flipScore: number;
+    flipReasoning: string;
+    riskFactors: string[];
+    thingsToCheck: string[];
+    whyUnderpriced: string | null;
+    buyDecision: BuyDecision;
+    recommendedOfferPrice: number | null;
+    negotiationMessage: string | null;
+    bestPlatform: string;
+    recommendedSellPrice: number;
+    listingTitle: string;
+    listingDescription: string;
+    keywords: string[];
+    photosNeeded: string[];
+  };
+}
+
+// 20 fake but realistic flips spanning categories, price points, marketplaces,
+// and the full Flip Score range (EXCEPTIONAL down to AVOID) - so the app looks
+// like a real, lived-in account (homepage, /explore, /saved) instead of
+// depending on eBay's Browse API access being approved first.
+const samples: SampleFlip[] = [
+  {
+    title: 'Sony A7 III Camera Body',
+    description: 'Used, some shelf wear, comes with battery and charger.',
+    askingPrice: 650,
+    marketplace: 'eBay',
+    analysis: {
+      identifiedProduct: 'Sony A7 III',
+      brand: 'Sony',
+      category: 'Cameras',
+      conditionAssessed: 'Used - light cosmetic wear, fully functional',
+      estimatedResaleValueLow: 850,
+      estimatedResaleValueHigh: 950,
+      demand: 'HIGH',
+      competition: 'MEDIUM',
+      confidence: 'HIGH',
+      flipScore: 92,
+      flipReasoning:
+        'Priced well below recent sold listings for this body with matching accessories. Demand for the A7 III stays strong among hybrid shooters; verify shutter count before buying.',
+      riskFactors: ['Shutter count unknown', 'No lens included, limits buyer pool slightly'],
+      thingsToCheck: ['Ask for shutter actuation count', 'Test all dials and the LCD hinge', 'Confirm sensor has no dust or scratches'],
+      whyUnderpriced: 'Seller listed as "camera" without model-specific keywords, so it is getting less search traffic than it should.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 600,
+      negotiationMessage: 'Hi! Is the A7 III still available? Would you take $600 for it today if I can pick up this week?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 899,
+      listingTitle: 'Sony A7 III Full-Frame Mirrorless Camera Body - Excellent Condition',
+      listingDescription:
+        'Sony A7 III body in excellent working condition. Light cosmetic wear consistent with careful use, sensor clean, all functions tested. Includes original battery and charger.',
+      keywords: ['sony a7iii', 'full frame mirrorless', 'sony alpha'],
+      photosNeeded: ['Front of body', 'Top dials', 'LCD screen on', 'Sensor with cap off', 'Included accessories'],
+    },
+  },
+  {
+    title: 'Canon EOS R6 with 24-105mm lens',
+    description: 'Barely used, upgrading to R6 Mark II.',
+    askingPrice: 400,
+    marketplace: 'Facebook Marketplace',
+    analysis: {
+      identifiedProduct: 'Canon EOS R6 + RF 24-105mm f/4L',
+      brand: 'Canon',
+      category: 'Cameras',
+      conditionAssessed: 'Like new',
+      estimatedResaleValueLow: 600,
+      estimatedResaleValueHigh: 700,
+      demand: 'HIGH',
+      competition: 'MEDIUM',
+      confidence: 'MEDIUM',
+      flipScore: 94,
+      flipReasoning:
+        'Kit price is far below the body-only used price, meaning the lens is essentially free. Very high demand pairing that typically sells within days.',
+      riskFactors: ['Price seems unusually low for a working kit - confirm it is not water/impact damaged'],
+      thingsToCheck: ['Ask for a shutter count', 'Test autofocus in low light', 'Check lens glass for fungus or scratches'],
+      whyUnderpriced: 'Seller likely wants a fast local sale over maximizing price.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 380,
+      negotiationMessage: 'Hi, is this still available? I can pay cash and pick up today if you can do $380.',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 649,
+      listingTitle: 'Canon EOS R6 Body + RF 24-105mm f/4L Kit - Like New',
+      listingDescription:
+        'Canon EOS R6 with RF 24-105mm f/4L lens, like-new condition. Low shutter count, no signs of use. Great low-light hybrid photo/video body.',
+      keywords: ['canon eos r6', 'rf 24-105', 'canon mirrorless kit'],
+      photosNeeded: ['Body front and back', 'Lens front element', 'LCD screen on', 'Battery and card door'],
+    },
+  },
+  {
+    title: 'Nike Air Jordan 1 Retro High "Chicago" Size 10',
+    description: 'Worn twice, comes with original box.',
+    askingPrice: 180,
+    marketplace: 'eBay',
+    analysis: {
+      identifiedProduct: 'Nike Air Jordan 1 Retro High OG "Chicago"',
+      brand: 'Nike',
+      category: 'Sneakers',
+      conditionAssessed: 'Pre-owned, VNDS (very near deadstock)',
+      estimatedResaleValueLow: 300,
+      estimatedResaleValueHigh: 340,
+      demand: 'HIGH',
+      competition: 'HIGH',
+      confidence: 'HIGH',
+      flipScore: 76,
+      flipReasoning:
+        'Chicago colorway holds strong, consistent resale demand even lightly worn. Size 10 is a liquid size, but high competition among resellers caps the margin somewhat.',
+      riskFactors: ['Popular size/colorway attracts counterfeits - verify authenticity carefully'],
+      thingsToCheck: ['Check stitching, Nike Air tag font, and box label against known legit checks', 'Ask for close-up photos of the sole wear'],
+      whyUnderpriced: 'Seller undervalued the resale premium on this specific 2022 retro release.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 165,
+      negotiationMessage: 'Hey! Still have the Chicagos? Would you do $165 if I pick up today?',
+      bestPlatform: 'StockX',
+      recommendedSellPrice: 325,
+      listingTitle: 'Nike Air Jordan 1 Retro High OG "Chicago" Size 10 - VNDS w/ Box',
+      listingDescription: 'Worn twice, no creasing issues, comes with original box and extra laces. Authentic, verified.',
+      keywords: ['jordan 1 chicago', 'aj1 chicago', 'jordan retro high'],
+      photosNeeded: ['Both shoes side by side', 'Sole wear close-up', 'Box label', 'Nike Air tag'],
+    },
+  },
+  {
+    title: 'DeWalt 20V MAX Cordless Drill Combo Kit',
+    description: '2-tool combo kit, used on one job, includes batteries and charger.',
+    askingPrice: 75,
+    marketplace: 'OfferUp',
+    analysis: {
+      identifiedProduct: 'DeWalt DCK240C2 20V MAX Drill/Impact Combo Kit',
+      brand: 'DeWalt',
+      category: 'Tools',
+      conditionAssessed: 'Used - minor scuffs, fully functional',
+      estimatedResaleValueLow: 110,
+      estimatedResaleValueHigh: 130,
+      demand: 'MEDIUM',
+      competition: 'MEDIUM',
+      confidence: 'HIGH',
+      flipScore: 71,
+      flipReasoning:
+        'Solid, dependable flip - DeWalt combo kits hold value well and sell steadily to homeowners and tradespeople, though margin is modest relative to effort.',
+      riskFactors: ['Battery health/cycle count unknown'],
+      thingsToCheck: ['Test both tools under load', 'Check battery charge holds overnight', 'Inspect chuck for wear'],
+      whyUnderpriced: 'Seller priced it like a single tool rather than a two-tool kit with two batteries.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 65,
+      negotiationMessage: 'Hi, is the DeWalt kit still up for grabs? Could you do $65?',
+      bestPlatform: 'Facebook Marketplace',
+      recommendedSellPrice: 120,
+      listingTitle: 'DeWalt 20V MAX Drill/Impact Driver Combo Kit - 2 Batteries + Charger',
+      listingDescription: 'Lightly used DeWalt 20V combo kit, both tools tested and working perfectly. Includes bag, two batteries, and charger.',
+      keywords: ['dewalt 20v combo kit', 'dewalt drill impact', 'dck240c2'],
+      photosNeeded: ['Both tools', 'Batteries and charger', 'Chuck close-up'],
+    },
+  },
+  {
+    title: 'PlayStation 5 Disc Edition',
+    description: 'Includes one controller and original box, upgrading to PS5 Pro.',
+    askingPrice: 320,
+    marketplace: 'Facebook Marketplace',
+    analysis: {
+      identifiedProduct: 'Sony PlayStation 5 (Disc Edition)',
+      brand: 'Sony',
+      category: 'Video Games',
+      conditionAssessed: 'Used, good condition, tested working',
+      estimatedResaleValueLow: 420,
+      estimatedResaleValueHigh: 460,
+      demand: 'HIGH',
+      competition: 'HIGH',
+      confidence: 'HIGH',
+      flipScore: 79,
+      flipReasoning:
+        'Consoles are reliably fast movers and this price beats local comps by a wide margin, but heavy reseller competition on consoles keeps margins from being exceptional.',
+      riskFactors: ['Disc drive mechanism could have issues not visible without testing', 'Check for console ban history if buying a linked account'],
+      thingsToCheck: ['Power on and run a disc + digital game', 'Check for overheating/fan noise', 'Verify HDMI port is undamaged'],
+      whyUnderpriced: 'Seller wants a fast sale ahead of a move.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 300,
+      negotiationMessage: 'Hi, is the PS5 still available? I can do $300 cash today.',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 449,
+      listingTitle: 'PlayStation 5 Disc Edition - Tested, Includes Controller',
+      listingDescription: 'PS5 disc edition in good condition, fully tested. Includes one DualSense controller, all cables, and original box.',
+      keywords: ['ps5 disc edition', 'playstation 5 console', 'sony ps5'],
+      photosNeeded: ['Console front and back', 'Serial number', 'Controller', 'Box'],
+    },
+  },
+  {
+    title: 'Herman Miller Aeron Chair Size B',
+    description: 'Office downsizing, chair is a few years old but well maintained.',
+    askingPrice: 250,
+    marketplace: 'Craigslist',
+    analysis: {
+      identifiedProduct: 'Herman Miller Aeron Chair, Size B (Remastered)',
+      brand: 'Herman Miller',
+      category: 'Furniture',
+      conditionAssessed: 'Good - normal wear, mesh intact, mechanisms work',
+      estimatedResaleValueLow: 500,
+      estimatedResaleValueHigh: 600,
+      demand: 'HIGH',
+      competition: 'LOW',
+      confidence: 'MEDIUM',
+      flipScore: 84,
+      flipReasoning:
+        'Aeron chairs hold their value exceptionally well and remote-work demand keeps this category liquid. Size B is the most common/desired size, widening the buyer pool.',
+      riskFactors: ['Bulky item - factor in a truck/van and your own time for local pickup and resale', 'Pneumatic cylinder wear not always visible in photos'],
+      thingsToCheck: ['Test height and tilt adjustments', 'Check for tears in the mesh', 'Confirm it is Size B via the size tag under the seat'],
+      whyUnderpriced: 'Office liquidation sales often underprice individual ergonomic chairs relative to their resale market.',
+      buyDecision: 'NEGOTIATE',
+      recommendedOfferPrice: 220,
+      negotiationMessage: 'Hi, is the Aeron still available? Would you take $220 for a same-day pickup?',
+      bestPlatform: 'Facebook Marketplace',
+      recommendedSellPrice: 550,
+      listingTitle: 'Herman Miller Aeron Chair - Size B - Great Condition',
+      listingDescription: 'Authentic Herman Miller Aeron, Size B, fully adjustable. Mesh in great shape, all mechanisms function smoothly.',
+      keywords: ['herman miller aeron', 'aeron size b', 'ergonomic office chair'],
+      photosNeeded: ['Full chair front/back', 'Size tag under seat', 'Mesh close-up', 'Base and casters'],
+    },
+  },
+  {
+    title: 'Rolex Submariner Date - Black Dial',
+    description: 'Comes with box and papers, seller says authentic.',
+    askingPrice: 4200,
+    marketplace: 'Craigslist',
+    analysis: {
+      identifiedProduct: 'Rolex Submariner Date (ref. 126610LN, claimed)',
+      brand: 'Rolex',
+      category: 'Watches',
+      conditionAssessed: 'Cannot verify - photos are low resolution and inconsistent with the claimed reference',
+      estimatedResaleValueLow: 4300,
+      estimatedResaleValueHigh: 4300,
+      demand: 'HIGH',
+      competition: 'HIGH',
+      confidence: 'LOW',
+      flipScore: 12,
+      flipReasoning:
+        'The asking price is far too close to genuine market value for a "must sell today" Craigslist listing, and several photo details (font, cyclops magnification) do not match a verified 126610LN. High counterfeit risk outweighs the category liquidity.',
+      riskFactors: [
+        'Extremely common counterfeit target - Craigslist watch scams are widespread',
+        'No option to have it authenticated by a jeweler before payment',
+        'Seller pressuring for cash-only, no-meet-in-safe-location deal',
+      ],
+      thingsToCheck: [
+        'Insist on meeting at a jeweler or authorized Rolex dealer for authentication before any payment',
+        'Verify serial/model number against Rolex records',
+        'Never wire or pre-pay - walk away if seller refuses in-person verification',
+      ],
+      whyUnderpriced: null,
+      buyDecision: 'PASS',
+      recommendedOfferPrice: null,
+      negotiationMessage: null,
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 4300,
+      listingTitle: 'Do not list - unverified authenticity',
+      listingDescription: 'Not recommended for purchase until independently authenticated in person.',
+      keywords: [],
+      photosNeeded: ['Independent authentication before any resale listing'],
+    },
+  },
+  {
+    title: 'iPhone 13 Pro 256GB Unlocked',
+    description: 'Small crack in corner of screen protector (screen itself fine), battery health 89%.',
+    askingPrice: 380,
+    marketplace: 'Mercari',
+    analysis: {
+      identifiedProduct: 'Apple iPhone 13 Pro 256GB, Unlocked',
+      brand: 'Apple',
+      category: 'Electronics',
+      conditionAssessed: 'Good - screen protector damage only, 89% battery health',
+      estimatedResaleValueLow: 430,
+      estimatedResaleValueHigh: 470,
+      demand: 'HIGH',
+      competition: 'HIGH',
+      confidence: 'MEDIUM',
+      flipScore: 58,
+      flipReasoning:
+        'Solid, reliable margin on a highly liquid item, but iPhone resale is saturated with competing sellers so it will take real listing effort (grading, timely response) to hit the top of the range.',
+      riskFactors: ['Confirm IMEI is clean (not blacklisted/financed)', 'Battery health at 89% may need disclosure that slightly softens buyer offers'],
+      thingsToCheck: ['Check iCloud/Find My is fully removed', 'Verify IMEI blacklist status', 'Confirm all cameras and Face ID work'],
+      whyUnderpriced: 'Seller priced based on the cracked screen protector, mistaking it for a cracked screen.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 360,
+      negotiationMessage: 'Hi, is this still available? Can confirm the screen itself is fine under the protector - would you take $360?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 449,
+      listingTitle: 'iPhone 13 Pro 256GB Unlocked - Good Condition, 89% Battery',
+      listingDescription: 'Unlocked iPhone 13 Pro, 256GB, fully functional, factory reset and IMEI verified clean. 89% battery health.',
+      keywords: ['iphone 13 pro 256gb', 'unlocked iphone 13 pro', 'apple iphone'],
+      photosNeeded: ['Front and back', 'Screen on showing no cracks', 'Settings battery health screen', 'IMEI in settings'],
+    },
+  },
+  {
+    title: 'Fender Player Stratocaster - Sunburst',
+    description: 'Bought new, played maybe 10 times, includes gig bag.',
+    askingPrice: 350,
+    marketplace: 'Facebook Marketplace',
+    analysis: {
+      identifiedProduct: 'Fender Player Stratocaster, 3-Color Sunburst',
+      brand: 'Fender',
+      category: 'Musical Instruments',
+      conditionAssessed: 'Excellent - light play wear only',
+      estimatedResaleValueLow: 520,
+      estimatedResaleValueHigh: 580,
+      demand: 'MEDIUM',
+      competition: 'LOW',
+      confidence: 'HIGH',
+      flipScore: 81,
+      flipReasoning:
+        'Player Series Strats are a reliable, well-loved entry point that hold value close to new. Low local competition and clean condition make this an easy, fast flip.',
+      riskFactors: ['Confirm neck has no warp or fret wear from storage'],
+      thingsToCheck: ['Play test all pickup positions and tremolo', 'Check neck relief and fret condition', 'Confirm electronics are original (not modded)'],
+      whyUnderpriced: 'Seller is a non-player who inherited it and just wants it gone.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 320,
+      negotiationMessage: 'Hi! Is the Strat still available? I can pick up today for $320 if that works.',
+      bestPlatform: 'Reverb',
+      recommendedSellPrice: 549,
+      listingTitle: 'Fender Player Stratocaster - Sunburst - Excellent Condition w/ Gig Bag',
+      listingDescription: 'Fender Player Series Stratocaster in 3-color sunburst. Barely played, no fret wear, all electronics original and working. Includes gig bag.',
+      keywords: ['fender player stratocaster', 'fender strat sunburst', 'fender electric guitar'],
+      photosNeeded: ['Full body front/back', 'Headstock', 'Fretboard', 'Electronics cavity'],
+    },
+  },
+  {
+    title: 'Pokemon Base Set Booster Box (Sealed)',
+    description: 'Unopened, stored in a smoke-free home, seller has provenance photos.',
+    askingPrice: 3200,
+    marketplace: 'eBay',
+    analysis: {
+      identifiedProduct: 'Pokemon Trading Card Game, Base Set Booster Box (Sealed, Unweighed)',
+      brand: 'Wizards of the Coast',
+      category: 'Collectibles',
+      conditionAssessed: 'Sealed, factory shrink-wrap intact, box shows minor shelf wear',
+      estimatedResaleValueLow: 4200,
+      estimatedResaleValueHigh: 4800,
+      demand: 'HIGH',
+      competition: 'LOW',
+      confidence: 'MEDIUM',
+      flipScore: 91,
+      flipReasoning:
+        'Sealed Base Set booster boxes are a top-tier, appreciating collectible with thin but consistent supply. This price is meaningfully under recent auction results for comparable shrink condition.',
+      riskFactors: [
+        'High-value item is a common resealing/fraud target - box weight and shrink pattern should be checked by an experienced buyer or authenticator',
+        'Large capital outlay for a single item ties up flip budget',
+      ],
+      thingsToCheck: [
+        'Weigh the box and compare to known-authentic weight ranges',
+        'Inspect shrink wrap seams and end flaps for resealing signs',
+        'Request the seller\'s provenance/purchase history if available',
+      ],
+      whyUnderpriced: 'Seller is not a card collector and priced off an outdated price guide.',
+      buyDecision: 'NEGOTIATE',
+      recommendedOfferPrice: 3000,
+      negotiationMessage: 'Hi, this is a beautiful box. Would you consider $3,000 if I can meet in person with cash and verify condition together?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 4500,
+      listingTitle: 'Pokemon Base Set Booster Box - Sealed - Unweighed',
+      listingDescription: 'Sealed Pokemon Base Set booster box, factory shrink intact. Stored in a smoke-free, climate-controlled home. Photos of full provenance available.',
+      keywords: ['pokemon base set booster box', 'sealed pokemon booster box', 'wotc base set'],
+      photosNeeded: ['All sides of box', 'Shrink wrap seams close-up', 'Weight on a scale', 'Provenance documents'],
+    },
+  },
+  {
+    title: 'Peloton Bike+',
+    description: 'Moving out of state, must sell, buyer arranges pickup.',
+    askingPrice: 900,
+    marketplace: 'Craigslist',
+    analysis: {
+      identifiedProduct: 'Peloton Bike+',
+      brand: 'Peloton',
+      category: 'Sporting Goods',
+      conditionAssessed: 'Good - normal use, touchscreen functional',
+      estimatedResaleValueLow: 1100,
+      estimatedResaleValueHigh: 1250,
+      demand: 'MEDIUM',
+      competition: 'LOW',
+      confidence: 'MEDIUM',
+      flipScore: 38,
+      flipReasoning:
+        'The margin on paper looks fine, but Bike+ is heavy and awkward to move/ship, subscription transfer can complicate a sale, and local demand for large fitness equipment is seasonal and slow-moving - real effective ROI is much lower once logistics are counted.',
+      riskFactors: [
+        'Requires a truck/van, dolly, and likely a second person to move safely',
+        'Peloton membership must be handled separately with the buyer',
+        'Touchscreen and flywheel resistance need an in-person test - both are costly to repair',
+      ],
+      thingsToCheck: ['Power on and run a class end-to-end', 'Check for unusual belt/flywheel noise', 'Confirm all bolts and the seat/handlebar adjustment rails are not stripped'],
+      whyUnderpriced: 'Seller is prioritizing speed of sale over price due to a move deadline.',
+      buyDecision: 'NEGOTIATE',
+      recommendedOfferPrice: 800,
+      negotiationMessage: 'Hi, is the Bike+ still available? I can arrange a truck for pickup this weekend - would $800 work?',
+      bestPlatform: 'Facebook Marketplace',
+      recommendedSellPrice: 1150,
+      listingTitle: 'Peloton Bike+ - Good Condition, Local Pickup Only',
+      listingDescription: 'Peloton Bike+ in good working condition, touchscreen and resistance both tested. Buyer must arrange pickup/transport.',
+      keywords: ['peloton bike plus', 'peloton exercise bike', 'peloton bike+'],
+      photosNeeded: ['Full bike', 'Touchscreen powered on', 'Flywheel area', 'Serial number'],
+    },
+  },
+  {
+    title: 'KitchenAid Artisan Stand Mixer - Empire Red',
+    description: 'Used for a few holiday baking seasons, all attachments included.',
+    askingPrice: 90,
+    marketplace: 'OfferUp',
+    analysis: {
+      identifiedProduct: 'KitchenAid Artisan Series 5-Quart Stand Mixer',
+      brand: 'KitchenAid',
+      category: 'Kitchen Appliances',
+      conditionAssessed: 'Good - light cosmetic wear, motor runs smoothly',
+      estimatedResaleValueLow: 140,
+      estimatedResaleValueHigh: 160,
+      demand: 'MEDIUM',
+      competition: 'MEDIUM',
+      confidence: 'HIGH',
+      flipScore: 64,
+      flipReasoning:
+        'Dependable, evergreen flip - KitchenAid mixers rarely go out of style and this popular color plus included attachments push it toward the top of the local comp range.',
+      riskFactors: ['Motor wear over years of use is hard to assess without running it under load'],
+      thingsToCheck: ['Run it on high speed with the whisk attachment for a few minutes', 'Check bowl for cracks or discoloration', 'Confirm all included attachments match photos'],
+      whyUnderpriced: 'Seller priced it like a basic mixer without accounting for the attachment set.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 80,
+      negotiationMessage: 'Hi, is the KitchenAid still available? Would you take $80?',
+      bestPlatform: 'Facebook Marketplace',
+      recommendedSellPrice: 155,
+      listingTitle: 'KitchenAid Artisan 5-Qt Stand Mixer - Empire Red - Attachments Included',
+      listingDescription: 'KitchenAid Artisan stand mixer, empire red, tested and working great. Includes whisk, dough hook, and paddle attachments.',
+      keywords: ['kitchenaid artisan mixer', 'kitchenaid stand mixer red', 'kitchenaid 5 quart'],
+      photosNeeded: ['Full mixer', 'Attachments laid out', 'Bowl interior', 'Model/serial sticker'],
+    },
+  },
+  {
+    title: 'Louis Vuitton Neverfull MM',
+    description: 'Great condition, seller includes dust bag, no receipt.',
+    askingPrice: 650,
+    marketplace: 'Poshmark',
+    analysis: {
+      identifiedProduct: 'Louis Vuitton Neverfull MM, Monogram Canvas (claimed)',
+      brand: 'Louis Vuitton',
+      category: 'Handbags',
+      conditionAssessed: 'Cannot confirm authenticity from listing photos alone',
+      estimatedResaleValueLow: 900,
+      estimatedResaleValueHigh: 1000,
+      demand: 'HIGH',
+      competition: 'HIGH',
+      confidence: 'LOW',
+      flipScore: 22,
+      flipReasoning:
+        'Neverfull MM is one of the single most counterfeited handbags in the world, and the listing has no date code photo, no receipt, and stitching inconsistent with authentic LV production in two photos. Without third-party authentication this is a high-risk pass.',
+      riskFactors: [
+        'Extremely common counterfeit target',
+        'No receipt or proof of purchase provided',
+        'Handle stitching pattern does not clearly match authentic reference photos',
+      ],
+      thingsToCheck: [
+        'Request date code photo and run it through a legit-check service before buying',
+        'Compare hardware stamping and stitching count against verified authentic examples',
+        'Use a buyer-protected platform (not direct Venmo/Zelle) if proceeding at all',
+      ],
+      whyUnderpriced: null,
+      buyDecision: 'PASS',
+      recommendedOfferPrice: null,
+      negotiationMessage: null,
+      bestPlatform: 'The RealReal',
+      recommendedSellPrice: 950,
+      listingTitle: 'Do not list - authenticity unconfirmed',
+      listingDescription: 'Not recommended for purchase until authenticated by a legit-check service or the date code is verified.',
+      keywords: [],
+      photosNeeded: ['Date code close-up for independent authentication'],
+    },
+  },
+  {
+    title: 'Trek Domane SL5 Road Bike - 56cm',
+    description: 'One season of use, garage kept, minor drivetrain wear.',
+    askingPrice: 900,
+    marketplace: 'eBay',
+    analysis: {
+      identifiedProduct: 'Trek Domane SL5, 56cm, Disc Brake',
+      brand: 'Trek',
+      category: 'Sporting Goods',
+      conditionAssessed: 'Very good - minor drivetrain wear, frame excellent',
+      estimatedResaleValueLow: 1400,
+      estimatedResaleValueHigh: 1600,
+      demand: 'MEDIUM',
+      competition: 'LOW',
+      confidence: 'MEDIUM',
+      flipScore: 87,
+      flipReasoning:
+        'Endurance road bikes in this size and condition move quickly to a dedicated cycling audience, and this price is well under typical used-market comps for a one-season-old SL5.',
+      riskFactors: ['Confirm frame has no cracks near welds/carbon joints', 'Shipping a full bike is costly - local sale or partial disassembly likely needed'],
+      thingsToCheck: ['Inspect frame for cracks, especially at the seat and head tube', 'Test shift through all gears', 'Check brake pad wear'],
+      whyUnderpriced: 'Seller is switching to mountain biking and wants a quick sale over top dollar.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 850,
+      negotiationMessage: 'Hi, is the Domane still up for grabs? Would you do $850 for a same-week pickup?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 1499,
+      listingTitle: 'Trek Domane SL5 56cm Road Bike - Very Good Condition',
+      listingDescription: 'Trek Domane SL5, 56cm, disc brake, one season of light use. Frame in excellent shape, drivetrain shows minor normal wear.',
+      keywords: ['trek domane sl5', 'trek road bike 56cm', 'domane disc'],
+      photosNeeded: ['Full bike both sides', 'Drivetrain close-up', 'Frame serial number', 'Any frame joints/welds'],
+    },
+  },
+  {
+    title: 'Yeti Tundra 65 Cooler',
+    description: 'Used a handful of times, no cracks, comes with basket.',
+    askingPrice: 150,
+    marketplace: 'Facebook Marketplace',
+    analysis: {
+      identifiedProduct: 'Yeti Tundra 65 Hard Cooler',
+      brand: 'Yeti',
+      category: 'Outdoor Gear',
+      conditionAssessed: 'Good - light scuffs, latches and seal intact',
+      estimatedResaleValueLow: 220,
+      estimatedResaleValueHigh: 250,
+      demand: 'MEDIUM',
+      competition: 'MEDIUM',
+      confidence: 'HIGH',
+      flipScore: 62,
+      flipReasoning:
+        'Yeti coolers are famously durable and hold resale value well; this is a steady, low-drama flip with dependable demand, though not an exceptional margin for the effort of moving a bulky item.',
+      riskFactors: ['Bulky item to store and reship - local pickup preferred'],
+      thingsToCheck: ['Check gasket seal is not dried out or cracked', 'Inspect latches for stress cracks', 'Confirm no persistent odor inside'],
+      whyUnderpriced: 'Seller is downsizing camping gear and bundled the price low to move it fast.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 135,
+      negotiationMessage: 'Hi, is the Yeti still available? Would you take $135?',
+      bestPlatform: 'Facebook Marketplace',
+      recommendedSellPrice: 235,
+      listingTitle: 'Yeti Tundra 65 Cooler - Good Condition w/ Basket',
+      listingDescription: 'Yeti Tundra 65, lightly used, latches and gasket seal in great shape. Includes the dry-goods basket.',
+      keywords: ['yeti tundra 65', 'yeti hard cooler', 'yeti 65'],
+      photosNeeded: ['Full cooler closed', 'Interior with basket', 'Gasket seal close-up', 'Latches'],
+    },
+  },
+  {
+    title: 'Milwaukee M18 FUEL Impact Driver (Tool Only)',
+    description: 'Bought as part of a bundle, do not need the extra driver.',
+    askingPrice: 55,
+    marketplace: 'OfferUp',
+    analysis: {
+      identifiedProduct: 'Milwaukee M18 FUEL 1/4" Hex Impact Driver (2853-20), Tool Only',
+      brand: 'Milwaukee',
+      category: 'Tools',
+      conditionAssessed: 'Like new - minimal use',
+      estimatedResaleValueLow: 90,
+      estimatedResaleValueHigh: 105,
+      demand: 'HIGH',
+      competition: 'MEDIUM',
+      confidence: 'HIGH',
+      flipScore: 78,
+      flipReasoning:
+        'M18 FUEL tools are the current-generation standard for tradespeople and this is priced well under a bare-tool used comp for like-new condition. Fast, easy sell in the M18 ecosystem.',
+      riskFactors: ['Tool-only listings need clear disclosure - some buyers assume batteries are included'],
+      thingsToCheck: ['Test on high torque setting', 'Check chuck collar for smooth operation', 'Confirm it is the FUEL (brushless) version, not the standard M18'],
+      whyUnderpriced: 'Seller bundled it originally and does not need a second driver.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 48,
+      negotiationMessage: 'Hi, is the impact driver still available? Would you take $48?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 99,
+      listingTitle: 'Milwaukee M18 FUEL Impact Driver 2853-20 - Tool Only - Like New',
+      listingDescription: 'Milwaukee M18 FUEL brushless impact driver, tool only, minimal use, works perfectly. No battery or charger included.',
+      keywords: ['milwaukee m18 fuel impact driver', 'milwaukee 2853-20', 'm18 fuel impact'],
+      photosNeeded: ['Tool from multiple angles', 'Model sticker close-up', 'Chuck/bit holder'],
+    },
+  },
+  {
+    title: 'Nintendo Switch OLED - White',
+    description: 'Light scratches on the dock, console/screen fine.',
+    askingPrice: 200,
+    marketplace: 'Mercari',
+    analysis: {
+      identifiedProduct: 'Nintendo Switch OLED Model, White',
+      brand: 'Nintendo',
+      category: 'Video Games',
+      conditionAssessed: 'Good - dock has cosmetic scratches, console/screen excellent',
+      estimatedResaleValueLow: 240,
+      estimatedResaleValueHigh: 265,
+      demand: 'HIGH',
+      competition: 'HIGH',
+      confidence: 'HIGH',
+      flipScore: 51,
+      flipReasoning:
+        'Reliable, fast-moving item with steady demand, but thin margin after fees given how competitive Switch resale pricing is - a fine flip, not a standout one.',
+      riskFactors: ['Confirm Joy-Con drift is not present - a very common Switch issue that tanks resale value'],
+      thingsToCheck: ['Test both Joy-Cons for stick drift', 'Check screen for burn-in or dead pixels', 'Verify it is not banned from eShop if buying with an account'],
+      whyUnderpriced: 'Seller focused the listing on dock cosmetic wear, undervaluing the console itself.',
+      buyDecision: 'NEGOTIATE',
+      recommendedOfferPrice: 185,
+      negotiationMessage: 'Hi, is the Switch OLED still available? Would you take $185 given the dock scratches?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 259,
+      listingTitle: 'Nintendo Switch OLED White - Console Excellent, Dock Has Cosmetic Wear',
+      listingDescription: 'Nintendo Switch OLED, white, console and screen in excellent shape. Dock has light cosmetic scratches, fully functional. No Joy-Con drift.',
+      keywords: ['nintendo switch oled white', 'switch oled console', 'nintendo switch'],
+      photosNeeded: ['Console and screen on', 'Dock scratches close-up', 'Both Joy-Cons', 'Serial number'],
+    },
+  },
+  {
+    title: 'West Elm Mid-Century Sofa - 3 Seater',
+    description: 'A few small stains on the cushions, structurally solid.',
+    askingPrice: 200,
+    marketplace: 'Craigslist',
+    analysis: {
+      identifiedProduct: 'West Elm Mid-Century 3-Seater Sofa',
+      brand: 'West Elm',
+      category: 'Furniture',
+      conditionAssessed: 'Fair - visible cushion staining, frame solid',
+      estimatedResaleValueLow: 280,
+      estimatedResaleValueHigh: 320,
+      demand: 'MEDIUM',
+      competition: 'LOW',
+      confidence: 'LOW',
+      flipScore: 33,
+      flipReasoning:
+        'The margin looks acceptable on paper, but visible stains will need professional cleaning or reupholstering to sell well, sofas are expensive and difficult to move/store, and demand is highly local and slow relative to smaller items - real effective ROI is weak once time and logistics are factored in.',
+      riskFactors: [
+        'Requires a truck and at least one helper to move safely',
+        'Stains may not fully clean out, capping achievable resale price',
+        'Slow-moving category - could tie up cash and space for weeks',
+      ],
+      thingsToCheck: ['Check frame for structural soundness (sit test, rock it)', 'Inspect stains up close to judge if professional cleaning will help', 'Confirm no odor (pets/smoke)'],
+      whyUnderpriced: 'Seller wants it gone quickly ahead of new furniture delivery.',
+      buyDecision: 'PASS',
+      recommendedOfferPrice: 150,
+      negotiationMessage: null,
+      bestPlatform: 'Facebook Marketplace',
+      recommendedSellPrice: 300,
+      listingTitle: 'West Elm Mid-Century Sofa - Needs Cleaning',
+      listingDescription: 'West Elm mid-century 3-seater sofa, solid frame, cushions show staining and would benefit from professional cleaning.',
+      keywords: ['west elm mid century sofa', 'west elm sofa 3 seater'],
+      photosNeeded: ['Full sofa', 'Stains close-up', 'Frame/legs', 'Underside for structure check'],
+    },
+  },
+  {
+    title: 'Canon EOS 5D Mark IV Body',
+    description: 'Professional use, well maintained, low shutter count noted by seller.',
+    askingPrice: 900,
+    marketplace: 'eBay',
+    analysis: {
+      identifiedProduct: 'Canon EOS 5D Mark IV',
+      brand: 'Canon',
+      category: 'Cameras',
+      conditionAssessed: 'Excellent - low shutter count claimed, minimal wear in photos',
+      estimatedResaleValueLow: 1150,
+      estimatedResaleValueHigh: 1300,
+      demand: 'MEDIUM',
+      competition: 'MEDIUM',
+      confidence: 'MEDIUM',
+      flipScore: 75,
+      flipReasoning:
+        'Still a highly respected full-frame DSLR with steady demand from photographers upgrading from crop-sensor bodies. Priced well below going rate if the shutter count claim checks out.',
+      riskFactors: ['Shutter count is self-reported - verify with EXIF data or a shutter-count checking tool before finalizing'],
+      thingsToCheck: ['Pull shutter count from a test photo\'s EXIF data', 'Check sensor for dust/scratches', 'Test all card slots and ports'],
+      whyUnderpriced: 'Seller is moving to mirrorless and wants a quick, no-hassle sale.',
+      buyDecision: 'BUY',
+      recommendedOfferPrice: 850,
+      negotiationMessage: 'Hi, is the 5D Mark IV still available? Could you send a test shot so I can check the shutter count? Would do $850 if it checks out.',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 1249,
+      listingTitle: 'Canon EOS 5D Mark IV Body - Excellent Condition, Low Shutter Count',
+      listingDescription: 'Canon 5D Mark IV body, excellent condition, low shutter count verified. Sensor clean, all functions tested.',
+      keywords: ['canon 5d mark iv', 'canon 5d mk4 body', 'canon full frame dslr'],
+      photosNeeded: ['Body front/back/top', 'LCD screen on', 'Sensor with cap off', 'Card door and ports'],
+    },
+  },
+  {
+    title: 'Vintage Omega Seamaster Automatic',
+    description: '1970s piece, running but not recently serviced, some case wear.',
+    askingPrice: 700,
+    marketplace: 'eBay',
+    analysis: {
+      identifiedProduct: 'Omega Seamaster Automatic, c. 1970s',
+      brand: 'Omega',
+      category: 'Watches',
+      conditionAssessed: 'Used - running, visible case/bracelet wear, service history unknown',
+      estimatedResaleValueLow: 850,
+      estimatedResaleValueHigh: 1000,
+      demand: 'MEDIUM',
+      competition: 'LOW',
+      confidence: 'MEDIUM',
+      flipScore: 68,
+      flipReasoning:
+        'Vintage Omega Seamasters have a dedicated collector base and this is priced reasonably, but a movement service (often $200-400) should be budgeted before resale, which trims the margin from what it looks like on the surface.',
+      riskFactors: ['No recent service history - movement could need work soon', 'Vintage watches carry some counterfeit/franken-watch risk (mismatched parts)'],
+      thingsToCheck: ['Confirm running accuracy over 24 hours', 'Check case/dial/movement serial numbers are consistent with each other', 'Budget for a service before resale if it has not been serviced in 5+ years'],
+      whyUnderpriced: 'Seller inherited it and priced based on a rough online estimate without accounting for collector premium.',
+      buyDecision: 'NEGOTIATE',
+      recommendedOfferPrice: 620,
+      negotiationMessage: 'Hi, beautiful piece. Would you consider $620, accounting for a movement service it may need?',
+      bestPlatform: 'eBay',
+      recommendedSellPrice: 950,
+      listingTitle: 'Vintage Omega Seamaster Automatic - 1970s - Running',
+      listingDescription: 'Vintage Omega Seamaster, automatic movement, running well. Case and bracelet show honest age-appropriate wear. Serviced and ready to wear.',
+      keywords: ['vintage omega seamaster', 'omega seamaster automatic', 'vintage omega watch'],
+      photosNeeded: ['Dial close-up', 'Case back with serial', 'Movement (if case back opens)', 'Bracelet/clasp'],
+    },
+  },
+];
+
 async function main() {
   const user = await db.user.upsert({
     where: { email: 'demo@flipos.app' },
@@ -9,74 +737,10 @@ async function main() {
     create: { email: 'demo@flipos.app', name: 'Demo Flipper' },
   });
 
-  const samples = [
-    {
-      title: 'Sony A7 III Camera Body',
-      description: 'Used, some shelf wear, comes with battery and charger.',
-      askingPrice: 650,
-      marketplace: 'eBay',
-      analysis: {
-        identifiedProduct: 'Sony A7 III',
-        brand: 'Sony',
-        category: 'Cameras',
-        conditionAssessed: 'Used - light cosmetic wear, fully functional',
-        estimatedResaleValueLow: 850,
-        estimatedResaleValueHigh: 950,
-        demand: 'HIGH' as const,
-        competition: 'MEDIUM' as const,
-        confidence: 'HIGH' as const,
-        flipScore: 92,
-        flipReasoning:
-          'Priced well below recent sold listings for this body with matching accessories. Demand for the A7 III stays strong among hybrid shooters; verify shutter count before buying.',
-        riskFactors: ['Shutter count unknown', 'No lens included, limits buyer pool slightly'],
-        thingsToCheck: ['Ask for shutter actuation count', 'Test all dials and the LCD hinge', 'Confirm sensor has no dust or scratches'],
-        whyUnderpriced: 'Seller listed as "camera" without model-specific keywords, so it is getting less search traffic than it should.',
-        buyDecision: 'BUY' as const,
-        recommendedOfferPrice: 600,
-        negotiationMessage: "Hi! Is the A7 III still available? Would you take $600 for it today if I can pick up this week?",
-        bestPlatform: 'eBay',
-        recommendedSellPrice: 899,
-        listingTitle: 'Sony A7 III Full-Frame Mirrorless Camera Body - Excellent Condition',
-        listingDescription:
-          'Sony A7 III body in excellent working condition. Light cosmetic wear consistent with careful use, sensor clean, all functions tested. Includes original battery and charger.',
-        keywords: ['sony a7iii', 'full frame mirrorless', 'sony alpha'],
-        photosNeeded: ['Front of body', 'Top dials', 'LCD screen on', 'Sensor with cap off', 'Included accessories'],
-      },
-    },
-    {
-      title: 'Canon EOS R6 with 24-105mm lens',
-      description: 'Barely used, upgrading to R6 Mark II.',
-      askingPrice: 400,
-      marketplace: 'Facebook Marketplace',
-      analysis: {
-        identifiedProduct: 'Canon EOS R6 + RF 24-105mm f/4L',
-        brand: 'Canon',
-        category: 'Cameras',
-        conditionAssessed: 'Like new',
-        estimatedResaleValueLow: 600,
-        estimatedResaleValueHigh: 700,
-        demand: 'HIGH' as const,
-        competition: 'MEDIUM' as const,
-        confidence: 'MEDIUM' as const,
-        flipScore: 94,
-        flipReasoning:
-          'Kit price is far below the body-only used price, meaning the lens is essentially free. Very high demand pairing that typically sells within days.',
-        riskFactors: ['Price seems unusually low for a working kit - confirm it is not water/impact damaged'],
-        thingsToCheck: ['Ask for a shutter count', 'Test autofocus in low light', 'Check lens glass for fungus or scratches'],
-        whyUnderpriced: 'Seller likely wants a fast local sale over maximizing price.',
-        buyDecision: 'BUY' as const,
-        recommendedOfferPrice: 380,
-        negotiationMessage: 'Hi, is this still available? I can pay cash and pick up today if you can do $380.',
-        bestPlatform: 'eBay',
-        recommendedSellPrice: 649,
-        listingTitle: 'Canon EOS R6 Body + RF 24-105mm f/4L Kit - Like New',
-        listingDescription:
-          'Canon EOS R6 with RF 24-105mm f/4L lens, like-new condition. Low shutter count, no signs of use. Great low-light hybrid photo/video body.',
-        keywords: ['canon eos r6', 'rf 24-105', 'canon mirrorless kit'],
-        photosNeeded: ['Body front and back', 'Lens front element', 'LCD screen on', 'Battery and card door'],
-      },
-    },
-  ];
+  // Re-running this script re-seeds from scratch for the demo user, so it's
+  // safe to run more than once instead of piling up duplicates. Cascades
+  // clear the matching FlipAnalysis/SavedFlip rows too.
+  await db.listing.deleteMany({ where: { userId: user.id } });
 
   for (const s of samples) {
     const listing = await db.listing.create({
@@ -90,6 +754,10 @@ async function main() {
     });
 
     const { flipReasoning, ...rest } = s.analysis;
+    const midResale = (rest.estimatedResaleValueLow + rest.estimatedResaleValueHigh) / 2;
+    const estimatedProfit = midResale - s.askingPrice;
+    const roi = s.askingPrice > 0 ? (estimatedProfit / s.askingPrice) * 100 : 0;
+
     await db.flipAnalysis.create({
       data: {
         listingId: listing.id,
@@ -102,14 +770,10 @@ async function main() {
         demand: rest.demand,
         competition: rest.competition,
         confidence: rest.confidence,
-        estimatedProfit:
-          (rest.estimatedResaleValueLow + rest.estimatedResaleValueHigh) / 2 - s.askingPrice,
-        roi:
-          (((rest.estimatedResaleValueLow + rest.estimatedResaleValueHigh) / 2 - s.askingPrice) /
-            s.askingPrice) *
-          100,
+        estimatedProfit,
+        roi,
         flipScore: rest.flipScore,
-        flipCategory: rest.flipScore >= 90 ? 'EXCEPTIONAL' : 'STRONG',
+        flipCategory: flipCategoryFromScore(rest.flipScore),
         flipReasoning,
         riskFactors: rest.riskFactors,
         thingsToCheck: rest.thingsToCheck,
@@ -128,7 +792,7 @@ async function main() {
     });
   }
 
-  console.log('Seeded demo user + sample flips');
+  console.log(`Seeded demo user + ${samples.length} sample flips`);
 }
 
 main()

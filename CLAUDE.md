@@ -79,7 +79,7 @@ drag physics use `framer-motion`. Respect `prefers-reduced-motion` (already hand
 ```bash
 npm run dev        # start dev server
 npm run db:push     # sync prisma/schema.prisma to the database
-npm run db:seed     # add 2 sample flips
+npm run db:seed     # replace demo data with 20 realistic sample flips
 npm run db:studio   # inspect data
 ```
 

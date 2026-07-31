@@ -38,7 +38,9 @@ integrations and portfolio analytics are still open.
 npm install
 cp .env.example .env      # fill in DATABASE_URL and ANTHROPIC_API_KEY
 npm run db:push           # create tables from prisma/schema.prisma
-npm run db:seed           # optional: adds 2 sample flips so the homepage isn't empty
+npm run db:seed           # optional: adds 20 realistic sample flips (safe to re-run - it
+                           # replaces the demo user's data each time) so the homepage,
+                           # /explore, and /saved aren't empty while eBay access is pending
 npm run dev
 ```
 
@@ -83,7 +85,7 @@ src/
 prisma/
   schema.prisma                Users, UserPreference, Listing, FlipAnalysis, SavedFlip,
                                 SavedSearch, AlertedListing
-  seed.ts                       Demo user + sample flips
+  seed.ts                       Demo user + 20 realistic sample flips (re-runnable)
 vercel.json                     Cron schedule for /api/cron/deal-alerts
 ```
 
