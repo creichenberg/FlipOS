@@ -39,12 +39,12 @@ export default async function HomePage() {
       </div>
 
       {deals.length === 0 ? (
-        <div className="rounded-card border border-dashed border-white/15 p-10 text-center">
+        <div className="rounded-card border border-dashed border-line p-10 text-center">
           <p className="font-display text-lg font-semibold">No flips analyzed yet</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-graphite">
             Upload a listing you&apos;re considering and FlipOS will score it in seconds.
           </p>
-          <Link href="/upload" className="btn-primary mt-4 inline-block px-5 py-2.5">
+          <Link href="/upload" className="pill-primary mt-4 inline-block px-5 py-2.5">
             Analyze your first listing
           </Link>
         </div>

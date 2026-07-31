@@ -8,15 +8,15 @@ import { FLIP_CATEGORY_LABEL } from '@/types/flip';
 type AnalysisWithRelations = FlipAnalysis & { listing: Listing; savedFlip: SavedFlip | null };
 
 const DECISION_STYLE: Record<string, string> = {
-  BUY: 'bg-profit text-paper',
-  NEGOTIATE: 'bg-caution text-ink',
-  PASS: 'bg-risk text-paper',
+  BUY: 'bg-profit/10 text-profit',
+  NEGOTIATE: 'bg-canvas text-ink',
+  PASS: 'bg-risk/10 text-risk',
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="glass-card p-5 text-paper">
-      <h2 className="font-display text-xs font-bold uppercase tracking-wider text-graphite">{title}</h2>
+    <section className="surface p-5 text-ink">
+      <h2 className="text-xs font-bold uppercase tracking-wider text-graphite">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -46,7 +46,7 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
     <div className="mx-auto max-w-2xl space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-wide text-graphite">
+          <p className="text-xs uppercase tracking-wide text-graphite">
             {analysis.category} {analysis.listing.marketplace ? `· ${analysis.listing.marketplace}` : ''}
           </p>
           <h1 className="font-display text-2xl font-bold">{analysis.identifiedProduct}</h1>
@@ -65,7 +65,7 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
       </Section>
 
       <Section title="Financial Analysis">
-        <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-y-3 text-sm tabular-nums sm:grid-cols-4">
           <div>
             <dt className="text-xs text-graphite">Current price</dt>
             <dd className="text-base font-semibold">${analysis.listing.askingPrice.toLocaleString()}</dd>
@@ -88,9 +88,9 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
           </div>
         </dl>
         <p className="mt-3 text-xs text-graphite">
-          Confidence: <span className="font-medium text-paper">{analysis.confidence}</span> · Demand:{' '}
-          <span className="font-medium text-paper">{analysis.demand}</span> · Competition:{' '}
-          <span className="font-medium text-paper">{analysis.competition}</span>
+          Confidence: <span className="font-medium text-ink">{analysis.confidence}</span> · Demand:{' '}
+          <span className="font-medium text-ink">{analysis.demand}</span> · Competition:{' '}
+          <span className="font-medium text-ink">{analysis.competition}</span>
         </p>
       </Section>
 
@@ -119,19 +119,19 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
 
       <Section title="Buying Strategy">
         {analysis.recommendedOfferPrice != null && (
-          <p className="font-mono text-sm">
+          <p className="text-sm tabular-nums">
             Recommended offer: <span className="font-semibold">${analysis.recommendedOfferPrice.toLocaleString()}</span>
           </p>
         )}
         {analysis.negotiationMessage && (
-          <div className="mt-2 rounded-control border border-line bg-white/[0.04] p-3 text-sm italic text-paper/90">
+          <div className="mt-2 rounded-control bg-canvas p-3 text-sm italic text-ink/90">
             &ldquo;{analysis.negotiationMessage}&rdquo;
           </div>
         )}
       </Section>
 
       <Section title="Selling Strategy">
-        <dl className="grid grid-cols-2 gap-y-3 font-mono text-sm">
+        <dl className="grid grid-cols-2 gap-y-3 text-sm tabular-nums">
           <div>
             <dt className="text-xs text-graphite">Best platform</dt>
             <dd className="font-semibold">{analysis.bestPlatform}</dd>
@@ -156,7 +156,7 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
         {analysis.keywords.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {analysis.keywords.map((k) => (
-              <span key={k} className="chip">
+              <span key={k} className="rounded-full bg-canvas px-2.5 py-1 text-xs font-medium text-ink">
                 {k}
               </span>
             ))}
@@ -174,7 +174,7 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
         )}
       </Section>
 
-      <button onClick={handleSave} disabled={saving || !!savedFlip} className="btn-primary w-full">
+      <button onClick={handleSave} disabled={saving || !!savedFlip} className="pill-primary w-full">
         {savedFlip ? 'Saved to your flips' : saving ? 'Saving...' : 'Save this flip'}
       </button>
     </div>

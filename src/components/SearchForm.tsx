@@ -72,7 +72,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="glass-card mt-6 space-y-5 p-5">
+      <form onSubmit={handleSubmit} className="surface mt-6 space-y-5 p-5">
         <div>
           <label className="block text-xs font-medium uppercase tracking-wide text-graphite">
             What are you looking for?
@@ -82,21 +82,32 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Sony A7 III"
-            className="field mt-1.5"
+            className="field-pill mt-1.5"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="col-span-2 sm:col-span-1">
-            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Category</label>
-            <select value={categoryLabel} onChange={(e) => setCategoryLabel(e.target.value)} className="field mt-1.5">
-              {EBAY_CATEGORIES.map((c) => (
-                <option key={c.label} value={c.label}>
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Category</label>
+          <div className="-mx-1 mt-1.5 flex gap-2 overflow-x-auto px-1 pb-1">
+            {EBAY_CATEGORIES.map((c) => {
+              const selected = c.label === categoryLabel;
+              return (
+                <button
+                  key={c.label}
+                  type="button"
+                  onClick={() => setCategoryLabel(c.label)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    selected ? 'bg-ink text-white' : 'bg-canvas text-graphite hover:text-ink'
+                  }`}
+                >
                   {c.label}
-                </option>
-              ))}
-            </select>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Max price</label>
             <input
@@ -138,7 +149,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             <input type="checkbox" checked={saveDefaults} onChange={(e) => setSaveDefaults(e.target.checked)} />
             Save these as my default filters
           </label>
-          <button type="submit" disabled={status === 'searching'} className="btn-primary w-full px-6 sm:w-auto">
+          <button type="submit" disabled={status === 'searching'} className="pill-primary w-full px-6 sm:w-auto">
             {status === 'searching' ? 'Searching...' : 'Find Deals'}
           </button>
         </div>
@@ -149,7 +160,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
       {deals !== null && (
         <div className="mt-6">
           {deals.length === 0 ? (
-            <div className="rounded-card border border-dashed border-white/20 p-10 text-center">
+            <div className="rounded-card border border-dashed border-line p-10 text-center">
               <p className="font-display text-lg font-semibold">No deals matched</p>
               <p className="mx-auto mt-1 max-w-sm text-sm text-graphite">
                 Try a broader search term or loosen your min profit / ROI filters.

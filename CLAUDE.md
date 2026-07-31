@@ -31,16 +31,24 @@ alerts, more marketplaces).
 
 ## Design language
 
-Refined dark UI (Apple Wallet/Card register, not a generic SaaS dashboard or default-Tailwind
-look): true-black page background (`#000000`) with a faint ambient radial glow, frosted-glass
-card surfaces (`.glass-card` in `globals.css` - `bg-white/[0.06]` + `backdrop-blur`), hairline
-borders instead of hard dividers, and one neutral display/body typeface (Inter) with weight and
-tracking doing the hierarchy work instead of a second quirky display font. Monospace
-(`font-mono`) is still used for all money figures. Flip Score is an Apple-activity-ring-style SVG
-gauge (`FlipScoreBadge.tsx`), not a linear progress bar. Reusable primitives - `.glass-card`,
-`.chip`, `.btn-primary` (solid off-white pill), `.btn-secondary` (glass outline pill), `.field`
-(solid dark input) - live in `src/app/globals.css` `@layer components`; reach for those before
-writing new one-off card/button/input styling. Full color/radius tokens in `tailwind.config.ts`.
+Light, near-monochrome, card-and-pill UI modeled directly on a specific reference (a travel-app
+mockup the product owner supplied) - not a generic dark SaaS look. Warm light-gray page
+background (`canvas`, `#F1EFEC`), white card surfaces (`card`) separated by soft shadow
+(`shadow-soft`/`shadow-tight`) instead of borders, near-black `ink` for all text and every solid
+button/pill/selected state, one gray (`graphite`) for secondary text. Color is reserved for
+exactly two things: profit (`profit`, green) and loss/pass (`risk`, red) figures - nothing else
+is colored, no per-category chip palette. Large rounded corners on cards (`rounded-card`, 28px),
+full pill radius on every button/search field/filter chip/nav. One typeface (Inter) for
+everything; money figures use `tabular-nums`, not a monospace font. Flip Score is a small
+rating-chip (`FlipScoreBadge.tsx`) - a tier-colored dot plus the number, echoing the reference's
+star-rating treatment. Mobile gets a floating black pill bottom-nav (`MobileNav.tsx`, `sm:hidden`)
+matching the reference's mobile nav pattern; the top `Nav.tsx` link cluster is desktop-only
+(`hidden sm:inline`). Reusable primitives - `.surface`, `.pill-primary` (solid black), `.pill-secondary`
+(white + shadow), `.icon-btn`, `.field` / `.field-pill` - live in `src/app/globals.css`
+`@layer components`; reach for those before writing new one-off styling. Full tokens in
+`tailwind.config.ts`. Two prior directions (a dark "paper index-card" look and a dark "Apple
+Wallet" glassmorphism look) were tried and explicitly rejected as generic/AI-slop - don't revert
+to either without discussion.
 
 ## Commands
 

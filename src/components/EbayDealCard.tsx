@@ -29,6 +29,7 @@ export default function EbayDealCard({ deal }: { deal: EbayDeal }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const profitPositive = deal.estimatedProfit >= 0;
+  const initial = (deal.category ?? deal.title).charAt(0).toUpperCase();
 
   async function handleAnalyze() {
     setAnalyzing(true);
@@ -61,21 +62,24 @@ export default function EbayDealCard({ deal }: { deal: EbayDeal }) {
   }
 
   return (
-    <div className="glass-card p-5 text-paper">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-graphite">
+    <div className="surface p-4 text-ink sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-canvas text-lg font-bold text-graphite">
+          {initial}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] text-graphite">
             {deal.category ?? 'Uncategorized'}
             {deal.condition ? ` · ${deal.condition}` : ''}
           </p>
-          <h3 className="mt-0.5 truncate font-display text-lg font-bold leading-tight">{deal.title}</h3>
+          <h3 className="mt-0.5 truncate font-display text-base font-bold leading-tight">{deal.title}</h3>
         </div>
         <FlipScoreBadge score={deal.flipScore} category={deal.flipCategory} size="sm" />
       </div>
 
-      <p className="mt-2 text-sm leading-relaxed text-graphite">{deal.reasoning}</p>
+      <p className="mt-3 text-sm leading-relaxed text-graphite">{deal.reasoning}</p>
 
-      <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 font-mono">
+      <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 tabular-nums">
         <div>
           <dt className="text-[11px] text-graphite">Buy</dt>
           <dd className="text-base font-semibold">${deal.price.toLocaleString()}</dd>
@@ -92,23 +96,18 @@ export default function EbayDealCard({ deal }: { deal: EbayDeal }) {
         </div>
       </dl>
 
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <span className="chip bg-profit-soft text-profit">Demand: {DEMAND_LABEL[deal.demand] ?? deal.demand}</span>
-        <span className="font-medium text-graphite">{FLIP_CATEGORY_LABEL[deal.flipCategory]}</span>
+      <div className="mt-3 flex items-center justify-between text-xs text-graphite">
+        <span>Demand {DEMAND_LABEL[deal.demand] ?? deal.demand}</span>
+        <span className="font-medium text-ink">{FLIP_CATEGORY_LABEL[deal.flipCategory]}</span>
       </div>
 
       {error && <p className="mt-2 text-xs text-risk">{error}</p>}
 
       <div className="mt-4 flex gap-2">
-        <a
-          href={deal.itemWebUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary flex-1 text-sm"
-        >
+        <a href={deal.itemWebUrl} target="_blank" rel="noopener noreferrer" className="pill-secondary flex-1 text-sm">
           View on eBay
         </a>
-        <button onClick={handleAnalyze} disabled={analyzing} className="btn-primary flex-1 text-sm">
+        <button onClick={handleAnalyze} disabled={analyzing} className="pill-primary flex-1 text-sm">
           {analyzing ? 'Analyzing...' : 'Analyze in depth'}
         </button>
       </div>

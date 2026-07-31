@@ -98,7 +98,7 @@ export default function UploadForm() {
               step="0.01"
               value={askingPrice}
               onChange={(e) => setAskingPrice(e.target.value)}
-              className="w-full bg-transparent py-2.5 pl-1 text-paper focus:outline-none"
+              className="w-full bg-transparent py-2.5 pl-1 text-ink focus:outline-none"
             />
           </div>
         </div>
@@ -121,14 +121,14 @@ export default function UploadForm() {
           accept="image/png,image/jpeg,image/webp"
           multiple
           onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-          className="mt-1.5 w-full text-sm text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-3.5 file:py-1.5 file:text-paper file:transition-colors hover:file:bg-white/[0.16]"
+          className="mt-1.5 w-full text-sm text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-canvas file:px-3.5 file:py-1.5 file:font-medium file:text-ink file:transition-shadow hover:file:shadow-tight"
         />
         {files.length > 0 && <p className="mt-1.5 text-xs text-graphite">{files.length} photo(s) selected</p>}
       </div>
 
       {error && <p className="text-sm text-risk">{error}</p>}
 
-      <button type="submit" disabled={status === 'submitting'} className="btn-primary w-full">
+      <button type="submit" disabled={status === 'submitting'} className="pill-primary w-full">
         {status === 'submitting' ? 'Analyzing...' : 'Get my Flip Score'}
       </button>
     </form>

@@ -26,24 +26,25 @@ function riskLabel(count: number) {
 
 export default function DealCard({ deal }: { deal: DealCardData }) {
   const profitPositive = deal.estimatedProfit >= 0;
+  const initial = (deal.category ?? deal.productTitle).charAt(0).toUpperCase();
 
   return (
-    <Link
-      href={`/analysis/${deal.analysisId}`}
-      className="glass-card glass-card-hover group block p-5 text-paper transition-transform hover:-translate-y-0.5"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-graphite">
+    <Link href={`/analysis/${deal.analysisId}`} className="surface block p-4 text-ink transition-shadow hover:shadow-tight sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-canvas text-lg font-bold text-graphite">
+          {initial}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] text-graphite">
             {deal.category ?? 'Uncategorized'}
             {deal.marketplace ? ` · ${deal.marketplace}` : ''}
           </p>
-          <h3 className="mt-0.5 truncate font-display text-lg font-bold leading-tight">{deal.productTitle}</h3>
+          <h3 className="mt-0.5 truncate font-display text-base font-bold leading-tight">{deal.productTitle}</h3>
         </div>
         <FlipScoreBadge score={deal.flipScore} category={deal.flipCategory} size="sm" />
       </div>
 
-      <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 font-mono">
+      <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4 tabular-nums">
         <div>
           <dt className="text-[11px] text-graphite">Buy</dt>
           <dd className="text-base font-semibold">${deal.askingPrice.toLocaleString()}</dd>
@@ -60,14 +61,11 @@ export default function DealCard({ deal }: { deal: DealCardData }) {
         </div>
       </dl>
 
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <div className="flex gap-2">
-          <span className="chip bg-profit-soft text-profit">Demand: {DEMAND_LABEL[deal.demand] ?? deal.demand}</span>
-          <span className="chip bg-caution-soft text-caution">Risk: {riskLabel(deal.riskFactorCount)}</span>
-        </div>
-        <span className="font-medium text-graphite transition-colors group-hover:text-paper">
-          {FLIP_CATEGORY_LABEL[deal.flipCategory]} →
+      <div className="mt-3 flex items-center justify-between text-xs text-graphite">
+        <span>
+          Demand {DEMAND_LABEL[deal.demand] ?? deal.demand} · Risk {riskLabel(deal.riskFactorCount)}
         </span>
+        <span className="font-medium text-ink">{FLIP_CATEGORY_LABEL[deal.flipCategory]} →</span>
       </div>
     </Link>
   );

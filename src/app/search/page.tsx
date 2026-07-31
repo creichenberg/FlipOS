@@ -18,7 +18,7 @@ export default async function SearchPage() {
       </p>
 
       {!ebayConfigured ? (
-        <div className="mt-6 rounded-card border border-dashed border-white/15 p-10 text-center">
+        <div className="mt-6 rounded-card border border-dashed border-line p-10 text-center">
           <p className="font-display text-lg font-semibold">eBay search isn&apos;t connected yet</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-graphite">
             Add EBAY_CLIENT_ID and EBAY_CLIENT_SECRET to your environment to enable live search. Until then, use

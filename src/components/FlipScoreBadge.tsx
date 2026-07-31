@@ -1,13 +1,10 @@
-const CATEGORY_COLOR: Record<string, string> = {
-  EXCEPTIONAL: '#30D158',
-  STRONG: '#30D158',
-  AVERAGE: '#FF9F0A',
-  WEAK: '#FF453A',
-  AVOID: '#FF453A',
+const TIER_DOT: Record<string, string> = {
+  EXCEPTIONAL: 'bg-profit',
+  STRONG: 'bg-profit',
+  AVERAGE: 'bg-graphite',
+  WEAK: 'bg-risk',
+  AVOID: 'bg-risk',
 };
-
-const RADIUS = 16;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export default function FlipScoreBadge({
   score,
@@ -18,30 +15,17 @@ export default function FlipScoreBadge({
   category: string;
   size?: 'sm' | 'md';
 }) {
-  const dims = size === 'sm' ? 'h-12 w-12 text-sm' : 'h-16 w-16 text-lg';
-  const color = CATEGORY_COLOR[category] ?? '#98989D';
-  const progress = Math.max(0, Math.min(100, score)) / 100;
-  const dashOffset = CIRCUMFERENCE * (1 - progress);
+  const dot = TIER_DOT[category] ?? 'bg-graphite';
+  const text = size === 'sm' ? 'text-xs' : 'text-sm';
+  const pad = size === 'sm' ? 'px-2.5 py-1' : 'px-3 py-1.5';
 
   return (
-    <div className={`relative ${dims} shrink-0 select-none`} title={`Flip Score ${score}/100`}>
-      <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
-        <circle cx="18" cy="18" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2.5" />
-        <circle
-          cx="18"
-          cy="18"
-          r={RADIUS}
-          fill="none"
-          stroke={color}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeDasharray={CIRCUMFERENCE}
-          strokeDashoffset={dashOffset}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center font-mono font-semibold text-paper">
-        {score}
-      </div>
+    <div
+      className={`icon-btn h-auto w-auto shrink-0 gap-1.5 rounded-full ${pad} ${text} font-semibold text-ink`}
+      title={`Flip Score ${score}/100`}
+    >
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
+      {score}
     </div>
   );
 }

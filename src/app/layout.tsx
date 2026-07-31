@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import Nav from '@/components/Nav';
+import MobileNav from '@/components/MobileNav';
 import './globals.css';
 
-// One neutral, high-quality UI typeface for both display and body - the
-// contrast comes from weight and tracking, not a second quirky display font.
-const display = Inter({ subsets: ['latin'], variable: '--font-display', weight: ['600', '700', '800'] });
-const body = Inter({ subsets: ['latin'], variable: '--font-body' });
-const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '600'] });
+// One clean grotesk across the whole app - the reference this follows uses
+// a single typeface with weight doing all the hierarchy work, not a second
+// display face or a monospace for numbers.
+const inter = Inter({ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
   title: 'FlipOS - Find profitable flips before other people do',
@@ -16,10 +16,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-ink font-body text-paper antialiased">
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen bg-canvas font-body text-ink antialiased">
         <Nav />
-        <main className="mx-auto max-w-5xl px-4 pb-24 pt-8 sm:px-6">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6 sm:pb-16">{children}</main>
+        <MobileNav />
       </body>
     </html>
   );

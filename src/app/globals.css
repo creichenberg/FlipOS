@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -12,11 +12,7 @@ html {
 }
 
 body {
-  background-color: #000;
-  background-image:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(10, 132, 255, 0.10), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(48, 209, 88, 0.06), transparent 55%);
-  background-attachment: fixed;
+  background-color: #f1efec;
 }
 
 * {
@@ -24,8 +20,8 @@ body {
 }
 
 ::selection {
-  background: #30d158;
-  color: #000;
+  background: #121212;
+  color: #fff;
 }
 
 /* visible keyboard focus everywhere */
@@ -34,42 +30,47 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #0a84ff;
+  outline: 2px solid #121212;
   outline-offset: 2px;
 }
 
 input[type='checkbox'] {
-  accent-color: #0a84ff;
+  accent-color: #121212;
 }
 
 @layer components {
-  /* Frosted glass panel - the base surface for cards, sections, rows */
-  .glass-card {
-    @apply rounded-card border border-line bg-white/[0.06] backdrop-blur-card;
+  /* White sheet - the base surface for cards/sections. Separated from the
+     canvas by a soft shadow, not a border. */
+  .surface {
+    @apply rounded-card bg-card shadow-soft;
   }
 
-  .glass-card-hover {
-    @apply transition-colors hover:bg-white/[0.09];
+  /* Solid black pill - the one high-contrast fill in the system, used for
+     the primary action and any "selected" state. */
+  .pill-primary {
+    @apply rounded-full bg-ink py-3 text-center font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40;
   }
 
-  /* Small filled pill for tags/status - Apple-style capsule chip */
-  .chip {
-    @apply rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-paper;
+  /* White pill with a soft shadow instead of a border - secondary action /
+     unselected chip state. */
+  .pill-secondary {
+    @apply rounded-full bg-card py-3 text-center font-medium text-ink shadow-tight transition-shadow hover:shadow-soft;
   }
 
-  /* Solid off-white pill - primary call to action on a dark surface */
-  .btn-primary {
-    @apply rounded-control bg-paper py-3 text-center font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40;
+  /* Small round icon button - floats over image areas (back, favorite). */
+  .icon-btn {
+    @apply flex h-9 w-9 items-center justify-center rounded-full bg-card text-ink shadow-tight transition-shadow hover:shadow-soft;
   }
 
-  /* Glass outline pill - secondary action */
-  .btn-secondary {
-    @apply rounded-control border border-line bg-white/[0.06] py-3 text-center font-medium text-paper backdrop-blur-card transition-colors hover:bg-white/[0.1];
-  }
-
-  /* Solid dark field - form inputs/selects */
+  /* White field with a soft shadow, no border - same elevation language as
+     the search bar, but a control radius so multi-line fields don't blob. */
   .field {
-    @apply w-full rounded-control border border-line bg-ink-soft px-3.5 py-2.5 text-paper placeholder:text-graphite/70 transition-colors focus:border-white/25;
+    @apply w-full rounded-control border-0 bg-card px-4 py-3 text-ink shadow-tight placeholder:text-graphite focus:shadow-soft;
+  }
+
+  /* Full-pill variant for single-line search-style inputs. */
+  .field-pill {
+    @apply field rounded-full;
   }
 }
 

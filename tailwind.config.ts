@@ -5,32 +5,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: '#000000',            // page background - true black, OLED-style depth
-        'ink-soft': '#1C1C1E',      // solid raised surface (inputs, secondary chips)
-        'ink-elevated': '#2C2C2E',  // hover/active state on raised surfaces
-        paper: '#F5F5F7',           // primary text on dark + solid light CTA fill
-        'paper-dim': '#E5E5EA',     // solid light secondary-button fill
-        graphite: '#98989D',        // secondary/tertiary text
-        line: 'rgba(255,255,255,0.12)', // hairline border on glass surfaces
-        profit: '#30D158',          // buy / profit signal
-        'profit-soft': 'rgba(48,209,88,0.16)',
-        risk: '#FF453A',            // pass / risk signal
-        'risk-soft': 'rgba(255,69,58,0.16)',
-        caution: '#FF9F0A',         // negotiate / caution signal
-        'caution-soft': 'rgba(255,159,10,0.16)',
-        accent: '#0A84FF',          // links, focus ring
+        // Light, near-monochrome system: warm-gray canvas, white cards,
+        // near-black for text/buttons, one gray for secondary text. Color
+        // is reserved for exactly two things - profit and loss figures -
+        // the same restraint as a single "verified" dot on an otherwise
+        // black-and-white interface.
+        canvas: '#F1EFEC',   // page background
+        card: '#FFFFFF',      // card/sheet surface
+        ink: '#121212',       // primary text + solid button fill
+        graphite: '#8A8985',  // secondary/meta text
+        line: 'rgba(18,18,18,0.08)', // hairline border, used sparingly
+        profit: '#1E9E5C',    // profit figures only
+        risk: '#DC4C4C',      // loss / pass signal only
       },
       fontFamily: {
-        display: ['var(--font-display)', 'sans-serif'],
+        // One typeface, referenced under two names so existing
+        // `font-display`/`font-body` usage keeps working without a
+        // find-and-replace across every component.
+        display: ['var(--font-body)', 'sans-serif'],
         body: ['var(--font-body)', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
       },
       borderRadius: {
-        card: '20px',
-        control: '14px',
+        control: '16px',
+        card: '28px',
       },
-      backdropBlur: {
-        card: '20px',
+      boxShadow: {
+        soft: '0 1px 2px rgba(18,18,18,0.04), 0 12px 24px -8px rgba(18,18,18,0.10)',
+        tight: '0 1px 2px rgba(18,18,18,0.06), 0 4px 10px -2px rgba(18,18,18,0.08)',
       },
     },
   },

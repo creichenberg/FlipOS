@@ -66,7 +66,7 @@ export default function SavedFlipsList({ initialFlips }: { initialFlips: SavedFl
 
   if (flips.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-white/15 p-10 text-center">
+      <div className="rounded-card border border-dashed border-line p-10 text-center">
         <p className="font-display text-lg font-semibold">No saved flips yet</p>
         <p className="mx-auto mt-1 max-w-sm text-sm text-graphite">
           Save a flip from any analysis to track it from purchase through sale.
@@ -78,19 +78,19 @@ export default function SavedFlipsList({ initialFlips }: { initialFlips: SavedFl
   return (
     <div className="space-y-3">
       {flips.map((flip) => (
-        <div key={flip.id} className="glass-card p-4 text-paper sm:p-5">
+        <div key={flip.id} className="surface p-4 text-ink sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <Link href={`/analysis/${flip.analysis.id}`} className="font-display font-semibold hover:underline">
                 {flip.analysis.identifiedProduct}
               </Link>
-              <p className="mt-0.5 font-mono text-xs text-graphite">Flip Score {flip.analysis.flipScore}/100</p>
+              <p className="mt-0.5 text-xs text-graphite">Flip Score {flip.analysis.flipScore}/100</p>
             </div>
             <StatusBadge status={flip.status} />
           </div>
 
           {flip.status === 'SOLD' ? (
-            <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-sm">
+            <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 text-sm tabular-nums">
               <div>
                 <dt className="text-xs text-graphite">Sold for</dt>
                 <dd className="font-semibold">${flip.actualSalePrice?.toLocaleString()}</dd>
@@ -107,10 +107,7 @@ export default function SavedFlipsList({ initialFlips }: { initialFlips: SavedFl
               </div>
             </dl>
           ) : (
-            <button
-              onClick={() => advance(flip)}
-              className="mt-3 rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-medium text-paper transition-colors hover:bg-white/[0.16]"
-            >
+            <button onClick={() => advance(flip)} className="pill-secondary mt-3 px-3.5 py-1.5 text-sm">
               {NEXT_LABEL[flip.status]}
             </button>
           )}
