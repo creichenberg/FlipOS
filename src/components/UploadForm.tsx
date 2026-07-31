@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AnalyzingOverlay from './AnalyzingOverlay';
 
 const MARKETPLACES = ['eBay', 'Facebook Marketplace', 'Craigslist', 'OfferUp', 'Mercari', 'Poshmark', 'Other'];
 
@@ -95,9 +96,11 @@ export default function UploadForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-      <div className="surface p-4">
-        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Paste a listing link</label>
-        <p className="mt-0.5 text-xs text-graphite">
+      {status === 'submitting' && <AnalyzingOverlay />}
+
+      <div className="surface p-5">
+        <label className="eyebrow block">Paste a listing link</label>
+        <p className="mt-1 text-xs text-graphite">
           Works best with eBay. Other marketplaces are best-effort - double check what gets filled in.
         </p>
         <div className="mt-2 flex gap-2">
@@ -126,7 +129,7 @@ export default function UploadForm() {
       </div>
 
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Listing title</label>
+        <label className="eyebrow block">Listing title</label>
         <input
           required
           value={title}
@@ -137,7 +140,7 @@ export default function UploadForm() {
       </div>
 
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Description (optional)</label>
+        <label className="eyebrow block">Description (optional)</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -149,7 +152,7 @@ export default function UploadForm() {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Asking price</label>
+          <label className="eyebrow block">Asking price</label>
           <div className="field mt-1.5 flex items-center py-0 pl-3.5">
             <span className="text-graphite">$</span>
             <input
@@ -164,7 +167,7 @@ export default function UploadForm() {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Marketplace</label>
+          <label className="eyebrow block">Marketplace</label>
           <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="field mt-1.5">
             {MARKETPLACES.map((m) => (
               <option key={m} value={m}>
@@ -176,7 +179,7 @@ export default function UploadForm() {
       </div>
 
       <div>
-        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Photos (up to 6)</label>
+        <label className="eyebrow block">Photos (up to 6)</label>
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp"

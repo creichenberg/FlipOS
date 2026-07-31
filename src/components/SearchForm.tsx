@@ -136,7 +136,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
     <div>
       <form onSubmit={handleSubmit} className="surface mt-6 space-y-5 p-5">
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">
+          <label className="eyebrow block">
             What are you looking for?
           </label>
           <input
@@ -149,7 +149,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
         </div>
 
         <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Category</label>
+          <label className="eyebrow block">Category</label>
           <div className="-mx-1 mt-1.5 flex gap-2 overflow-x-auto px-1 pb-1">
             {EBAY_CATEGORIES.map((c) => {
               const selected = c.label === categoryLabel;
@@ -171,7 +171,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min price</label>
+            <label className="eyebrow block">Min price</label>
             <input
               type="number"
               min="0"
@@ -183,7 +183,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             />
           </div>
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Max price</label>
+            <label className="eyebrow block">Max price</label>
             <input
               type="number"
               min="0"
@@ -195,7 +195,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             />
           </div>
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Condition</label>
+            <label className="eyebrow block">Condition</label>
             <select value={condition} onChange={(e) => setCondition(e.target.value as typeof condition)} className="field mt-1.5">
               {CONDITIONS.map((c) => (
                 <option key={c.label} value={c.value}>
@@ -208,7 +208,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min profit</label>
+            <label className="eyebrow block">Min profit</label>
             <input
               type="number"
               step="1"
@@ -219,7 +219,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             />
           </div>
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min ROI %</label>
+            <label className="eyebrow block">Min ROI %</label>
             <input
               type="number"
               step="1"
@@ -233,7 +233,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
 
         <div className="rounded-control bg-canvas p-3.5">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-xs font-medium uppercase tracking-wide text-graphite">Near me</label>
+            <label className="eyebrow">Near me</label>
             <label className="flex items-center gap-2 text-sm text-graphite">
               <input type="checkbox" checked={nearMeOnly} onChange={(e) => setNearMeOnly(e.target.checked)} />
               Local pickup only
@@ -274,9 +274,9 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
       {deals !== null && (
         <div className="mt-6">
           {deals.length === 0 ? (
-            <div className="rounded-card border border-dashed border-line p-10 text-center">
-              <p className="font-display text-lg font-semibold">No deals matched</p>
-              <p className="mx-auto mt-1 max-w-sm text-sm text-graphite">
+            <div className="rounded-card border border-dashed border-line py-16 px-8 text-center">
+              <p className="text-xl font-bold tracking-tight">No deals matched</p>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-ink-soft">
                 Try a broader search term or loosen your min profit / ROI filters.
               </p>
             </div>

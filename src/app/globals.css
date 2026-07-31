@@ -48,7 +48,7 @@ input[type='checkbox'] {
   /* Interactive variant - a card you can click. Lifts on hover, settles on
      press, instead of sitting dead-flat like the static form panels. */
   .surface-interactive {
-    @apply surface transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-tight active:translate-y-0 active:shadow-soft active:duration-75;
+    @apply surface transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-lift active:translate-y-0 active:shadow-soft active:duration-75;
   }
 
   /* Solid black pill - the one high-contrast fill in the system, used for
@@ -71,29 +71,29 @@ input[type='checkbox'] {
   /* White field with a soft shadow, no border - same elevation language as
      the search bar, but a control radius so multi-line fields don't blob. */
   .field {
-    @apply w-full rounded-control border-0 bg-card px-4 py-3 text-ink shadow-tight placeholder:text-graphite transition-shadow focus:shadow-soft;
+    @apply w-full rounded-control border-0 bg-card px-4 py-3 text-ink shadow-tight transition-shadow placeholder:text-graphite focus:shadow-soft;
   }
 
   /* Full-pill variant for single-line search-style inputs. */
   .field-pill {
     @apply field rounded-full;
   }
-}
 
-/* Staggered fade-up entrance for card grids (see animationDelay usage). */
-@keyframes card-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  /* Uppercase micro-label used above every stat/field/section. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-graphite;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.animate-card-in {
-  animation: card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Skeleton block for loading states - a shimmer sweep rather than a
+     static gray box, so a slow analysis reads as "working" not "stuck". */
+  .skeleton {
+    @apply relative overflow-hidden rounded-control bg-ink/[0.06];
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    content: '';
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

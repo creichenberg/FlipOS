@@ -52,27 +52,42 @@ buttons drive the same exit-animation path as a real drag so it isn't touch-only
 Light, near-monochrome, card-and-pill UI modeled directly on a specific reference (a travel-app
 mockup the product owner supplied) - not a generic dark SaaS look. Warm light-gray page
 background (`canvas`, `#F1EFEC`), white card surfaces (`card`) separated by soft shadow
-(`shadow-soft`/`shadow-tight`) instead of borders, near-black `ink` for all text and every solid
-button/pill/selected state, one gray (`graphite`) for secondary text. Color is reserved for
-exactly two things: profit (`profit`, green) and loss/pass (`risk`, red) figures - nothing else
-is colored, no per-category chip palette. Large rounded corners on cards (`rounded-card`, 28px),
-full pill radius on every button/search field/filter chip/nav. One typeface (Inter) for
-everything; money figures use `tabular-nums`, not a monospace font. Flip Score is a small
-rating-chip (`FlipScoreBadge.tsx`) - a tier-colored dot plus the number, echoing the reference's
-star-rating treatment. Mobile gets a floating black pill bottom-nav (`MobileNav.tsx`, `sm:hidden`)
-matching the reference's mobile nav pattern; the top `Nav.tsx` link cluster is desktop-only
-(`hidden sm:inline`). Reusable primitives - `.surface`, `.pill-primary` (solid black), `.pill-secondary`
-(white + shadow), `.icon-btn`, `.field` / `.field-pill`, `.surface-interactive` (hover-lift +
-press-settle, for clickable cards specifically) - live in `src/app/globals.css`
-`@layer components`; reach for those before writing new one-off styling. Full tokens in
-`tailwind.config.ts`. Two prior directions (a dark "paper index-card" look and a dark "Apple
-Wallet" glassmorphism look) were tried and explicitly rejected as generic/AI-slop - don't revert
-to either without discussion.
+(`shadow-soft`/`shadow-tight`/`shadow-lift`) plus a hairline border, near-black `ink` for all text
+and every solid button/pill/selected state, `ink-soft` for body copy that shouldn't compete with
+headings, one gray (`graphite`) for meta text. Color is reserved for exactly two things: profit
+(`profit`, green) and loss/pass (`risk`, red) figures - nothing else is colored, no per-category
+chip palette. The `-wash` tints exist only to back a profit/loss block. Large rounded corners on
+cards (`rounded-card`, 28px), full pill radius on every button/search field/filter chip/nav. One
+typeface (Inter) for everything; money figures use `tabular-nums`, not a monospace font.
+
+**Money is the hero.** This product exists to answer "how much can I make," so estimated profit
+is set in the `text-figure` / `text-figure-lg` display sizes and everything else is deliberately
+quieter - never render profit at the same weight as the buy price. Card grids reserve two lines
+for the title (`min-h-[2.75em]`) so profit figures stay on a shared baseline across a row; the
+same trick keeps `StatStrip`'s labels from knocking its numbers out of alignment.
+
+Flip Score has two presentations in `FlipScoreBadge.tsx`: a compact tier-dot chip (`sm`/`md`) for
+card corners, and a full ring gauge (`lg`) for the analysis hero where the score is the headline.
+Mobile gets a floating black pill bottom-nav (`MobileNav.tsx`, `sm:hidden`) matching the
+reference's mobile nav pattern; the top `Nav.tsx` link cluster is desktop-only (`hidden sm:inline`).
+Because that nav floats over content, avoid `fixed`/`sticky` bottom bars elsewhere - the analysis
+page deliberately puts its Save action inside the hero card (next to the verdict, where the
+decision is made) rather than in a sticky footer that would collide with it and obscure content.
+
+Reusable primitives - `.surface`, `.surface-interactive` (hover-lift + press-settle, for clickable
+cards), `.pill-primary` (solid black), `.pill-secondary` (white + shadow), `.icon-btn`, `.field` /
+`.field-pill`, `.eyebrow` (the uppercase micro-label above every stat/field/section), `.skeleton` -
+live in `src/app/globals.css` `@layer components`; reach for those before writing new one-off
+styling. Full tokens in `tailwind.config.ts`. Two prior directions (a dark "paper index-card" look
+and a dark "Apple Wallet" glassmorphism look) were tried and explicitly rejected as
+generic/AI-slop - don't revert to either without discussion.
 
 Motion is deliberate, not decorative: card grids fade/slide in staggered (`.animate-card-in`),
-buttons settle on press (`active:scale-95` baked into the pill/icon-btn classes), and `/explore`'s
-drag physics use `framer-motion`. Respect `prefers-reduced-motion` (already handled globally in
-`globals.css`) rather than adding animations that ignore it.
+buttons settle on press (`active:scale-95` baked into the pill/icon-btn classes), card images
+scale slightly on hover, and `/explore`'s drag physics use `framer-motion`. A ~10s analysis gets
+`AnalyzingOverlay.tsx` (stepped progress) rather than a dead disabled button - if you add another
+slow action, give it the same treatment. Respect `prefers-reduced-motion` (already handled
+globally in `globals.css`) rather than adding animations that ignore it.
 
 ## Commands
 
