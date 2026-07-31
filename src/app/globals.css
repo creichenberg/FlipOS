@@ -6,13 +6,26 @@
   color-scheme: dark;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: #000;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(10, 132, 255, 0.10), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(48, 209, 88, 0.06), transparent 55%);
+  background-attachment: fixed;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
-  background: #1f7a4d;
-  color: #fbf8f2;
+  background: #30d158;
+  color: #000;
 }
 
 /* visible keyboard focus everywhere */
@@ -21,8 +34,43 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #c98a2c;
+  outline: 2px solid #0a84ff;
   outline-offset: 2px;
+}
+
+input[type='checkbox'] {
+  accent-color: #0a84ff;
+}
+
+@layer components {
+  /* Frosted glass panel - the base surface for cards, sections, rows */
+  .glass-card {
+    @apply rounded-card border border-line bg-white/[0.06] backdrop-blur-card;
+  }
+
+  .glass-card-hover {
+    @apply transition-colors hover:bg-white/[0.09];
+  }
+
+  /* Small filled pill for tags/status - Apple-style capsule chip */
+  .chip {
+    @apply rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-paper;
+  }
+
+  /* Solid off-white pill - primary call to action on a dark surface */
+  .btn-primary {
+    @apply rounded-control bg-paper py-3 text-center font-display font-semibold text-ink transition-opacity hover:opacity-90 disabled:opacity-40;
+  }
+
+  /* Glass outline pill - secondary action */
+  .btn-secondary {
+    @apply rounded-control border border-line bg-white/[0.06] py-3 text-center font-medium text-paper backdrop-blur-card transition-colors hover:bg-white/[0.1];
+  }
+
+  /* Solid dark field - form inputs/selects */
+  .field {
+    @apply w-full rounded-control border border-line bg-ink-soft px-3.5 py-2.5 text-paper placeholder:text-graphite/70 transition-colors focus:border-white/25;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

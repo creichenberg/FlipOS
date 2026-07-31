@@ -15,8 +15,8 @@ const DECISION_STYLE: Record<string, string> = {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-card border border-line bg-paper p-5 text-ink">
-      <h2 className="font-display text-sm font-bold uppercase tracking-wide text-graphite">{title}</h2>
+    <section className="glass-card p-5 text-paper">
+      <h2 className="font-display text-xs font-bold uppercase tracking-wider text-graphite">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -88,9 +88,9 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
           </div>
         </dl>
         <p className="mt-3 text-xs text-graphite">
-          Confidence: <span className="font-medium text-ink">{analysis.confidence}</span> · Demand:{' '}
-          <span className="font-medium text-ink">{analysis.demand}</span> · Competition:{' '}
-          <span className="font-medium text-ink">{analysis.competition}</span>
+          Confidence: <span className="font-medium text-paper">{analysis.confidence}</span> · Demand:{' '}
+          <span className="font-medium text-paper">{analysis.demand}</span> · Competition:{' '}
+          <span className="font-medium text-paper">{analysis.competition}</span>
         </p>
       </Section>
 
@@ -124,7 +124,9 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
           </p>
         )}
         {analysis.negotiationMessage && (
-          <div className="mt-2 rounded-card bg-paper-dim p-3 text-sm italic">&ldquo;{analysis.negotiationMessage}&rdquo;</div>
+          <div className="mt-2 rounded-control border border-line bg-white/[0.04] p-3 text-sm italic text-paper/90">
+            &ldquo;{analysis.negotiationMessage}&rdquo;
+          </div>
         )}
       </Section>
 
@@ -154,7 +156,7 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
         {analysis.keywords.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {analysis.keywords.map((k) => (
-              <span key={k} className="rounded-full bg-paper-dim px-2 py-0.5 text-xs">
+              <span key={k} className="chip">
                 {k}
               </span>
             ))}
@@ -172,11 +174,7 @@ export default function AnalysisResult({ analysis }: { analysis: AnalysisWithRel
         )}
       </Section>
 
-      <button
-        onClick={handleSave}
-        disabled={saving || !!savedFlip}
-        className="w-full rounded-card bg-paper py-3 font-display font-semibold text-ink disabled:opacity-60"
-      >
+      <button onClick={handleSave} disabled={saving || !!savedFlip} className="btn-primary w-full">
         {savedFlip ? 'Saved to your flips' : saving ? 'Saving...' : 'Save this flip'}
       </button>
     </div>

@@ -72,26 +72,24 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-card border border-white/10 bg-ink-soft p-4 sm:p-5">
+      <form onSubmit={handleSubmit} className="glass-card mt-6 space-y-5 p-5">
         <div>
-          <label className="block text-sm font-medium text-graphite">What are you looking for?</label>
+          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">
+            What are you looking for?
+          </label>
           <input
             required
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Sony A7 III"
-            className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+            className="field mt-1.5"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
-            <label className="block text-sm font-medium text-graphite">Category</label>
-            <select
-              value={categoryLabel}
-              onChange={(e) => setCategoryLabel(e.target.value)}
-              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper"
-            >
+            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Category</label>
+            <select value={categoryLabel} onChange={(e) => setCategoryLabel(e.target.value)} className="field mt-1.5">
               {EBAY_CATEGORIES.map((c) => (
                 <option key={c.label} value={c.label}>
                   {c.label}
@@ -100,7 +98,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-graphite">Max price</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Max price</label>
             <input
               type="number"
               min="0"
@@ -108,43 +106,39 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
               placeholder="Any"
-              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+              className="field mt-1.5"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-graphite">Min profit</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min profit</label>
             <input
               type="number"
               step="1"
               value={minProfit}
               onChange={(e) => setMinProfit(e.target.value)}
               placeholder="Any"
-              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+              className="field mt-1.5"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-graphite">Min ROI %</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min ROI %</label>
             <input
               type="number"
               step="1"
               value={minROI}
               onChange={(e) => setMinROI(e.target.value)}
               placeholder="Any"
-              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+              className="field mt-1.5"
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col-reverse items-start gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
           <label className="flex items-center gap-2 text-sm text-graphite">
             <input type="checkbox" checked={saveDefaults} onChange={(e) => setSaveDefaults(e.target.checked)} />
             Save these as my default filters
           </label>
-          <button
-            type="submit"
-            disabled={status === 'searching'}
-            className="rounded-card bg-profit px-5 py-2 font-display font-semibold text-paper transition-opacity disabled:opacity-60"
-          >
+          <button type="submit" disabled={status === 'searching'} className="btn-primary w-full px-6 sm:w-auto">
             {status === 'searching' ? 'Searching...' : 'Find Deals'}
           </button>
         </div>

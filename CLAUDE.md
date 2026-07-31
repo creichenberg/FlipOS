@@ -31,10 +31,16 @@ alerts, more marketplaces).
 
 ## Design language
 
-Dark ink background (`#14171C`), paper-colored cards (`#FBF8F2`), monospace for all money
-figures (`font-mono`), Flip Score shown as a rotated stamp badge, not a progress bar. Full token
-set in `tailwind.config.ts`. Keep new screens consistent with this - no default Tailwind grays,
-no generic SaaS-dashboard look.
+Refined dark UI (Apple Wallet/Card register, not a generic SaaS dashboard or default-Tailwind
+look): true-black page background (`#000000`) with a faint ambient radial glow, frosted-glass
+card surfaces (`.glass-card` in `globals.css` - `bg-white/[0.06]` + `backdrop-blur`), hairline
+borders instead of hard dividers, and one neutral display/body typeface (Inter) with weight and
+tracking doing the hierarchy work instead of a second quirky display font. Monospace
+(`font-mono`) is still used for all money figures. Flip Score is an Apple-activity-ring-style SVG
+gauge (`FlipScoreBadge.tsx`), not a linear progress bar. Reusable primitives - `.glass-card`,
+`.chip`, `.btn-primary` (solid off-white pill), `.btn-secondary` (glass outline pill), `.field`
+(solid dark input) - live in `src/app/globals.css` `@layer components`; reach for those before
+writing new one-off card/button/input styling. Full color/radius tokens in `tailwind.config.ts`.
 
 ## Commands
 

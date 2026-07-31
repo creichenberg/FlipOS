@@ -63,33 +63,33 @@ export default function UploadForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+    <form onSubmit={handleSubmit} className="mt-6 space-y-5">
       <div>
-        <label className="block text-sm font-medium text-graphite">Listing title</label>
+        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Listing title</label>
         <input
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Sony A7 III Camera Body"
-          className="mt-1 w-full rounded-card border border-white/15 bg-ink-soft px-3 py-2 text-paper placeholder:text-graphite"
+          className="field mt-1.5"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-graphite">Description (optional)</label>
+        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Description (optional)</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Anything the seller wrote about condition, accessories, flaws..."
-          className="mt-1 w-full rounded-card border border-white/15 bg-ink-soft px-3 py-2 text-paper placeholder:text-graphite"
+          className="field mt-1.5"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-graphite">Asking price</label>
-          <div className="mt-1 flex items-center rounded-card border border-white/15 bg-ink-soft px-3">
+          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Asking price</label>
+          <div className="field mt-1.5 flex items-center py-0 pl-3.5">
             <span className="text-graphite">$</span>
             <input
               required
@@ -98,17 +98,13 @@ export default function UploadForm() {
               step="0.01"
               value={askingPrice}
               onChange={(e) => setAskingPrice(e.target.value)}
-              className="w-full bg-transparent py-2 pl-1 text-paper"
+              className="w-full bg-transparent py-2.5 pl-1 text-paper focus:outline-none"
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-graphite">Marketplace</label>
-          <select
-            value={marketplace}
-            onChange={(e) => setMarketplace(e.target.value)}
-            className="mt-1 w-full rounded-card border border-white/15 bg-ink-soft px-3 py-2 text-paper"
-          >
+          <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Marketplace</label>
+          <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="field mt-1.5">
             {MARKETPLACES.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -119,24 +115,20 @@ export default function UploadForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-graphite">Photos (up to 6)</label>
+        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Photos (up to 6)</label>
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp"
           multiple
           onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-          className="mt-1 w-full text-sm text-graphite file:mr-3 file:rounded-card file:border-0 file:bg-paper file:px-3 file:py-1.5 file:text-ink"
+          className="mt-1.5 w-full text-sm text-graphite file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-3.5 file:py-1.5 file:text-paper file:transition-colors hover:file:bg-white/[0.16]"
         />
-        {files.length > 0 && <p className="mt-1 text-xs text-graphite">{files.length} photo(s) selected</p>}
+        {files.length > 0 && <p className="mt-1.5 text-xs text-graphite">{files.length} photo(s) selected</p>}
       </div>
 
       {error && <p className="text-sm text-risk">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={status === 'submitting'}
-        className="w-full rounded-card bg-profit py-3 font-display font-semibold text-paper transition-opacity disabled:opacity-60"
-      >
+      <button type="submit" disabled={status === 'submitting'} className="btn-primary w-full">
         {status === 'submitting' ? 'Analyzing...' : 'Get my Flip Score'}
       </button>
     </form>
