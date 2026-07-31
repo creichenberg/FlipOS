@@ -3,9 +3,12 @@
 AI-powered flip analysis for resellers. Upload a listing, get a Flip Score, a buy/negotiate/pass
 call, and a ready-to-post selling plan.
 
-Phase 1 (upload → AI analysis → Flip Score → save/track), Phase 2 (eBay Browse API search +
-filters), and the deal-alerts half of Phase 3 (saved searches, cron-driven re-checks, email
-notifications) are built. More marketplace integrations and portfolio analytics are still open.
+Phase 1 (upload → AI analysis → Flip Score → save/track), Phase 2 (eBay Browse API search with
+category/price-range/condition/near-me filters), and the deal-alerts half of Phase 3 (saved
+searches, cron-driven re-checks, email notifications) are built. `/upload` also accepts a pasted
+listing link (eBay via the Browse API, other marketplaces best-effort via Open Graph/JSON-LD)
+instead of typing everything by hand. More marketplace integrations and portfolio analytics are
+still open.
 
 ## Stack
 
@@ -57,14 +60,17 @@ src/
       saved-searches/route.ts     GET/POST saved alert searches
       saved-searches/[id]/route.ts  PATCH (toggle alerts) / DELETE a saved search
       cron/deal-alerts/route.ts   Vercel Cron target - re-runs saved searches, emails new matches
+      listing/lookup/route.ts     POST a listing URL -> normalized title/price/photo/marketplace
       flips/route.ts          GET/POST saved flips
       flips/[id]/route.ts     PATCH status (saved/purchased/listed/sold)
   components/                 DealCard, EbayDealCard, SearchForm, SavedSearchList, FlipScoreBadge,
                                UploadForm, Nav, MobileNav, etc.
   lib/
     ai.ts                     Claude calls (full analysis + batched quick-score) + tool schemas
-    ebay.ts                   eBay Browse API client (OAuth token cache + search)
+    ebay.ts                   eBay Browse API client (OAuth token cache + search + single-item
+                               lookup by legacy ID, used by the paste-a-link flow)
     ebayCategories.ts         Curated eBay category id list for the search filter dropdown
+    listingLookup.ts          Best-effort Open Graph/JSON-LD scrape for non-eBay listing URLs
     email.ts                  Resend client + deal-alert email template
     auth.ts                   Current-user resolution (demo account for now)
     db.ts                     Prisma client singleton

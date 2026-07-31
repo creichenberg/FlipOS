@@ -11,9 +11,13 @@ financials/risk/buying/selling strategy → save and track through sold.
 
 Phase 2 is built: `/search` searches live eBay listings (Browse API, client-credentials OAuth),
 quick-scores a page of results in one batched Claude call (`quickScoreListings()` in
-`src/lib/ai.ts`), ranks/filters by category/max price/min profit/min ROI, and lets a result be
-promoted into the full `analyzeListing()` flow with one click. `UserPreference` now backs
-save-able default filters via `src/app/api/preferences/route.ts`.
+`src/lib/ai.ts`), ranks/filters by category/min-max price/condition/min profit/min ROI, and lets
+a result be promoted into the full `analyzeListing()` flow with one click. A "near me" toggle
+(ZIP + local-pickup-only, sorted by distance) is also in `searchEbayListings()`. `UserPreference`
+now backs save-able default filters via `src/app/api/preferences/route.ts`. `/upload` also takes
+a pasted listing URL (`/api/listing/lookup`) - eBay via `getEbayItemByLegacyId()`, anything else
+best-effort via Open Graph/JSON-LD scraping (`src/lib/listingLookup.ts`) - to prefill the form
+instead of typing everything by hand.
 
 Phase 3 (deal alerts) is built: `SavedSearch` is a standing eBay query a user creates from
 "Save as alert" on `/search`. `src/app/api/cron/deal-alerts/route.ts` - triggered by Vercel Cron,

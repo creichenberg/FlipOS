@@ -9,7 +9,11 @@ export const dynamic = 'force-dynamic';
 const RequestSchema = z.object({
   query: z.string().min(1),
   categoryId: z.string().optional(),
+  minPrice: z.number().positive().optional(),
   maxPrice: z.number().positive().optional(),
+  condition: z.enum(['NEW', 'USED']).optional(),
+  postalCode: z.string().optional(),
+  nearMeOnly: z.boolean().optional(),
   minProfit: z.number().optional(),
   minROI: z.number().optional(),
 });
@@ -26,7 +30,11 @@ export async function POST(req: NextRequest) {
     results = await searchEbayListings({
       query: input.query,
       categoryId: input.categoryId,
+      minPrice: input.minPrice,
       maxPrice: input.maxPrice,
+      condition: input.condition,
+      postalCode: input.postalCode,
+      nearMeOnly: input.nearMeOnly,
       limit: 24,
     });
   } catch (err) {
@@ -66,6 +74,7 @@ export async function POST(req: NextRequest) {
         imageUrl: r.imageUrl,
         itemWebUrl: r.itemWebUrl,
         category: r.categoryName,
+        location: r.location,
         flipScore: Math.round(score.flipScore),
         flipCategory: flipCategoryFromScore(score.flipScore),
         demand: score.demand,

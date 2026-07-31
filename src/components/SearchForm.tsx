@@ -12,19 +12,43 @@ export interface InitialPreferences {
   minROI: number | null;
 }
 
+const CONDITIONS = [
+  { label: 'Any condition', value: '' },
+  { label: 'New', value: 'NEW' },
+  { label: 'Used', value: 'USED' },
+] as const;
+
 export default function SearchForm({ initialPreferences }: { initialPreferences: InitialPreferences | null }) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [categoryLabel, setCategoryLabel] = useState(initialPreferences?.categories[0] ?? EBAY_CATEGORIES[0].label);
+  const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState(initialPreferences?.maxPurchasePrice?.toString() ?? '');
+  const [condition, setCondition] = useState<'' | 'NEW' | 'USED'>('');
   const [minProfit, setMinProfit] = useState(initialPreferences?.minProfit?.toString() ?? '');
   const [minROI, setMinROI] = useState(initialPreferences?.minROI?.toString() ?? '');
+  const [postalCode, setPostalCode] = useState('');
+  const [nearMeOnly, setNearMeOnly] = useState(false);
   const [saveDefaults, setSaveDefaults] = useState(false);
 
   const [status, setStatus] = useState<'idle' | 'searching' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [deals, setDeals] = useState<EbayDeal[] | null>(null);
   const [savingAlert, setSavingAlert] = useState(false);
+
+  function buildFilters() {
+    const category = EBAY_CATEGORIES.find((c) => c.label === categoryLabel);
+    return {
+      categoryId: category?.categoryId,
+      minPrice: minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+      condition: condition || undefined,
+      postalCode: postalCode || undefined,
+      nearMeOnly: nearMeOnly || undefined,
+      minProfit: minProfit ? parseFloat(minProfit) : undefined,
+      minROI: minROI ? parseFloat(minROI) : undefined,
+    };
+  }
 
   async function handleSaveAlert() {
     if (!query.trim()) {
@@ -34,7 +58,7 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
     const name = window.prompt('Name this alert', query);
     if (!name) return;
 
-    const category = EBAY_CATEGORIES.find((c) => c.label === categoryLabel);
+    const filters = buildFilters();
     setSavingAlert(true);
     try {
       const res = await fetch('/api/saved-searches', {
@@ -43,10 +67,10 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
         body: JSON.stringify({
           name,
           query,
-          categoryId: category?.categoryId,
-          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-          minProfit: minProfit ? parseFloat(minProfit) : undefined,
-          minROI: minROI ? parseFloat(minROI) : undefined,
+          categoryId: filters.categoryId,
+          maxPrice: filters.maxPrice,
+          minProfit: filters.minProfit,
+          minROI: filters.minROI,
         }),
       });
       if (!res.ok) {
@@ -66,19 +90,19 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
     setStatus('searching');
     setError(null);
 
-    const category = EBAY_CATEGORIES.find((c) => c.label === categoryLabel);
+    if (nearMeOnly && !postalCode.trim()) {
+      setStatus('error');
+      setError('Enter your ZIP code to search near you.');
+      return;
+    }
+
+    const filters = buildFilters();
 
     try {
       const res = await fetch('/api/ebay/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query,
-          categoryId: category?.categoryId,
-          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-          minProfit: minProfit ? parseFloat(minProfit) : undefined,
-          minROI: minROI ? parseFloat(minROI) : undefined,
-        }),
+        body: JSON.stringify({ query, ...filters }),
       });
 
       if (!res.ok) {
@@ -95,10 +119,10 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            categories: category?.categoryId ? [category.label] : [],
-            maxPurchasePrice: maxPrice ? parseFloat(maxPrice) : null,
-            minProfit: minProfit ? parseFloat(minProfit) : null,
-            minROI: minROI ? parseFloat(minROI) : null,
+            categories: filters.categoryId ? [categoryLabel] : [],
+            maxPurchasePrice: filters.maxPrice ?? null,
+            minProfit: filters.minProfit ?? null,
+            minROI: filters.minROI ?? null,
           }),
         }).catch(() => {});
       }
@@ -147,6 +171,18 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
 
         <div className="grid grid-cols-3 gap-3">
           <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min price</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              placeholder="Any"
+              className="field mt-1.5"
+            />
+          </div>
+          <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Max price</label>
             <input
               type="number"
@@ -158,6 +194,19 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
               className="field mt-1.5"
             />
           </div>
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Condition</label>
+            <select value={condition} onChange={(e) => setCondition(e.target.value as typeof condition)} className="field mt-1.5">
+              {CONDITIONS.map((c) => (
+                <option key={c.label} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Min profit</label>
             <input
@@ -180,6 +229,23 @@ export default function SearchForm({ initialPreferences }: { initialPreferences:
               className="field mt-1.5"
             />
           </div>
+        </div>
+
+        <div className="rounded-control bg-canvas p-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-xs font-medium uppercase tracking-wide text-graphite">Near me</label>
+            <label className="flex items-center gap-2 text-sm text-graphite">
+              <input type="checkbox" checked={nearMeOnly} onChange={(e) => setNearMeOnly(e.target.checked)} />
+              Local pickup only
+            </label>
+          </div>
+          <input
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            placeholder="ZIP code"
+            inputMode="numeric"
+            className="field mt-2 bg-card"
+          />
         </div>
 
         <div className="flex flex-col-reverse items-start gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">

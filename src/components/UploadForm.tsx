@@ -16,6 +16,10 @@ function fileToBase64(file: File): Promise<string> {
 
 export default function UploadForm() {
   const router = useRouter();
+  const [listingUrl, setListingUrl] = useState('');
+  const [fetchingUrl, setFetchingUrl] = useState(false);
+  const [fetchedImageUrl, setFetchedImageUrl] = useState<string | null>(null);
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [askingPrice, setAskingPrice] = useState('');
@@ -23,6 +27,32 @@ export default function UploadForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
+
+  async function handleFetchUrl() {
+    if (!listingUrl.trim()) return;
+    setFetchingUrl(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/listing/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: listingUrl }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? 'Could not fetch that listing.');
+
+      const { listing } = body;
+      if (listing.title) setTitle(listing.title);
+      if (listing.description) setDescription(listing.description);
+      if (listing.askingPrice) setAskingPrice(String(listing.askingPrice));
+      if (listing.marketplace && MARKETPLACES.includes(listing.marketplace)) setMarketplace(listing.marketplace);
+      setFetchedImageUrl(listing.imageUrl ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setFetchingUrl(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +76,7 @@ export default function UploadForm() {
           askingPrice: parseFloat(askingPrice),
           marketplace,
           images,
+          imageUrl: images.length === 0 ? fetchedImageUrl ?? undefined : undefined,
         }),
       });
 
@@ -64,6 +95,36 @@ export default function UploadForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+      <div className="surface p-4">
+        <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Paste a listing link</label>
+        <p className="mt-0.5 text-xs text-graphite">
+          Works best with eBay. Other marketplaces are best-effort - double check what gets filled in.
+        </p>
+        <div className="mt-2 flex gap-2">
+          <input
+            value={listingUrl}
+            onChange={(e) => setListingUrl(e.target.value)}
+            placeholder="https://www.ebay.com/itm/..."
+            className="field flex-1"
+          />
+          <button
+            type="button"
+            onClick={handleFetchUrl}
+            disabled={fetchingUrl || !listingUrl.trim()}
+            className="pill-secondary shrink-0 px-4 text-sm"
+          >
+            {fetchingUrl ? 'Fetching...' : 'Fetch details'}
+          </button>
+        </div>
+        {fetchedImageUrl && (
+          <div className="mt-3 flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={fetchedImageUrl} alt="" className="h-12 w-12 rounded-control bg-canvas object-cover" />
+            <p className="text-xs text-graphite">Found a photo - it&apos;ll be used if you don&apos;t upload your own below.</p>
+          </div>
+        )}
+      </div>
+
       <div>
         <label className="block text-xs font-medium uppercase tracking-wide text-graphite">Listing title</label>
         <input

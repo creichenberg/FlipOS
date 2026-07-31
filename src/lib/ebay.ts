@@ -42,10 +42,24 @@ async function getEbayAccessToken(): Promise<string> {
   return cachedToken.value;
 }
 
+// eBay's numeric condition IDs - a small subset covering the common cases
+// resellers care about. See eBay's condition ID reference for the full list.
+export const EBAY_CONDITION_IDS = {
+  NEW: '1000',
+  USED: '3000',
+} as const;
+export type EbayConditionFilter = keyof typeof EBAY_CONDITION_IDS;
+
 export interface EbaySearchParams {
   query: string;
   categoryId?: string;
+  minPrice?: number;
   maxPrice?: number;
+  condition?: EbayConditionFilter;
+  /** Buyer's postal code - required for `nearMeOnly` and to power distance sort/display. */
+  postalCode?: string;
+  /** Local-pickup-only listings near `postalCode`, sorted nearest first. */
+  nearMeOnly?: boolean;
   limit?: number;
 }
 
@@ -57,6 +71,7 @@ export interface EbaySearchResult {
   imageUrl: string | null;
   itemWebUrl: string;
   categoryName: string | null;
+  location: string | null;
 }
 
 interface EbayItemSummary {
@@ -67,6 +82,7 @@ interface EbayItemSummary {
   image?: { imageUrl: string };
   itemWebUrl: string;
   categories?: { categoryId: string; categoryName: string }[];
+  itemLocation?: { city?: string; stateOrProvince?: string; postalCode?: string; country?: string };
 }
 
 export async function searchEbayListings(params: EbaySearchParams): Promise<EbaySearchResult[]> {
@@ -74,8 +90,23 @@ export async function searchEbayListings(params: EbaySearchParams): Promise<Ebay
 
   const searchParams = new URLSearchParams({ q: params.query, limit: String(params.limit ?? 24) });
   if (params.categoryId) searchParams.set('category_ids', params.categoryId);
-  if (params.maxPrice) {
-    searchParams.set('filter', `price:[..${params.maxPrice}],priceCurrency:USD`);
+
+  const filters: string[] = [];
+  if (params.minPrice != null || params.maxPrice != null) {
+    filters.push(`price:[${params.minPrice ?? ''}..${params.maxPrice ?? ''}]`, 'priceCurrency:USD');
+  }
+  if (params.condition) {
+    filters.push(`conditionIds:{${EBAY_CONDITION_IDS[params.condition]}}`);
+  }
+  if (params.nearMeOnly) {
+    // Free local pickup only - the standard way to get an eBay "near me" result set.
+    filters.push('maxDeliveryCost:0', 'deliveryCountry:US');
+  }
+  if (filters.length > 0) searchParams.set('filter', filters.join(','));
+
+  if (params.postalCode) {
+    searchParams.set('buyerPostalCode', params.postalCode);
+    if (params.nearMeOnly) searchParams.set('sort', 'distance');
   }
 
   const res = await fetch(`https://api.ebay.com/buy/browse/v1/item_summary/search?${searchParams}`, {
@@ -99,5 +130,77 @@ export async function searchEbayListings(params: EbaySearchParams): Promise<Ebay
     imageUrl: item.image?.imageUrl ?? null,
     itemWebUrl: item.itemWebUrl,
     categoryName: item.categories?.[0]?.categoryName ?? null,
+    location: [item.itemLocation?.city, item.itemLocation?.stateOrProvince].filter(Boolean).join(', ') || null,
   }));
+}
+
+interface EbayItemDetail {
+  itemId: string;
+  title: string;
+  price?: { value: string; currency: string };
+  condition?: string;
+  shortDescription?: string;
+  description?: string;
+  image?: { imageUrl: string };
+  itemWebUrl: string;
+  categoryPath?: string;
+}
+
+export interface EbayItem {
+  ebayItemId: string;
+  title: string;
+  price: number;
+  condition: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  itemWebUrl: string;
+  category: string | null;
+}
+
+// Fetch a single item by the numeric ID eBay puts in its item URLs
+// (ebay.com/itm/<legacyId> or ebay.com/itm/<title>/<legacyId>) - powers the
+// "paste a listing link" flow so a user doesn't have to retype everything.
+export async function getEbayItemByLegacyId(legacyItemId: string): Promise<EbayItem> {
+  const token = await getEbayAccessToken();
+
+  const res = await fetch(
+    `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${encodeURIComponent(legacyItemId)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-EBAY-C-MARKETPLACE-ID': process.env.EBAY_MARKETPLACE_ID || 'EBAY_US',
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`eBay item lookup failed: ${res.status} ${await res.text()}`);
+  }
+
+  const item = (await res.json()) as EbayItemDetail;
+
+  return {
+    ebayItemId: item.itemId,
+    title: item.title,
+    price: parseFloat(item.price?.value ?? '0'),
+    condition: item.condition ?? null,
+    description: item.shortDescription ?? item.description ?? null,
+    imageUrl: item.image?.imageUrl ?? null,
+    itemWebUrl: item.itemWebUrl,
+    category: item.categoryPath?.split('|').pop() ?? null,
+  };
+}
+
+// Pull the legacy numeric item ID out of a standard eBay item URL, e.g.
+// https://www.ebay.com/itm/Some-Title/123456789012 or
+// https://www.ebay.com/itm/123456789012?hash=...
+export function parseEbayItemId(url: string): string | null {
+  try {
+    const { hostname, pathname } = new URL(url);
+    if (!hostname.endsWith('ebay.com')) return null;
+    const match = pathname.match(/\/itm\/(?:[^/]+\/)?(\d{9,})/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
 }

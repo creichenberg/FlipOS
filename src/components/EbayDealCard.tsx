@@ -13,6 +13,7 @@ export interface EbayDeal {
   imageUrl: string | null;
   itemWebUrl: string;
   category: string | null;
+  location: string | null;
   flipScore: number;
   flipCategory: string;
   demand: string;
@@ -81,6 +82,7 @@ export default function EbayDealCard({ deal }: { deal: EbayDeal }) {
           <p className="truncate text-[13px] text-graphite">
             {deal.category ?? 'Uncategorized'}
             {deal.condition ? ` · ${deal.condition}` : ''}
+            {deal.location ? ` · ${deal.location}` : ''}
           </p>
           <h3 className="mt-0.5 truncate font-display text-base font-bold leading-tight">{deal.title}</h3>
         </div>

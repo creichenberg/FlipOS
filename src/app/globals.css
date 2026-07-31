@@ -39,10 +39,10 @@ input[type='checkbox'] {
 }
 
 @layer components {
-  /* White sheet - the base surface for cards/sections. Separated from the
-     canvas by a soft shadow, not a border. */
+  /* White sheet - the base surface for cards/sections. A visible hairline
+     outline plus a soft shadow, so a card reads as a clearly bounded card. */
   .surface {
-    @apply rounded-card bg-card shadow-soft;
+    @apply rounded-card border border-ink/[0.14] bg-card shadow-soft;
   }
 
   /* Solid black pill - the one high-contrast fill in the system, used for
