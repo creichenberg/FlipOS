@@ -9,8 +9,21 @@ export default async function SearchPage() {
   const ebayConfigured = Boolean(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET);
 
   const user = await getCurrentUser();
-  const preferences = await db.userPreference.findUnique({ where: { userId: user.id } });
-  const savedSearches = await db.savedSearch.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } });
+
+  // UserPreference and SavedSearch are queried defensively: SavedSearch is a
+  // newer table than the rest of the schema, and a database that hasn't been
+  // re-migrated (`npx prisma db push`) shouldn't take the whole page down -
+  // search itself doesn't depend on either of these.
+  const preferences = await db.userPreference.findUnique({ where: { userId: user.id } }).catch((err) => {
+    console.error('Could not load preferences - is the database migrated? (npx prisma db push)', err);
+    return null;
+  });
+  const savedSearches = await db.savedSearch
+    .findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } })
+    .catch((err) => {
+      console.error('Could not load saved searches - is the database migrated? (npx prisma db push)', err);
+      return [];
+    });
 
   return (
     <div>

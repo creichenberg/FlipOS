@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { searchEbayListings, EbayNotConfiguredError } from '@/lib/ebay';
-import { quickScoreListings } from '@/lib/ai';
+import { quickScoreListings, AnthropicNotConfiguredError } from '@/lib/ai';
 import { computeFinancialsFromRange, flipCategoryFromScore } from '@/types/flip';
 
 export const dynamic = 'force-dynamic';
+// Quick-scoring up to 24 listings in one Claude call can take a while -
+// give it real headroom instead of Vercel's short serverless default.
+export const maxDuration = 60;
 
 const RequestSchema = z.object({
   query: z.string().min(1),
@@ -55,6 +58,9 @@ export async function POST(req: NextRequest) {
       results.map((r) => ({ id: r.ebayItemId, title: r.title, price: r.price, condition: r.condition, category: r.categoryName }))
     );
   } catch (err) {
+    if (err instanceof AnthropicNotConfiguredError) {
+      return NextResponse.json({ error: err.message }, { status: 501 });
+    }
     console.error('Quick scoring failed', err);
     return NextResponse.json({ error: 'Could not score these listings. Try again in a moment.' }, { status: 502 });
   }

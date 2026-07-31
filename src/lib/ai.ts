@@ -1,7 +1,24 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { FlipAnalysisSchema, QuickScoreSchema, type FlipAnalysisResult, type QuickScoreResult } from '@/types/flip';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+export class AnthropicNotConfiguredError extends Error {
+  constructor() {
+    super('Claude analysis is not configured. Set ANTHROPIC_API_KEY.');
+    this.name = 'AnthropicNotConfiguredError';
+  }
+}
+
+// Constructed lazily (not at module load) so a missing key surfaces as a
+// clear, catchable error from the functions below instead of crashing every
+// route that imports this file the moment it's evaluated.
+let cachedClient: Anthropic | null | undefined;
+function getClient(): Anthropic {
+  if (cachedClient === undefined) {
+    cachedClient = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
+  }
+  if (!cachedClient) throw new AnthropicNotConfiguredError();
+  return cachedClient;
+}
 
 // Swap this for a cheaper/faster model once you've validated the prompt,
 // or a stronger one if scores feel too generic. See docs.claude.com for
@@ -135,7 +152,7 @@ export async function analyzeListing(input: AnalyzeListingInput): Promise<FlipAn
       .join('\n'),
   });
 
-  const response = await anthropic.messages.create({
+  const response = await getClient().messages.create({
     model: MODEL,
     max_tokens: 2000,
     system: SYSTEM_PROMPT,
@@ -220,7 +237,7 @@ export async function quickScoreListings(items: QuickScoreInput[]): Promise<Quic
     )
     .join('\n');
 
-  const response = await anthropic.messages.create({
+  const response = await getClient().messages.create({
     model: MODEL,
     max_tokens: 4000,
     system: QUICK_SCORE_SYSTEM_PROMPT,
