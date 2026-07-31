@@ -18,6 +18,9 @@ export interface SampleFlip {
   description: string;
   askingPrice: number;
   marketplace: string;
+  /** Wikimedia Commons photo of the real product, so demo cards aren't all
+   *  blank initial-letter tiles - freely licensed, stable URLs. */
+  imageUrl: string;
   analysis: {
     identifiedProduct: string;
     brand: string | null;
@@ -55,6 +58,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Used, some shelf wear, comes with battery and charger.',
     askingPrice: 650,
     marketplace: 'eBay',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Sony_Alpha7_III_20_apr_2018a.jpg/960px-Sony_Alpha7_III_20_apr_2018a.jpg',
     analysis: {
       identifiedProduct: 'Sony A7 III',
       brand: 'Sony',
@@ -88,6 +92,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Barely used, upgrading to R6 Mark II.',
     askingPrice: 400,
     marketplace: 'Facebook Marketplace',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Canon_R6_und_RF_85_2%2C0-8065.jpg/960px-Canon_R6_und_RF_85_2%2C0-8065.jpg',
     analysis: {
       identifiedProduct: 'Canon EOS R6 + RF 24-105mm f/4L',
       brand: 'Canon',
@@ -121,6 +126,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Worn twice, comes with original box.',
     askingPrice: 180,
     marketplace: 'eBay',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/1985_Air_Jordan_1s.jpg/960px-1985_Air_Jordan_1s.jpg',
     analysis: {
       identifiedProduct: 'Nike Air Jordan 1 Retro High OG "Chicago"',
       brand: 'Nike',
@@ -153,6 +159,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: '2-tool combo kit, used on one job, includes batteries and charger.',
     askingPrice: 75,
     marketplace: 'OfferUp',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Cordless_Drill_-_unbranded.jpg',
     analysis: {
       identifiedProduct: 'DeWalt DCK240C2 20V MAX Drill/Impact Combo Kit',
       brand: 'DeWalt',
@@ -185,6 +192,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Includes one controller and original box, upgrading to PS5 Pro.',
     askingPrice: 320,
     marketplace: 'Facebook Marketplace',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Black_and_white_Playstation_5_base_edition_with_controller.png/960px-Black_and_white_Playstation_5_base_edition_with_controller.png',
     analysis: {
       identifiedProduct: 'Sony PlayStation 5 (Disc Edition)',
       brand: 'Sony',
@@ -217,6 +226,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Office downsizing, chair is a few years old but well maintained.',
     askingPrice: 250,
     marketplace: 'Craigslist',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Aeron_Chair_by_Herman_Miller_%289446986497%29.jpg/960px-Aeron_Chair_by_Herman_Miller_%289446986497%29.jpg',
     analysis: {
       identifiedProduct: 'Herman Miller Aeron Chair, Size B (Remastered)',
       brand: 'Herman Miller',
@@ -249,6 +260,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Comes with box and papers, seller says authentic.',
     askingPrice: 4200,
     marketplace: 'Craigslist',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Rolex-Submariner.jpg/960px-Rolex-Submariner.jpg',
     analysis: {
       identifiedProduct: 'Rolex Submariner Date (ref. 126610LN, claimed)',
       brand: 'Rolex',
@@ -289,6 +301,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Small crack in corner of screen protector (screen itself fine), battery health 89%.',
     askingPrice: 380,
     marketplace: 'Mercari',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/IPhone_13_Pro_vector.svg/960px-IPhone_13_Pro_vector.svg.png',
     analysis: {
       identifiedProduct: 'Apple iPhone 13 Pro 256GB, Unlocked',
       brand: 'Apple',
@@ -321,6 +335,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Bought new, played maybe 10 times, includes gig bag.',
     askingPrice: 350,
     marketplace: 'Facebook Marketplace',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Black_Strat.jpg/960px-Black_Strat.jpg',
     analysis: {
       identifiedProduct: 'Fender Player Stratocaster, 3-Color Sunburst',
       brand: 'Fender',
@@ -353,6 +368,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Unopened, stored in a smoke-free home, seller has provenance photos.',
     askingPrice: 3200,
     marketplace: 'eBay',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Pok%C3%A9mon_Trading_Card_Game_logo.svg/960px-Pok%C3%A9mon_Trading_Card_Game_logo.svg.png',
     analysis: {
       identifiedProduct: 'Pokemon Trading Card Game, Base Set Booster Box (Sealed, Unweighed)',
       brand: 'Wizards of the Coast',
@@ -392,6 +409,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Moving out of state, must sell, buyer arranges pickup.',
     askingPrice: 900,
     marketplace: 'Craigslist',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Magnetic_resistance_stationary_bicycle_exercise_bike.JPG/960px-Magnetic_resistance_stationary_bicycle_exercise_bike.JPG',
     analysis: {
       identifiedProduct: 'Peloton Bike+',
       brand: 'Peloton',
@@ -428,6 +447,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Used for a few holiday baking seasons, all attachments included.',
     askingPrice: 90,
     marketplace: 'OfferUp',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Red_KitchenAid_Artisan.jpg/960px-Red_KitchenAid_Artisan.jpg',
     analysis: {
       identifiedProduct: 'KitchenAid Artisan Series 5-Quart Stand Mixer',
       brand: 'KitchenAid',
@@ -460,6 +480,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Great condition, seller includes dust bag, no receipt.',
     askingPrice: 650,
     marketplace: 'Poshmark',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Hacking_bandouliere_sac_Louis_Vuitton_noe_Toile_monogram_avant_apres.jpg/960px-Hacking_bandouliere_sac_Louis_Vuitton_noe_Toile_monogram_avant_apres.jpg',
     analysis: {
       identifiedProduct: 'Louis Vuitton Neverfull MM, Monogram Canvas (claimed)',
       brand: 'Louis Vuitton',
@@ -500,6 +522,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'One season of use, garage kept, minor drivetrain wear.',
     askingPrice: 900,
     marketplace: 'eBay',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/2012_Trek_1.1_Road_Bike.jpg/960px-2012_Trek_1.1_Road_Bike.jpg',
     analysis: {
       identifiedProduct: 'Trek Domane SL5, 56cm, Disc Brake',
       brand: 'Trek',
@@ -532,6 +555,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Used a handful of times, no cracks, comes with basket.',
     askingPrice: 150,
     marketplace: 'Facebook Marketplace',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/4/47/Rubbermaid_DuraChill_Cooler_-_Ice_Chest_%282613253830%29.jpg',
     analysis: {
       identifiedProduct: 'Yeti Tundra 65 Hard Cooler',
       brand: 'Yeti',
@@ -564,6 +589,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Bought as part of a bundle, do not need the extra driver.',
     askingPrice: 55,
     marketplace: 'OfferUp',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Ryobi_impact_driver.JPG/960px-Ryobi_impact_driver.JPG',
     analysis: {
       identifiedProduct: 'Milwaukee M18 FUEL 1/4" Hex Impact Driver (2853-20), Tool Only',
       brand: 'Milwaukee',
@@ -596,6 +622,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Light scratches on the dock, console/screen fine.',
     askingPrice: 200,
     marketplace: 'Mercari',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Nintendo_Switch_OLED_Model.jpg/960px-Nintendo_Switch_OLED_Model.jpg',
     analysis: {
       identifiedProduct: 'Nintendo Switch OLED Model, White',
       brand: 'Nintendo',
@@ -628,6 +655,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'A few small stains on the cushions, structurally solid.',
     askingPrice: 200,
     marketplace: 'Craigslist',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Couch-furniture-living-room-sofa_%2824300293356%29.jpg/960px-Couch-furniture-living-room-sofa_%2824300293356%29.jpg',
     analysis: {
       identifiedProduct: 'West Elm Mid-Century 3-Seater Sofa',
       brand: 'West Elm',
@@ -664,6 +693,8 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: 'Professional use, well maintained, low shutter count noted by seller.',
     askingPrice: 900,
     marketplace: 'eBay',
+    imageUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Canon_EOS_5D_Mark_IV_and_EF_11-24mm_F4L_USM.jpg/960px-Canon_EOS_5D_Mark_IV_and_EF_11-24mm_F4L_USM.jpg',
     analysis: {
       identifiedProduct: 'Canon EOS 5D Mark IV',
       brand: 'Canon',
@@ -696,6 +727,7 @@ export const DEMO_FLIPS: SampleFlip[] = [
     description: '1970s piece, running but not recently serviced, some case wear.',
     askingPrice: 700,
     marketplace: 'eBay',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Omega-Seamaster-p1020458.jpg/960px-Omega-Seamaster-p1020458.jpg',
     analysis: {
       identifiedProduct: 'Omega Seamaster Automatic, c. 1970s',
       brand: 'Omega',
@@ -740,6 +772,7 @@ export async function seedDemoFlips(db: PrismaClient, userId: string): Promise<n
         description: s.description,
         askingPrice: s.askingPrice,
         marketplace: s.marketplace,
+        imageUrls: [s.imageUrl],
       },
     });
 
