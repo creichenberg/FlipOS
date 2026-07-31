@@ -3,8 +3,9 @@
 AI-powered flip analysis for resellers. Upload a listing, get a Flip Score, a buy/negotiate/pass
 call, and a ready-to-post selling plan.
 
-This is the **Phase 1 MVP**: upload → AI analysis → Flip Score → save/track. eBay search
-(Phase 2) and deal alerts (Phase 3) are stubbed out in the architecture but not built yet.
+Phase 1 (upload → AI analysis → Flip Score → save/track) and Phase 2 (eBay Browse API search +
+filters) are built. Deal alerts and more marketplaces (Phase 3) are stubbed out in the
+architecture but not built yet.
 
 ## Stack
 
@@ -46,19 +47,24 @@ src/
   app/
     page.tsx                 Homepage - "Today's Best Flips"
     upload/page.tsx           Upload a listing
+    search/page.tsx           Find Deals - live eBay search + filters (Phase 2)
     analysis/[id]/page.tsx    Full Flip Score breakdown
     saved/page.tsx            Saved flips + status tracking
     api/
       analyze/route.ts        POST listing -> AI analysis -> DB row
+      ebay/search/route.ts    POST search terms -> eBay results -> quick-scored deals
+      preferences/route.ts    GET/PUT saved default search filters
       flips/route.ts          GET/POST saved flips
       flips/[id]/route.ts     PATCH status (saved/purchased/listed/sold)
-  components/                 DealCard, FlipScoreBadge, UploadForm, AnalysisResult, etc.
+  components/                 DealCard, EbayDealCard, SearchForm, FlipScoreBadge, UploadForm, etc.
   lib/
-    ai.ts                     Claude call + tool schema (the core product logic)
+    ai.ts                     Claude calls (full analysis + batched quick-score) + tool schemas
+    ebay.ts                   eBay Browse API client (OAuth token cache + search)
+    ebayCategories.ts         Curated eBay category id list for the search filter dropdown
     auth.ts                   Current-user resolution (demo account for now)
     db.ts                     Prisma client singleton
   types/
-    flip.ts                   Zod schema = AI output shape = TS types (single source of truth)
+    flip.ts                   Zod schemas = AI output shapes = TS types (single source of truth)
 prisma/
   schema.prisma                Users, UserPreference, Listing, FlipAnalysis, SavedFlip
   seed.ts                       Demo user + sample flips
@@ -85,8 +91,11 @@ Six models, matching the spec:
 
 - [x] **Phase 1** - Upload listing, AI analysis, Flip Score, financials, risk, buying + selling
       strategy, save/track through sold.
-- [ ] **Phase 2** - eBay Browse API search, filters (category/max price/min profit/min ROI),
-      deal ranking on the homepage. `UserPreference` model is already there for this.
+- [x] **Phase 2** - `/search` hits the eBay Browse API (client-credentials OAuth, cached token)
+      with query/category/max price, quick-scores the page of results in one batched Claude
+      call, ranks by Flip Score, and supports min profit/min ROI filters computed in code from
+      those scores. A result can be promoted into the full `analyzeListing()` flow with one
+      click. Default filters save to `UserPreference` via `/api/preferences`.
 - [ ] **Phase 3** - Deal alerts (needs a cron/queue - Vercel Cron or a worker polling saved
       searches), more marketplace integrations, bulk/portfolio analytics.
 
@@ -97,9 +106,9 @@ Six models, matching the spec:
   for NextAuth once you're ready for real users.
 - **Photo storage** - uploaded photos are sent straight to Claude for analysis and not persisted
   to object storage yet. Add S3/Cloudflare R2 and store `imageUrls` on `Listing` before you need
-  to show photos back to the user (e.g. in the saved flips list).
-- **eBay integration** - Option 1 (search eBay for deals) is Phase 2 per your plan; the schema
-  and homepage query are already shaped to make that a ranking/filter change, not a rebuild.
+  to show photos back to the user (e.g. in the saved flips list). eBay search results inherit
+  this too - quick-scoring and the one-click full analysis run on title/price/condition only, no
+  photos, until image fetching is wired up.
 
 ## Future improvements
 

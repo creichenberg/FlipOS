@@ -42,6 +42,25 @@ export const FlipAnalysisSchema = z.object({
 
 export type FlipAnalysisResult = z.infer<typeof FlipAnalysisSchema>;
 
+// Phase 2: a lighter-weight tool schema for triaging a page of eBay search
+// results at once. Deliberately thinner than FlipAnalysisSchema (no risk/
+// buying/selling strategy, no photos) - it's meant to rank many listings
+// fast, not replace the full analysis a user runs before actually buying.
+export const QuickScoreSchema = z.object({
+  scores: z.array(
+    z.object({
+      id: z.string().describe('Echo back the listing id exactly as given'),
+      flipScore: z.number().min(0).max(100),
+      estimatedResaleValueLow: z.number(),
+      estimatedResaleValueHigh: z.number(),
+      demand: z.enum(['HIGH', 'MEDIUM', 'LOW']),
+      reasoning: z.string().describe('One sentence, specific to this exact listing'),
+    })
+  ),
+});
+
+export type QuickScoreResult = z.infer<typeof QuickScoreSchema>;
+
 // Derived financials - computed in code, never trusted from the model,
 // since profit/ROI must be internally consistent with price + resale value.
 export interface FlipFinancials {
@@ -51,8 +70,12 @@ export interface FlipFinancials {
   roi: number; // percent
 }
 
-export function computeFinancials(askingPrice: number, result: FlipAnalysisResult): FlipFinancials {
-  const midResale = (result.market.estimatedResaleValueLow + result.market.estimatedResaleValueHigh) / 2;
+export function computeFinancialsFromRange(
+  askingPrice: number,
+  resaleValueLow: number,
+  resaleValueHigh: number
+): FlipFinancials {
+  const midResale = (resaleValueLow + resaleValueHigh) / 2;
   const estimatedProfit = midResale - askingPrice;
   const roi = askingPrice > 0 ? (estimatedProfit / askingPrice) * 100 : 0;
   return {
@@ -61,6 +84,10 @@ export function computeFinancials(askingPrice: number, result: FlipAnalysisResul
     estimatedProfit: Math.round(estimatedProfit),
     roi: Math.round(roi * 10) / 10,
   };
+}
+
+export function computeFinancials(askingPrice: number, result: FlipAnalysisResult): FlipFinancials {
+  return computeFinancialsFromRange(askingPrice, result.market.estimatedResaleValueLow, result.market.estimatedResaleValueHigh);
 }
 
 export function flipCategoryFromScore(score: number): 'EXCEPTIONAL' | 'STRONG' | 'AVERAGE' | 'WEAK' | 'AVOID' {

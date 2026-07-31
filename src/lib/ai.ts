@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { FlipAnalysisSchema, type FlipAnalysisResult } from '@/types/flip';
+import { FlipAnalysisSchema, QuickScoreSchema, type FlipAnalysisResult, type QuickScoreResult } from '@/types/flip';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -154,4 +154,85 @@ export async function analyzeListing(input: AnalyzeListingInput): Promise<FlipAn
   // Validate against the Zod schema so a malformed model response fails loudly
   // here instead of corrupting the database.
   return FlipAnalysisSchema.parse(toolUse.input);
+}
+
+// Phase 2: triage a page of eBay search results at once. No photos, no
+// risk/buying/selling strategy - just enough to rank a search results page
+// by flip potential. Users click into the full analyzeListing() flow above
+// for anything they actually want to act on.
+const QUICK_SCORE_SYSTEM_PROMPT = `You are FlipOS's market analyst, doing a fast first pass over a page of
+secondhand listings to triage them for resale ("flipping") potential - the way a reseller
+skims a search results page before opening anything.
+
+Rules:
+- You only have a title, asking price, condition string, and category for each listing - no
+  photos, no description. Estimate accordingly and keep the resale range wide when the title
+  is ambiguous about model/condition specifics.
+- flipScore (0-100) should weigh estimated profit margin, ROI, and demand/liquidity for that
+  specific product - not just raw price.
+- reasoning is one sentence, specific to that exact listing (mention the product, not generic
+  advice).
+- Return exactly one score per listing id given, in any order, echoing the id back exactly.
+
+Call the submit_quick_scores tool exactly once with all scores. Do not respond in plain text.`;
+
+const QUICK_SCORE_TOOL: Anthropic.Tool = {
+  name: 'submit_quick_scores',
+  description: 'Submit flip-potential triage scores for a batch of listings.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      scores: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            flipScore: { type: 'number' },
+            estimatedResaleValueLow: { type: 'number' },
+            estimatedResaleValueHigh: { type: 'number' },
+            demand: { type: 'string', enum: ['HIGH', 'MEDIUM', 'LOW'] },
+            reasoning: { type: 'string' },
+          },
+          required: ['id', 'flipScore', 'estimatedResaleValueLow', 'estimatedResaleValueHigh', 'demand', 'reasoning'],
+        },
+      },
+    },
+    required: ['scores'],
+  },
+};
+
+export interface QuickScoreInput {
+  id: string;
+  title: string;
+  price: number;
+  condition?: string | null;
+  category?: string | null;
+}
+
+export async function quickScoreListings(items: QuickScoreInput[]): Promise<QuickScoreResult['scores']> {
+  if (items.length === 0) return [];
+
+  const listingText = items
+    .map(
+      (item, i) =>
+        `${i + 1}. id=${item.id} | "${item.title}" | $${item.price} | condition: ${item.condition ?? 'unknown'} | category: ${item.category ?? 'unknown'}`
+    )
+    .join('\n');
+
+  const response = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 4000,
+    system: QUICK_SCORE_SYSTEM_PROMPT,
+    tools: [QUICK_SCORE_TOOL],
+    tool_choice: { type: 'tool', name: 'submit_quick_scores' },
+    messages: [{ role: 'user', content: `Triage these ${items.length} listings for flip potential:\n\n${listingText}` }],
+  });
+
+  const toolUse = response.content.find((block) => block.type === 'tool_use');
+  if (!toolUse || toolUse.type !== 'tool_use') {
+    throw new Error('Model did not return quick scores');
+  }
+
+  return QuickScoreSchema.parse(toolUse.input).scores;
 }

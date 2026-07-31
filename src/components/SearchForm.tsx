@@ -1,0 +1,175 @@
+'use client';
+
+import { useState } from 'react';
+import { EBAY_CATEGORIES } from '@/lib/ebayCategories';
+import EbayDealCard, { type EbayDeal } from './EbayDealCard';
+
+export interface InitialPreferences {
+  categories: string[];
+  maxPurchasePrice: number | null;
+  minProfit: number | null;
+  minROI: number | null;
+}
+
+export default function SearchForm({ initialPreferences }: { initialPreferences: InitialPreferences | null }) {
+  const [query, setQuery] = useState('');
+  const [categoryLabel, setCategoryLabel] = useState(initialPreferences?.categories[0] ?? EBAY_CATEGORIES[0].label);
+  const [maxPrice, setMaxPrice] = useState(initialPreferences?.maxPurchasePrice?.toString() ?? '');
+  const [minProfit, setMinProfit] = useState(initialPreferences?.minProfit?.toString() ?? '');
+  const [minROI, setMinROI] = useState(initialPreferences?.minROI?.toString() ?? '');
+  const [saveDefaults, setSaveDefaults] = useState(false);
+
+  const [status, setStatus] = useState<'idle' | 'searching' | 'error'>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const [deals, setDeals] = useState<EbayDeal[] | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus('searching');
+    setError(null);
+
+    const category = EBAY_CATEGORIES.find((c) => c.label === categoryLabel);
+
+    try {
+      const res = await fetch('/api/ebay/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query,
+          categoryId: category?.categoryId,
+          maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+          minProfit: minProfit ? parseFloat(minProfit) : undefined,
+          minROI: minROI ? parseFloat(minROI) : undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Search failed. Try again.');
+      }
+
+      const body = await res.json();
+      setDeals(body.deals);
+      setStatus('idle');
+
+      if (saveDefaults) {
+        fetch('/api/preferences', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            categories: category?.categoryId ? [category.label] : [],
+            maxPurchasePrice: maxPrice ? parseFloat(maxPrice) : null,
+            minProfit: minProfit ? parseFloat(minProfit) : null,
+            minROI: minROI ? parseFloat(minROI) : null,
+          }),
+        }).catch(() => {});
+      }
+    } catch (err) {
+      setStatus('error');
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    }
+  }
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-card border border-white/10 bg-ink-soft p-4 sm:p-5">
+        <div>
+          <label className="block text-sm font-medium text-graphite">What are you looking for?</label>
+          <input
+            required
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="e.g. Sony A7 III"
+            className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block text-sm font-medium text-graphite">Category</label>
+            <select
+              value={categoryLabel}
+              onChange={(e) => setCategoryLabel(e.target.value)}
+              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper"
+            >
+              {EBAY_CATEGORIES.map((c) => (
+                <option key={c.label} value={c.label}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-graphite">Max price</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Any"
+              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-graphite">Min profit</label>
+            <input
+              type="number"
+              step="1"
+              value={minProfit}
+              onChange={(e) => setMinProfit(e.target.value)}
+              placeholder="Any"
+              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-graphite">Min ROI %</label>
+            <input
+              type="number"
+              step="1"
+              value={minROI}
+              onChange={(e) => setMinROI(e.target.value)}
+              placeholder="Any"
+              className="mt-1 w-full rounded-card border border-white/15 bg-ink px-3 py-2 text-paper placeholder:text-graphite"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-sm text-graphite">
+            <input type="checkbox" checked={saveDefaults} onChange={(e) => setSaveDefaults(e.target.checked)} />
+            Save these as my default filters
+          </label>
+          <button
+            type="submit"
+            disabled={status === 'searching'}
+            className="rounded-card bg-profit px-5 py-2 font-display font-semibold text-paper transition-opacity disabled:opacity-60"
+          >
+            {status === 'searching' ? 'Searching...' : 'Find Deals'}
+          </button>
+        </div>
+
+        {error && <p className="text-sm text-risk">{error}</p>}
+      </form>
+
+      {deals !== null && (
+        <div className="mt-6">
+          {deals.length === 0 ? (
+            <div className="rounded-card border border-dashed border-white/20 p-10 text-center">
+              <p className="font-display text-lg font-semibold">No deals matched</p>
+              <p className="mx-auto mt-1 max-w-sm text-sm text-graphite">
+                Try a broader search term or loosen your min profit / ROI filters.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {deals.map((deal) => (
+                <EbayDealCard key={deal.ebayItemId} deal={deal} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

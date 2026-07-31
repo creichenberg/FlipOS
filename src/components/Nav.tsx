@@ -11,6 +11,9 @@ export default function Nav() {
           <Link href="/" className="hover:text-paper">
             Best Flips
           </Link>
+          <Link href="/search" className="hover:text-paper">
+            Find Deals
+          </Link>
           <Link href="/saved" className="hover:text-paper">
             Saved
           </Link>

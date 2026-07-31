@@ -7,8 +7,14 @@ rationale: see `README.md`.
 ## Status
 
 Phase 1 is built: upload listing → Claude analysis (tool-use, forced JSON) → Flip Score →
-financials/risk/buying/selling strategy → save and track through sold. Not yet started: Phase 2
-(eBay Browse API search + filters) and Phase 3 (deal alerts, more marketplaces).
+financials/risk/buying/selling strategy → save and track through sold.
+
+Phase 2 is built: `/search` searches live eBay listings (Browse API, client-credentials OAuth),
+quick-scores a page of results in one batched Claude call (`quickScoreListings()` in
+`src/lib/ai.ts`), ranks/filters by category/max price/min profit/min ROI, and lets a result be
+promoted into the full `analyzeListing()` flow with one click. `UserPreference` now backs
+save-able default filters via `src/app/api/preferences/route.ts`. Not yet started: Phase 3 (deal
+alerts, more marketplaces).
 
 ## Non-negotiable design decisions - don't relitigate these without discussion
 
@@ -41,6 +47,10 @@ npm run db:studio   # inspect data
 
 ## Key files to read before touching AI logic
 
-- `src/lib/ai.ts` - the Claude call, system prompt, and tool schema
-- `src/types/flip.ts` - the shared schema/types
-- `src/app/api/analyze/route.ts` - how an analysis becomes DB rows
+- `src/lib/ai.ts` - the Claude calls (`analyzeListing()` for full analysis, `quickScoreListings()`
+  for batched Phase 2 search triage), system prompts, and tool schemas
+- `src/types/flip.ts` - the shared schema/types (`FlipAnalysisSchema` for full analysis,
+  `QuickScoreSchema` for triage; both feed `computeFinancialsFromRange()`)
+- `src/app/api/analyze/route.ts` - how a full analysis becomes DB rows
+- `src/lib/ebay.ts` - eBay Browse API client (OAuth token cache + search), used by
+  `src/app/api/ebay/search/route.ts`
