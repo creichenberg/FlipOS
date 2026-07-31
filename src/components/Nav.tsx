@@ -21,6 +21,12 @@ export default function Nav() {
             Find Deals
           </Link>
           <Link
+            href="/explore"
+            className="hidden rounded-full px-3 py-1.5 font-medium text-graphite transition-colors hover:text-ink sm:inline"
+          >
+            Explore
+          </Link>
+          <Link
             href="/saved"
             className="hidden rounded-full px-3 py-1.5 font-medium text-graphite transition-colors hover:text-ink sm:inline"
           >

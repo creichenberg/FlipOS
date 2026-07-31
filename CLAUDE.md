@@ -41,6 +41,12 @@ started: more marketplace integrations, portfolio analytics.
   validated. Don't build auth UI without discussing first - the swap-in path for NextAuth is
   documented in that file.
 
+`/explore` is a Tinder-style swipeable card stack over the same ranked deals as the homepage
+(`getTopDeals()` in `src/lib/deals.ts`, shared by both) - drag right to save (calls the same
+`/api/flips` POST as the analysis page's Save button), drag left to pass, tap Details to open the
+full analysis. Built with `framer-motion` (`SwipeStack.tsx`/`ExploreCard.tsx`); explicit ✕/heart
+buttons drive the same exit-animation path as a real drag so it isn't touch-only.
+
 ## Design language
 
 Light, near-monochrome, card-and-pill UI modeled directly on a specific reference (a travel-app
@@ -56,11 +62,17 @@ rating-chip (`FlipScoreBadge.tsx`) - a tier-colored dot plus the number, echoing
 star-rating treatment. Mobile gets a floating black pill bottom-nav (`MobileNav.tsx`, `sm:hidden`)
 matching the reference's mobile nav pattern; the top `Nav.tsx` link cluster is desktop-only
 (`hidden sm:inline`). Reusable primitives - `.surface`, `.pill-primary` (solid black), `.pill-secondary`
-(white + shadow), `.icon-btn`, `.field` / `.field-pill` - live in `src/app/globals.css`
+(white + shadow), `.icon-btn`, `.field` / `.field-pill`, `.surface-interactive` (hover-lift +
+press-settle, for clickable cards specifically) - live in `src/app/globals.css`
 `@layer components`; reach for those before writing new one-off styling. Full tokens in
 `tailwind.config.ts`. Two prior directions (a dark "paper index-card" look and a dark "Apple
 Wallet" glassmorphism look) were tried and explicitly rejected as generic/AI-slop - don't revert
 to either without discussion.
+
+Motion is deliberate, not decorative: card grids fade/slide in staggered (`.animate-card-in`),
+buttons settle on press (`active:scale-95` baked into the pill/icon-btn classes), and `/explore`'s
+drag physics use `framer-motion`. Respect `prefers-reduced-motion` (already handled globally in
+`globals.css`) rather than adding animations that ignore it.
 
 ## Commands
 

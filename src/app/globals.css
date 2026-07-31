@@ -45,33 +45,55 @@ input[type='checkbox'] {
     @apply rounded-card border border-ink/[0.14] bg-card shadow-soft;
   }
 
+  /* Interactive variant - a card you can click. Lifts on hover, settles on
+     press, instead of sitting dead-flat like the static form panels. */
+  .surface-interactive {
+    @apply surface transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-tight active:translate-y-0 active:shadow-soft active:duration-75;
+  }
+
   /* Solid black pill - the one high-contrast fill in the system, used for
      the primary action and any "selected" state. */
   .pill-primary {
-    @apply rounded-full bg-ink py-3 text-center font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40;
+    @apply rounded-full bg-ink py-3 text-center font-medium text-white transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:active:scale-100;
   }
 
   /* White pill with a soft shadow instead of a border - secondary action /
      unselected chip state. */
   .pill-secondary {
-    @apply rounded-full bg-card py-3 text-center font-medium text-ink shadow-tight transition-shadow hover:shadow-soft;
+    @apply rounded-full bg-card py-3 text-center font-medium text-ink shadow-tight transition-[box-shadow,transform] duration-150 hover:shadow-soft active:scale-95;
   }
 
   /* Small round icon button - floats over image areas (back, favorite). */
   .icon-btn {
-    @apply flex h-9 w-9 items-center justify-center rounded-full bg-card text-ink shadow-tight transition-shadow hover:shadow-soft;
+    @apply flex h-9 w-9 items-center justify-center rounded-full bg-card text-ink shadow-tight transition-[box-shadow,transform] duration-150 hover:shadow-soft active:scale-90;
   }
 
   /* White field with a soft shadow, no border - same elevation language as
      the search bar, but a control radius so multi-line fields don't blob. */
   .field {
-    @apply w-full rounded-control border-0 bg-card px-4 py-3 text-ink shadow-tight placeholder:text-graphite focus:shadow-soft;
+    @apply w-full rounded-control border-0 bg-card px-4 py-3 text-ink shadow-tight placeholder:text-graphite transition-shadow focus:shadow-soft;
   }
 
   /* Full-pill variant for single-line search-style inputs. */
   .field-pill {
     @apply field rounded-full;
   }
+}
+
+/* Staggered fade-up entrance for card grids (see animationDelay usage). */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-in {
+  animation: card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

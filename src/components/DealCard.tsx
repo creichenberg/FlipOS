@@ -30,7 +30,7 @@ export default function DealCard({ deal }: { deal: DealCardData }) {
   const initial = (deal.category ?? deal.productTitle).charAt(0).toUpperCase();
 
   return (
-    <Link href={`/analysis/${deal.analysisId}`} className="surface block p-4 text-ink transition-shadow hover:shadow-tight sm:p-5">
+    <Link href={`/analysis/${deal.analysisId}`} className="surface-interactive block p-4 text-ink sm:p-5">
       <div className="flex items-start gap-3">
         {deal.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

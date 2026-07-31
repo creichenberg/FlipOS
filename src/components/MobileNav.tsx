@@ -17,6 +17,16 @@ const ITEMS = [
     icon: <><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.3-4.3" /></>,
   },
   {
+    href: '/explore',
+    label: 'Explore',
+    icon: (
+      <>
+        <rect x="6" y="8" width="12" height="13" rx="2" transform="rotate(-6 12 14.5)" opacity="0.5" />
+        <rect x="6" y="6" width="12" height="13" rx="2" />
+      </>
+    ),
+  },
+  {
     href: '/saved',
     label: 'Saved',
     icon: <path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1Z" />,
@@ -41,11 +51,11 @@ export default function MobileNav() {
               key={item.href}
               href={item.href}
               aria-label={item.label}
-              className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                 active ? 'bg-white text-ink' : 'text-white/70'
               }`}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
                 {item.icon}
               </svg>
             </Link>

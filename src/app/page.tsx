@@ -1,42 +1,26 @@
 import Link from 'next/link';
-import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
-import DealCard, { type DealCardData } from '@/components/DealCard';
+import { getTopDeals } from '@/lib/deals';
+import DealCard from '@/components/DealCard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-
-  const analyses = await db.flipAnalysis.findMany({
-    where: { listing: { userId: user.id } },
-    include: { listing: true },
-    orderBy: { flipScore: 'desc' },
-    take: 20,
-  });
-
-  const deals: DealCardData[] = analyses.map((a) => ({
-    analysisId: a.id,
-    productTitle: a.identifiedProduct,
-    category: a.category,
-    marketplace: a.listing.marketplace,
-    imageUrl: a.listing.imageUrls[0] ?? null,
-    askingPrice: a.listing.askingPrice,
-    estimatedResaleValue: Math.round((a.estimatedResaleValueLow + a.estimatedResaleValueHigh) / 2),
-    estimatedProfit: Math.round(a.estimatedProfit),
-    flipScore: a.flipScore,
-    flipCategory: a.flipCategory,
-    demand: a.demand,
-    riskFactorCount: a.riskFactors.length,
-  }));
+  const deals = await getTopDeals(user.id);
 
   return (
     <div>
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 flex items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Today&apos;s Best Flips</h1>
           <p className="mt-1 text-sm text-graphite">Ranked by Flip Score, highest first.</p>
         </div>
+        {deals.length > 0 && (
+          <Link href="/explore" className="pill-secondary hidden shrink-0 px-4 py-2 text-sm sm:inline-block">
+            Explore →
+          </Link>
+        )}
       </div>
 
       {deals.length === 0 ? (
@@ -51,8 +35,14 @@ export default async function HomePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {deals.map((deal) => (
-            <DealCard key={deal.analysisId} deal={deal} />
+          {deals.map((deal, i) => (
+            <div
+              key={deal.analysisId}
+              className="animate-card-in"
+              style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+            >
+              <DealCard deal={deal} />
+            </div>
           ))}
         </div>
       )}

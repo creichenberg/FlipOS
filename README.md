@@ -7,8 +7,9 @@ Phase 1 (upload → AI analysis → Flip Score → save/track), Phase 2 (eBay Br
 category/price-range/condition/near-me filters), and the deal-alerts half of Phase 3 (saved
 searches, cron-driven re-checks, email notifications) are built. `/upload` also accepts a pasted
 listing link (eBay via the Browse API, other marketplaces best-effort via Open Graph/JSON-LD)
-instead of typing everything by hand. More marketplace integrations and portfolio analytics are
-still open.
+instead of typing everything by hand. `/explore` is a swipeable card stack over your ranked
+flips (drag/tap right to save, left to pass) built with `framer-motion`. More marketplace
+integrations and portfolio analytics are still open.
 
 ## Stack
 
@@ -20,6 +21,7 @@ still open.
   parsing free text, and accepts listing photos directly for condition assessment.
 - **Zod** - one schema (`src/types/flip.ts`) shared by the AI tool definition, the API request
   validation, and the TypeScript types. Change it once, everything else follows.
+- **Framer Motion** - drag physics + exit animations for the `/explore` swipe stack.
 
 ## Why this stack
 
@@ -51,6 +53,7 @@ src/
     page.tsx                 Homepage - "Today's Best Flips"
     upload/page.tsx           Upload a listing
     search/page.tsx           Find Deals - live eBay search + filters (Phase 2) + saved alerts
+    explore/page.tsx          Swipeable card stack over your ranked flips
     analysis/[id]/page.tsx    Full Flip Score breakdown
     saved/page.tsx            Saved flips + status tracking
     api/
@@ -64,13 +67,14 @@ src/
       flips/route.ts          GET/POST saved flips
       flips/[id]/route.ts     PATCH status (saved/purchased/listed/sold)
   components/                 DealCard, EbayDealCard, SearchForm, SavedSearchList, FlipScoreBadge,
-                               UploadForm, Nav, MobileNav, etc.
+                               UploadForm, Nav, MobileNav, SwipeStack, ExploreCard, etc.
   lib/
     ai.ts                     Claude calls (full analysis + batched quick-score) + tool schemas
     ebay.ts                   eBay Browse API client (OAuth token cache + search + single-item
                                lookup by legacy ID, used by the paste-a-link flow)
     ebayCategories.ts         Curated eBay category id list for the search filter dropdown
     listingLookup.ts          Best-effort Open Graph/JSON-LD scrape for non-eBay listing URLs
+    deals.ts                  getTopDeals() - shared ranked-deals query (homepage + /explore)
     email.ts                  Resend client + deal-alert email template
     auth.ts                   Current-user resolution (demo account for now)
     db.ts                     Prisma client singleton
