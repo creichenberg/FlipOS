@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { getClient, MODEL } from './client';
 import { buildBrandContextBlock } from './brandContext';
+import { mockVideoDetail } from './mock';
 import type { Business, VideoCard } from '@/lib/types/database';
 
 const ShotSchema = z.object({
@@ -48,6 +49,10 @@ Rules:
 - caption and hashtags should be ready to post as-is on the platform this content is meant for.`;
 
 export async function generateVideoDetail(business: Business, card: VideoCard): Promise<VideoDetailResult> {
+  // Zero-cost path for testing the app without spending Anthropic credits -
+  // see .env.example. Never set in a real deploy meant for actual customers.
+  if (process.env.MOCK_AI === 'true') return mockVideoDetail(business, card);
+
   const client = getClient();
   const brandContext = buildBrandContextBlock(business);
 

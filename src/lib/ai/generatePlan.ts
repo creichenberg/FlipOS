@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { getClient, MODEL } from './client';
 import { buildBrandContextBlock } from './brandContext';
+import { mockWeeklyPlan } from './mock';
 import type { Business, ContentGoal } from '@/lib/types/database';
 
 const ContentGoalSchema = z.enum(['educate', 'sell', 'entertain', 'build_trust', 'engage']);
@@ -39,6 +40,10 @@ Rules:
 - Return exactly 7 ideas, one per day of the week (dayOfWeek 0-6, Sunday-Saturday).`;
 
 export async function generateWeeklyPlan(business: Business): Promise<WeeklyPlanCard[]> {
+  // Zero-cost path for testing the app without spending Anthropic credits -
+  // see .env.example. Never set in a real deploy meant for actual customers.
+  if (process.env.MOCK_AI === 'true') return mockWeeklyPlan(business);
+
   const client = getClient();
   const brandContext = buildBrandContextBlock(business);
 
