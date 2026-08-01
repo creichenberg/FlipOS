@@ -5,7 +5,7 @@ import type { Database } from '@/lib/types/database';
 const PUBLIC_PATHS = ['/login', '/auth/callback', '/', '/pricing'];
 
 function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.includes(pathname) || pathname.startsWith('/api/webhooks');
+  return PUBLIC_PATHS.includes(pathname);
 }
 
 // Runs on every request. Refreshes the session cookie (required for
@@ -36,6 +36,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // API routes authenticate and authorize themselves (each does its own
+  // supabase.auth.getUser() check and returns a proper 401/404 JSON body) -
+  // they must never be subject to the page-redirect logic below. Without
+  // this, POSTing to /api/onboarding/business while a business row doesn't
+  // exist yet gets redirected to the /onboarding *page* (a fetch() client
+  // expecting JSON gets an HTML/405 response instead), which is exactly the
+  // request that's supposed to create that row in the first place.
+  if (pathname.startsWith('/api/')) {
+    return response;
+  }
 
   if (!user && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
