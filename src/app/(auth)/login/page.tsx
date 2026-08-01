@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ThemeToggle } from '@/components/design-system/ThemeToggle';
 
 type EmailStatus = 'idle' | 'sending' | 'sent' | 'error';
 type PhoneStatus = 'idle' | 'sending' | 'verifying' | 'error';
@@ -123,33 +122,29 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -left-32 -top-40 h-96 w-96 rounded-full bg-primary/30 blur-[110px]" />
       <div className="pointer-events-none absolute -bottom-40 -right-32 h-96 w-96 rounded-full bg-primary/25 blur-[110px]" />
 
-      <div className="absolute right-6 top-6 z-20">
-        <ThemeToggle />
-      </div>
-
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5)] backdrop-blur-md dark:border-white/15 dark:bg-white/10">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5)] backdrop-blur-md">
             <span className="text-sm font-semibold text-primary">B</span>
           </div>
           <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
         </div>
 
-        <div className="rounded-3xl border border-white/20 bg-white/10 p-8 shadow-[0_25px_70px_-20px_rgba(79,70,229,0.45),inset_0_1px_0_0_rgba(255,255,255,0.3)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.06]">
+        <div className="rounded-3xl border border-white/20 bg-white/10 p-8 shadow-[0_25px_70px_-20px_rgba(79,70,229,0.45),inset_0_1px_0_0_rgba(255,255,255,0.3)] backdrop-blur-2xl">
           <div className="mb-6">
             <h2 className="text-xl font-semibold tracking-tight">Sign in</h2>
             <p className="mt-1.5 text-sm text-text-secondary">Welcome back. Choose how you&apos;d like to continue.</p>
           </div>
 
           <Tabs value={method} onValueChange={(v) => setMethod(v as 'email' | 'phone')}>
-            <TabsList className="grid w-full grid-cols-2 bg-black/5 dark:bg-white/5">
+            <TabsList className="grid w-full grid-cols-2 bg-black/5">
               <TabsTrigger value="email">Email</TabsTrigger>
               <TabsTrigger value="phone">Phone</TabsTrigger>
             </TabsList>
 
             <TabsContent value="email" className="mt-6">
               {emailStatus === 'sent' ? (
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
                   <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
                     <Mail className="h-4 w-4 text-primary" />
                   </div>
@@ -169,7 +164,7 @@ export default function LoginPage() {
                         placeholder="you@business.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm dark:border-white/10 dark:bg-black/20"
+                        className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
                       />
                     </div>
                   </div>
@@ -197,7 +192,7 @@ export default function LoginPage() {
                       placeholder="123456"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="border-white/20 bg-white/40 text-center text-lg tracking-[0.3em] backdrop-blur-sm dark:border-white/10 dark:bg-black/20"
+                      className="border-white/20 bg-white/40 text-center text-lg tracking-[0.3em] backdrop-blur-sm"
                     />
                     <p className="text-xs text-text-secondary">
                       Sent to <span className="font-medium">{phone}</span>.
@@ -236,7 +231,7 @@ export default function LoginPage() {
                         placeholder="+15125550100"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm dark:border-white/10 dark:bg-black/20"
+                        className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
                       />
                     </div>
                     <p className="text-xs text-text-secondary">Include country code, e.g. +1 for the US.</p>
@@ -253,14 +248,14 @@ export default function LoginPage() {
           </Tabs>
 
           <div className="my-6 flex items-center gap-3 text-xs text-text-secondary">
-            <div className="h-px flex-1 bg-white/15 dark:bg-white/10" />
+            <div className="h-px flex-1 bg-white/15" />
             or
-            <div className="h-px flex-1 bg-white/15 dark:bg-white/10" />
+            <div className="h-px flex-1 bg-white/15" />
           </div>
 
           <Button
             variant="outline"
-            className="w-full border-white/20 bg-white/40 backdrop-blur-sm dark:border-white/10 dark:bg-black/20"
+            className="w-full border-white/20 bg-white/40 backdrop-blur-sm"
             onClick={signInWithGoogle}
           >
             <GoogleIcon />

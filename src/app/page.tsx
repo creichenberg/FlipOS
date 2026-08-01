@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash } from 'lucide-react';
+import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/design-system/ThemeToggle';
 
 const STEPS = [
   {
@@ -46,6 +45,31 @@ const FEATURES = [
   },
 ];
 
+const PLANS = [
+  {
+    name: 'Base',
+    price: 15,
+    videosPerWeek: 5,
+    description: 'A steady stream of content without overcommitting.',
+    features: ['5 video ideas every week', 'Full script & shot list for each', 'Guided Filming Mode', 'Captions & hashtags included'],
+    highlighted: false,
+  },
+  {
+    name: 'Pro',
+    price: 20,
+    videosPerWeek: 10,
+    description: 'For businesses that want to post more often.',
+    features: [
+      '10 video ideas every week',
+      'Full script & shot list for each',
+      'Guided Filming Mode',
+      'Captions & hashtags included',
+      'Priority support',
+    ],
+    highlighted: true,
+  },
+];
+
 export default async function LandingPage() {
   const supabase = await createClient();
   const {
@@ -58,8 +82,10 @@ export default async function LandingPage() {
       <header className="border-b border-border-subtle">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <Link href="#pricing" className="hidden text-sm text-text-secondary hover:text-foreground sm:inline">
+              Pricing
+            </Link>
             <Button asChild variant="ghost" size="sm">
               <Link href="/login">Sign in</Link>
             </Button>
@@ -112,6 +138,49 @@ export default async function LandingPage() {
                 <feature.icon className="h-5 w-5 text-primary" />
                 <h3 className="mt-3 text-base font-medium">{feature.title}</h3>
                 <p className="mt-1.5 text-sm text-text-secondary">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="border-t border-border-subtle px-6 py-20">
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold tracking-tight">Simple, predictable pricing</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">Pick the plan that matches how often you want to post. Cancel anytime.</p>
+          </div>
+          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.name}
+                className={`relative rounded-lg border p-6 ${
+                  plan.highlighted ? 'border-primary bg-surface' : 'border-border-subtle bg-surface'
+                }`}
+              >
+                {plan.highlighted && (
+                  <span className="absolute -top-3 left-6 rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                    Most popular
+                  </span>
+                )}
+                <h3 className="text-base font-medium">{plan.name}</h3>
+                <p className="mt-1 text-sm text-text-secondary">{plan.description}</p>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
+                  <span className="text-sm text-text-secondary">/ month</span>
+                </div>
+                <p className="mt-1 text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
+                <ul className="mt-5 space-y-2.5">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild className="mt-6 w-full" variant={plan.highlighted ? 'default' : 'outline'}>
+                  <Link href="/login">Get started</Link>
+                </Button>
               </div>
             ))}
           </div>
