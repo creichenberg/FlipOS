@@ -11,6 +11,52 @@ import { StepIndicator } from '@/components/design-system/StepIndicator';
 
 const GOAL_OPTIONS = ['Build brand awareness', 'Drive sales', 'Build trust/credibility', 'Grow engagement', 'Educate customers'];
 
+// Suggestions, not a restriction - the Industry field stays free text (via
+// <datalist>) and Brand personality keeps a free-text "Other" field too.
+// Prefilled/suggested options reduce the blank-page problem and nudge
+// toward more specific, usable answers than typing from scratch.
+const INDUSTRY_OPTIONS = [
+  'Residential plumbing',
+  'HVAC',
+  'Electrical services',
+  'Landscaping & lawn care',
+  'House cleaning',
+  'Auto repair',
+  'Hair salon',
+  'Barbershop',
+  'Nail salon',
+  'Med spa',
+  'Personal training',
+  'Yoga studio',
+  'Restaurant',
+  'Coffee shop',
+  'Bakery',
+  'Catering',
+  'Photography',
+  'Real estate',
+  'Law firm',
+  'Dental practice',
+  'Veterinary clinic',
+  'Pet grooming',
+  'Interior design',
+  'Bookkeeping & accounting',
+];
+
+const PERSONALITY_OPTIONS = [
+  'Friendly',
+  'Professional',
+  'Bold',
+  'Playful',
+  'Trustworthy',
+  'Innovative',
+  'Down-to-earth',
+  'Luxurious',
+  'Quirky',
+  'Reliable',
+  'Warm',
+  'Energetic',
+];
+
 const TOTAL_STEPS = 3;
 
 interface FormState {
@@ -20,7 +66,8 @@ interface FormState {
   description: string;
   productsServices: string;
   targetAudience: string;
-  brandPersonality: string;
+  brandPersonality: string[];
+  brandPersonalityOther: string;
   goals: string[];
   website: string;
 }
@@ -32,7 +79,8 @@ const initialState: FormState = {
   description: '',
   productsServices: '',
   targetAudience: '',
-  brandPersonality: '',
+  brandPersonality: [],
+  brandPersonalityOther: '',
   goals: [],
   website: '',
 };
@@ -56,6 +104,15 @@ export function OnboardingWizard() {
     setForm((f) => ({
       ...f,
       goals: f.goals.includes(goal) ? f.goals.filter((g) => g !== goal) : [...f.goals, goal],
+    }));
+  }
+
+  function togglePersonality(trait: string) {
+    setForm((f) => ({
+      ...f,
+      brandPersonality: f.brandPersonality.includes(trait)
+        ? f.brandPersonality.filter((t) => t !== trait)
+        : [...f.brandPersonality, trait],
     }));
   }
 
@@ -88,10 +145,13 @@ export function OnboardingWizard() {
           description: form.description,
           productsServices: form.productsServices,
           targetAudience: form.targetAudience,
-          brandPersonality: form.brandPersonality
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean),
+          brandPersonality: [
+            ...form.brandPersonality,
+            ...form.brandPersonalityOther
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean),
+          ],
           goals: form.goals,
           website: form.website,
         }),
@@ -130,7 +190,18 @@ export function OnboardingWizard() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="industry">Industry</Label>
-            <Input id="industry" value={form.industry} onChange={(e) => update('industry', e.target.value)} placeholder="Residential plumbing" />
+            <Input
+              id="industry"
+              list="industry-options"
+              value={form.industry}
+              onChange={(e) => update('industry', e.target.value)}
+              placeholder="Residential plumbing"
+            />
+            <datalist id="industry-options">
+              {INDUSTRY_OPTIONS.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
@@ -184,12 +255,32 @@ export function OnboardingWizard() {
       {step === 2 && (
         <div className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="personality">Brand personality (comma separated)</Label>
+            <Label>Brand personality</Label>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {PERSONALITY_OPTIONS.map((trait) => {
+                const selected = form.brandPersonality.includes(trait);
+                return (
+                  <button
+                    key={trait}
+                    type="button"
+                    onClick={() => togglePersonality(trait)}
+                    className={
+                      selected
+                        ? 'rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary'
+                        : 'rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-primary/40 hover:text-foreground'
+                    }
+                  >
+                    {trait}
+                  </button>
+                );
+              })}
+            </div>
             <Input
-              id="personality"
-              value={form.brandPersonality}
-              onChange={(e) => update('brandPersonality', e.target.value)}
-              placeholder="Friendly, no-nonsense, reliable"
+              id="personality-other"
+              value={form.brandPersonalityOther}
+              onChange={(e) => update('brandPersonalityOther', e.target.value)}
+              placeholder="Other (comma separated)"
+              className="mt-2"
             />
           </div>
           <div className="space-y-2">
