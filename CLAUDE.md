@@ -1,9 +1,10 @@
 # Blueprint Studio
 
-AI social media manager for small businesses. Weekly, a business gets 7 personalized short-form
-video ideas; opening one generates a full shot list, script, and captions; a guided Filming Mode
-walks the owner through recording it. See `/root/.claude/plans/functional-plotting-seal.md` for the
-full architecture plan this was built from.
+AI social media manager for small businesses. Weekly, a business gets a batch of personalized
+short-form video ideas (5/week on the Base plan, 10/week on Pro - see `src/lib/plans.ts`); opening
+one generates a full shot list, script, and captions; a guided Filming Mode walks the owner through
+recording it. See `/root/.claude/plans/functional-plotting-seal.md` for the full architecture plan
+this was built from.
 
 **Phase 1 (this build):** auth, onboarding, weekly plan generation, video detail generation, guided
 Filming Mode, Stripe billing. **Phase 2 (not built):** the automatic AI video-editing pipeline
@@ -44,6 +45,19 @@ using the app - either via the Supabase SQL editor or `supabase db push` if you 
   Client-side reducer for the step machine, but every "mark done" persists to
   `shot_progress`/`voiceover_progress` immediately so a mid-session refresh resumes correctly
   (hydrated from server data, not localStorage).
+- `src/lib/plans.ts` - the Base/Pro tier definitions (price, videos/week) plus the price-id <-> tier
+  mapping helpers. `POST /api/plans/[businessId]/generate` looks up the business owner's active
+  subscription tier (defaulting to Base if there isn't one) and passes `videosPerWeek` through to
+  `generateWeeklyPlan`/`mockWeeklyPlan`, which build a dynamic-length schema/response instead of the
+  old hardcoded 7. `video_cards.day_of_week` stays 0-6 either way - counts above 7 (Pro) just put more
+  than one card on some days, counts below 7 (Base) leave some days empty; no schema change needed.
+- **Two ways to test without spending money**, both documented in `.env.example`: `MOCK_AI=true`
+  skips real Claude calls and returns templated plan/detail content built from the business's actual
+  profile; `MOCK_BILLING=true` unlocks a tier switcher on `/billing`
+  (`TestTierSwitcher.tsx` -> `POST /api/billing/test-tier`) that writes your subscription tier
+  directly via the service-role client, bypassing Stripe entirely. Both are inert unless explicitly
+  set, and neither should ever be set on a deploy with real customers - `MOCK_BILLING` in particular
+  lets any signed-in user grant themselves a paid tier for free.
 
 ## Gotchas already hit
 

@@ -76,8 +76,8 @@ export function RegeneratePlanButton({ businessId }: { businessId: string }) {
         <DialogHeader>
           <DialogTitle>Regenerate this week&apos;s plan?</DialogTitle>
           <DialogDescription>
-            This replaces all 7 video ideas for this week, including any shot lists, scripts, or filming progress
-            already generated for them. This can&apos;t be undone.
+            This replaces this week&apos;s video ideas, including any shot lists, scripts, or filming progress already
+            generated for them. This can&apos;t be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

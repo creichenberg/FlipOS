@@ -9,7 +9,7 @@ const STEPS = [
   {
     icon: Calendar,
     title: '1. Get your weekly plan',
-    description: '7 video ideas built specifically for your business - one for each day of the week, no generic content calendar filler.',
+    description: '5-10 video ideas a week (depending on your plan), built specifically for your business - no generic content calendar filler.',
   },
   {
     icon: Clapperboard,
@@ -103,7 +103,7 @@ export default async function LandingPage() {
           An AI social media manager for your business
         </h1>
         <p className="mt-4 max-w-xl text-text-secondary">
-          Every week, get 7 video ideas built for your business - each with a hook, a full script, and a shot-by-shot
+          Every week, get video ideas built for your business - each with a hook, a full script, and a shot-by-shot
           filming guide simple enough that anyone can film it.
         </p>
         <div className="mt-8 flex gap-3">

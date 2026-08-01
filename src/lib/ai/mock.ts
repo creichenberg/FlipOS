@@ -46,13 +46,17 @@ const DAY_PLAN: { title: (b: Business) => string; concept: (b: Business) => stri
   },
 ];
 
-export function mockWeeklyPlan(business: Business): WeeklyPlanCard[] {
-  return DAY_PLAN.map((entry, i) => ({
-    dayOfWeek: i,
-    title: entry.title(business),
-    concept: entry.concept(business),
-    contentGoal: entry.contentGoal,
-  }));
+export function mockWeeklyPlan(business: Business, count: number): WeeklyPlanCard[] {
+  return Array.from({ length: count }, (_, i) => {
+    const entry = DAY_PLAN[i % DAY_PLAN.length];
+    const repeat = Math.floor(i / DAY_PLAN.length);
+    return {
+      dayOfWeek: i % 7,
+      title: repeat > 0 ? `${entry.title(business)} (Part ${repeat + 1})` : entry.title(business),
+      concept: entry.concept(business),
+      contentGoal: entry.contentGoal,
+    };
+  });
 }
 
 export function mockVideoDetail(business: Business, card: VideoCard): VideoDetailResult {

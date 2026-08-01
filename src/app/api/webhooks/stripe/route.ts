@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { getStripeClient } from '@/lib/stripe/client';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isPlanTier, priceIdToTier } from '@/lib/plans';
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -54,13 +55,16 @@ export async function POST(request: Request) {
 
 async function upsertSubscription(supabase: ReturnType<typeof createAdminClient>, userId: string, subscription: Stripe.Subscription) {
   const item = subscription.items.data[0];
+  const metadataTier = subscription.metadata?.plan_tier;
+  const tier = isPlanTier(metadataTier) ? metadataTier : priceIdToTier(item?.price?.id);
+
   await supabase.from('subscriptions').upsert(
     {
       user_id: userId,
       stripe_customer_id: subscription.customer as string,
       stripe_subscription_id: subscription.id,
       status: subscription.status as 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete',
-      plan_tier: item?.price?.id ?? null,
+      plan_tier: tier,
       current_period_end: item?.current_period_end ? new Date(item.current_period_end * 1000).toISOString() : null,
       cancel_at_period_end: subscription.cancel_at_period_end,
       updated_at: new Date().toISOString(),

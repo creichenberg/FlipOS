@@ -53,7 +53,7 @@ export default async function DashboardPage() {
         <EmptyState
           icon={CalendarDays}
           title="No plan for this week yet"
-          description="Generate 7 personalized video ideas built specifically for your business."
+          description="Generate this week's personalized video ideas, built specifically for your business."
           action={<GeneratePlanButton businessId={business.id} />}
         />
       )}

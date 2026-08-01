@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { generateWeeklyPlan } from '@/lib/ai/generatePlan';
 import { AnthropicNotConfiguredError } from '@/lib/ai/client';
 import { currentWeekStart } from '@/lib/week';
+import { PLAN_TIERS, DEFAULT_TIER, isPlanTier } from '@/lib/plans';
 import type { Business } from '@/lib/types/database';
 
 export const maxDuration = 60;
@@ -20,6 +21,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ bus
 
   const body = await request.json().catch(() => ({}));
   const regenerate = body?.regenerate === true;
+
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('status, plan_tier')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const isActiveSub = subscription?.status === 'active' || subscription?.status === 'trialing';
+  const tier = isActiveSub && isPlanTier(subscription?.plan_tier) ? subscription.plan_tier : DEFAULT_TIER;
+  const videosPerWeek = PLAN_TIERS[tier].videosPerWeek;
 
   const weekStartDate = currentWeekStart();
 
@@ -43,7 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ bus
   if (planError || !plan) return NextResponse.json({ error: planError?.message ?? 'Failed to start plan' }, { status: 500 });
 
   try {
-    const cards = await generateWeeklyPlan(business as Business);
+    const cards = await generateWeeklyPlan(business as Business, videosPerWeek);
 
     await supabase.from('video_cards').delete().eq('weekly_plan_id', plan.id);
     const { error: cardsError } = await supabase.from('video_cards').insert(

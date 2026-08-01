@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getStripeClient, StripeNotConfiguredError } from '@/lib/stripe/client';
+import { isPlanTier, tierToPriceId } from '@/lib/plans';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -9,8 +10,14 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const priceId = process.env.STRIPE_PRICE_ID;
-  if (!priceId) return NextResponse.json({ error: 'Billing is not configured. Set STRIPE_PRICE_ID.' }, { status: 503 });
+  const body = await request.json().catch(() => ({}));
+  const plan = isPlanTier(body?.plan) ? body.plan : null;
+  if (!plan) return NextResponse.json({ error: 'A plan (base or pro) is required' }, { status: 400 });
+
+  const priceId = tierToPriceId(plan);
+  if (!priceId) {
+    return NextResponse.json({ error: 'Billing is not configured. Set STRIPE_PRICE_ID_BASE / STRIPE_PRICE_ID_PRO.' }, { status: 503 });
+  }
 
   try {
     const stripe = getStripeClient();
@@ -26,7 +33,7 @@ export async function POST(request: Request) {
       success_url: `${origin}/billing?checkout=success`,
       cancel_url: `${origin}/billing?checkout=cancelled`,
       client_reference_id: user.id,
-      subscription_data: { metadata: { user_id: user.id } },
+      subscription_data: { metadata: { user_id: user.id, plan_tier: plan } },
     });
 
     return NextResponse.json({ url: session.url });

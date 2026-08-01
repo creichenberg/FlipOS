@@ -15,7 +15,7 @@ const VideoIdeaSchema = z.object({
 });
 
 const WeeklyPlanSchema = z.object({
-  cards: z.array(VideoIdeaSchema).describe('Exactly 7 video ideas, one per day of the week'),
+  cards: z.array(VideoIdeaSchema),
 });
 
 export interface WeeklyPlanCard {
@@ -25,7 +25,8 @@ export interface WeeklyPlanCard {
   contentGoal: ContentGoal;
 }
 
-const SYSTEM_INSTRUCTIONS = `You are Blueprint Studio's social media strategist. You plan a week of short-form
+function systemInstructions(count: number): string {
+  return `You are Blueprint Studio's social media strategist. You plan a week of short-form
 video content (TikTok/Reels/Shorts) for a specific small business - the way a professional social
 media manager who has worked with hundreds of businesses in this exact industry would, not a
 generic content calendar.
@@ -37,12 +38,17 @@ Rules:
   the same goal more than twice.
 - Titles should read like a real video hook, not a bland topic label - e.g. "3 Things Every
   Homeowner Should Know Before Hiring a Plumber", not "Plumbing Tips".
-- Return exactly 7 ideas, one per day of the week (dayOfWeek 0-6, Sunday-Saturday).`;
+- Return exactly ${count} ideas, spread across the days of the week (dayOfWeek 0-6, Sunday-Saturday).
+  ${count > 7 ? 'Some days will need more than one idea since there are more ideas than days.' : count < 7 ? "It's fine to skip some days since there are fewer ideas than days in the week." : 'One idea per day.'}`;
+}
 
-export async function generateWeeklyPlan(business: Business): Promise<WeeklyPlanCard[]> {
+// videosPerWeek is driven by the business owner's subscription tier (see
+// src/lib/plans.ts) - Base is 5/week, Pro is 10/week, no active subscription
+// defaults to the Base count.
+export async function generateWeeklyPlan(business: Business, videosPerWeek: number): Promise<WeeklyPlanCard[]> {
   // Zero-cost path for testing the app without spending Anthropic credits -
   // see .env.example. Never set in a real deploy meant for actual customers.
-  if (process.env.MOCK_AI === 'true') return mockWeeklyPlan(business);
+  if (process.env.MOCK_AI === 'true') return mockWeeklyPlan(business, videosPerWeek);
 
   const client = getClient();
   const brandContext = buildBrandContextBlock(business);
@@ -52,16 +58,16 @@ export async function generateWeeklyPlan(business: Business): Promise<WeeklyPlan
     max_tokens: 4096,
     system: [
       { type: 'text', text: brandContext, cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: SYSTEM_INSTRUCTIONS },
+      { type: 'text', text: systemInstructions(videosPerWeek) },
     ],
-    messages: [{ role: 'user', content: 'Generate this week\'s 7 video ideas for this business.' }],
+    messages: [{ role: 'user', content: `Generate this week's ${videosPerWeek} video ideas for this business.` }],
     output_config: { format: zodOutputFormat(WeeklyPlanSchema) },
   });
 
   const parsed = response.parsed_output;
   if (!parsed) throw new Error('Weekly plan generation returned no parsable output.');
-  if (parsed.cards.length !== 7) {
-    throw new Error(`Weekly plan generation returned ${parsed.cards.length} cards, expected 7.`);
+  if (parsed.cards.length !== videosPerWeek) {
+    throw new Error(`Weekly plan generation returned ${parsed.cards.length} cards, expected ${videosPerWeek}.`);
   }
 
   return parsed.cards;
