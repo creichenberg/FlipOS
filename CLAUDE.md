@@ -78,3 +78,11 @@ just wiring, not new tokens. The onboarding page and the landing page's hero sec
 a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary accent
 color, radially masked - as a subtle nod to the product name; keep it off other pages (dashboard,
 settings, etc.), it's decorative and meant for pre-auth/entry screens only.
+
+**Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
+this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,
+translucent `bg-white/10`/`dark:bg-white/[0.06]` fills, `rounded-3xl`, inset highlight via
+`shadow-[...inset...]`) over a full-bleed `.bg-blueprint-grid` background with two blurred `bg-primary`
+glow orbs for depth. This is the one place in the app that uses glassmorphism and a radius above
+`--radius-lg` - don't "fix" it back to the neutral/thin-border/capped-radius system used everywhere
+else; that's a deliberate, asked-for departure for this screen specifically, not drift.
