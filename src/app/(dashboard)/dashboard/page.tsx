@@ -1,0 +1,53 @@
+import { CalendarDays } from 'lucide-react';
+import { requireBusiness } from '@/lib/session';
+import { createClient } from '@/lib/supabase/server';
+import { currentWeekStart } from '@/lib/week';
+import { PageHeader } from '@/components/design-system/PageHeader';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { VideoCardTile } from '@/components/design-system/VideoCardTile';
+import { GeneratePlanButton } from '@/components/features/dashboard/GeneratePlanButton';
+export default async function DashboardPage() {
+  const business = await requireBusiness();
+  const supabase = await createClient();
+  const weekStartDate = currentWeekStart();
+
+  const { data: plan } = await supabase
+    .from('weekly_plans')
+    .select('*')
+    .eq('business_id', business.id)
+    .eq('week_start_date', weekStartDate)
+    .maybeSingle();
+
+  const { data: cardsData } = plan
+    ? await supabase.from('video_cards').select('*').eq('weekly_plan_id', plan.id).order('day_of_week')
+    : { data: null };
+  const cards = cardsData ?? [];
+
+  return (
+    <div className="space-y-8">
+      <PageHeader title={`Welcome back, ${business.name}`} description="This week's video plan, ready to film." />
+
+      {plan?.status === 'ready' && cards.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => (
+            <VideoCardTile key={card.id} card={card} />
+          ))}
+        </div>
+      ) : plan?.status === 'failed' ? (
+        <EmptyState
+          icon={CalendarDays}
+          title="Plan generation failed"
+          description="Something went wrong generating this week's plan. Try again."
+          action={<GeneratePlanButton businessId={business.id} label="Try again" />}
+        />
+      ) : (
+        <EmptyState
+          icon={CalendarDays}
+          title="No plan for this week yet"
+          description="Generate 7 personalized video ideas built specifically for your business."
+          action={<GeneratePlanButton businessId={business.id} />}
+        />
+      )}
+    </div>
+  );
+}
