@@ -2,18 +2,46 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Mail, Phone, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ThemeToggle } from '@/components/design-system/ThemeToggle';
 
-type Method = 'email' | 'phone';
 type EmailStatus = 'idle' | 'sending' | 'sent' | 'error';
 type PhoneStatus = 'idle' | 'sending' | 'verifying' | 'error';
 
+const VALUE_PROPS = [
+  '7 personalized video ideas, every single week',
+  'A full script and shot list for each one',
+  'A guided Filming Mode - zero experience needed',
+];
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4">
+      <path
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47c-.28 1.5-1.13 2.78-2.4 3.63v3h3.89c2.27-2.09 3.56-5.17 3.56-8.82Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.89-3c-1.08.73-2.46 1.15-4.06 1.15-3.12 0-5.77-2.11-6.71-4.94H1.27v3.1A12 12 0 0 0 12 24Z"
+        fill="#34A853"
+      />
+      <path d="M5.29 14.3a7.2 7.2 0 0 1 0-4.6v-3.1H1.27a12 12 0 0 0 0 10.8l4.02-3.1Z" fill="#FBBC05" />
+      <path
+        d="M12 4.75c1.76 0 3.35.61 4.6 1.8l3.45-3.45C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.6l4.02 3.1C6.23 6.86 8.88 4.75 12 4.75Z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const [method, setMethod] = useState<Method>('email');
+  const [method, setMethod] = useState<'email' | 'phone'>('email');
 
   const [email, setEmail] = useState('');
   const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle');
@@ -21,8 +49,6 @@ export default function LoginPage() {
 
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
-  // Tracked separately from phoneStatus so a verify-step error keeps the code
-  // entry screen visible instead of bouncing back to the phone-number form.
   const [codeSent, setCodeSent] = useState(false);
   const [phoneStatus, setPhoneStatus] = useState<PhoneStatus>('idle');
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -44,10 +70,6 @@ export default function LoginPage() {
         setEmailStatus('sent');
       }
     } catch (err) {
-      // signInWithOtp can throw outright (network failure, CORS, unreachable
-      // Supabase URL) rather than resolving with { error } - without this,
-      // status stays stuck on "sending" forever with zero feedback, which
-      // looks exactly like the button doing nothing at all.
       setEmailError(err instanceof Error ? err.message : 'Request failed');
       setEmailStatus('error');
     }
@@ -102,133 +124,162 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Blueprint Studio</h1>
-          <p className="mt-2 text-sm text-text-secondary">Your AI social media manager. Sign in to continue.</p>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-10 text-primary-foreground lg:flex">
+        <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
+        <div>
+          <h1 className="max-w-sm text-3xl font-semibold tracking-tight">Your AI social media manager</h1>
+          <p className="mt-3 max-w-sm text-sm text-primary-foreground/70">
+            One place to plan, script, and film your business&apos;s short-form content - built specifically for you,
+            not a generic template.
+          </p>
+        </div>
+        <ul className="space-y-3">
+          {VALUE_PROPS.map((item) => (
+            <li key={item} className="flex items-start gap-2.5 text-sm text-primary-foreground/90">
+              <Check className="mt-0.5 h-4 w-4 shrink-0" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-col px-6 py-8">
+        <div className="flex items-center justify-between lg:justify-end">
+          <span className="text-sm font-semibold tracking-tight lg:hidden">Blueprint Studio</span>
+          <ThemeToggle />
         </div>
 
-        <div className="grid grid-cols-2 gap-1 rounded-md border border-border-subtle bg-surface p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setMethod('email')}
-            className={
-              method === 'email'
-                ? 'rounded-sm bg-secondary py-1.5 font-medium text-secondary-foreground'
-                : 'rounded-sm py-1.5 text-text-secondary hover:text-foreground'
-            }
-          >
-            Email
-          </button>
-          <button
-            type="button"
-            onClick={() => setMethod('phone')}
-            className={
-              method === 'phone'
-                ? 'rounded-sm bg-secondary py-1.5 font-medium text-secondary-foreground'
-                : 'rounded-sm py-1.5 text-text-secondary hover:text-foreground'
-            }
-          >
-            Phone
-          </button>
-        </div>
-
-        {method === 'email' &&
-          (emailStatus === 'sent' ? (
-            <div className="rounded-lg border border-border-subtle bg-surface p-6 text-center text-sm">
-              Check <span className="font-medium">{email}</span> for a sign-in link.
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-sm">
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold tracking-tight">Sign in</h2>
+              <p className="mt-1.5 text-sm text-text-secondary">Welcome back. Choose how you&apos;d like to continue.</p>
             </div>
-          ) : (
-            <form onSubmit={sendMagicLink} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  autoFocus
-                  placeholder="you@business.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={emailStatus === 'sending'}>
-                {emailStatus === 'sending' ? 'Sending link…' : 'Send magic link'}
-              </Button>
-              {emailStatus === 'error' && (
-                <p className="text-sm text-destructive">{emailError ?? 'Something went wrong. Try again.'}</p>
-              )}
-            </form>
-          ))}
 
-        {method === 'phone' &&
-          (codeSent ? (
-            <form onSubmit={verifySmsCode} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Verification code</Label>
-                <Input
-                  id="code"
-                  type="text"
-                  inputMode="numeric"
-                  required
-                  autoFocus
-                  placeholder="123456"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                />
-                <p className="text-xs text-text-secondary">
-                  Sent to <span className="font-medium">{phone}</span>.
-                </p>
-              </div>
-              <Button type="submit" className="w-full" disabled={phoneStatus === 'verifying'}>
-                {phoneStatus === 'verifying' ? 'Verifying…' : 'Verify code'}
-              </Button>
-              {phoneStatus === 'error' && <p className="text-sm text-destructive">{phoneError ?? 'Something went wrong. Try again.'}</p>}
-              <button
-                type="button"
-                onClick={() => {
-                  setCodeSent(false);
-                  setPhoneStatus('idle');
-                  setPhoneError(null);
-                  setCode('');
-                }}
-                className="w-full text-center text-xs text-text-secondary hover:text-foreground"
-              >
-                Use a different number
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={sendSmsCode} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  required
-                  autoFocus
-                  placeholder="+15125550100"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-                <p className="text-xs text-text-secondary">Include country code, e.g. +1 for the US.</p>
-              </div>
-              <Button type="submit" className="w-full" disabled={phoneStatus === 'sending'}>
-                {phoneStatus === 'sending' ? 'Sending code…' : 'Send code'}
-              </Button>
-              {phoneStatus === 'error' && <p className="text-sm text-destructive">{phoneError ?? 'Something went wrong. Try again.'}</p>}
-            </form>
-          ))}
+            <Tabs value={method} onValueChange={(v) => setMethod(v as 'email' | 'phone')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email">Email</TabsTrigger>
+                <TabsTrigger value="phone">Phone</TabsTrigger>
+              </TabsList>
 
-        <div className="flex items-center gap-3 text-xs text-text-secondary">
-          <div className="h-px flex-1 bg-border-subtle" />
-          or
-          <div className="h-px flex-1 bg-border-subtle" />
+              <TabsContent value="email" className="mt-6">
+                {emailStatus === 'sent' ? (
+                  <div className="rounded-lg border border-border-subtle bg-surface p-6 text-center text-sm">
+                    <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                      <Mail className="h-4 w-4 text-primary" />
+                    </div>
+                    Check <span className="font-medium">{email}</span> for a sign-in link.
+                  </div>
+                ) : (
+                  <form onSubmit={sendMagicLink} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                        <Input
+                          id="email"
+                          type="email"
+                          required
+                          autoFocus
+                          placeholder="you@business.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={emailStatus === 'sending'}>
+                      {emailStatus === 'sending' ? 'Sending link…' : 'Send magic link'}
+                    </Button>
+                    {emailStatus === 'error' && (
+                      <p className="text-sm text-destructive">{emailError ?? 'Something went wrong. Try again.'}</p>
+                    )}
+                  </form>
+                )}
+              </TabsContent>
+
+              <TabsContent value="phone" className="mt-6">
+                {codeSent ? (
+                  <form onSubmit={verifySmsCode} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="code">Verification code</Label>
+                      <Input
+                        id="code"
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        autoFocus
+                        placeholder="123456"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        className="text-center text-lg tracking-[0.3em]"
+                      />
+                      <p className="text-xs text-text-secondary">
+                        Sent to <span className="font-medium">{phone}</span>.
+                      </p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={phoneStatus === 'verifying'}>
+                      {phoneStatus === 'verifying' ? 'Verifying…' : 'Verify code'}
+                    </Button>
+                    {phoneStatus === 'error' && (
+                      <p className="text-sm text-destructive">{phoneError ?? 'Something went wrong. Try again.'}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCodeSent(false);
+                        setPhoneStatus('idle');
+                        setPhoneError(null);
+                        setCode('');
+                      }}
+                      className="w-full text-center text-xs text-text-secondary hover:text-foreground"
+                    >
+                      Use a different number
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={sendSmsCode} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone number</Label>
+                      <div className="relative">
+                        <Phone className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                        <Input
+                          id="phone"
+                          type="tel"
+                          required
+                          autoFocus
+                          placeholder="+15125550100"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="pl-8"
+                        />
+                      </div>
+                      <p className="text-xs text-text-secondary">Include country code, e.g. +1 for the US.</p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={phoneStatus === 'sending'}>
+                      {phoneStatus === 'sending' ? 'Sending code…' : 'Send code'}
+                    </Button>
+                    {phoneStatus === 'error' && (
+                      <p className="text-sm text-destructive">{phoneError ?? 'Something went wrong. Try again.'}</p>
+                    )}
+                  </form>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            <div className="my-6 flex items-center gap-3 text-xs text-text-secondary">
+              <div className="h-px flex-1 bg-border-subtle" />
+              or
+              <div className="h-px flex-1 bg-border-subtle" />
+            </div>
+
+            <Button variant="outline" className="w-full" onClick={signInWithGoogle}>
+              <GoogleIcon />
+              Continue with Google
+            </Button>
+          </div>
         </div>
-
-        <Button variant="outline" className="w-full" onClick={signInWithGoogle}>
-          Continue with Google
-        </Button>
       </div>
     </div>
   );

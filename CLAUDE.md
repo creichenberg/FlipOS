@@ -74,6 +74,7 @@ Tailwind's `rounded-xl`/`2xl`/`3xl` in new components, that's the single most di
 elevated surfaces (dropdowns, modals). Dark-first via `next-themes` (`defaultTheme="dark"`), with a
 user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashboard nav) switching
 `resolvedTheme` between `dark`/`light` - both palettes are fully defined in `globals.css`, so this is
-just wiring, not new tokens. The onboarding page additionally uses a `.bg-blueprint-grid` utility
-(also in `globals.css`) - a faint two-scale grid in the primary accent color, radially masked - as a
-subtle nod to the product name; keep it off every other page, it's decorative and page-specific.
+just wiring, not new tokens. The onboarding page and the landing page's hero section additionally use
+a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary accent
+color, radially masked - as a subtle nod to the product name; keep it off other pages (dashboard,
+settings, etc.), it's decorative and meant for pre-auth/entry screens only.

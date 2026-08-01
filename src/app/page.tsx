@@ -67,7 +67,7 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      <section className="flex flex-col items-center px-6 py-24 text-center">
+      <section className="bg-blueprint-grid flex flex-col items-center px-6 py-24 text-center">
         <p className="text-sm font-medium uppercase tracking-wide text-text-secondary">Blueprint Studio</p>
         <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
           An AI social media manager for your business
