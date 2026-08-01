@@ -66,6 +66,14 @@ export function OnboardingWizard() {
     form.targetAudience.trim().length >= MIN_LENGTH;
   const step2Valid = form.goals.length > 0;
 
+  // Surfaced under each field on step 1 so the Continue button's disabled
+  // state is never a silent mystery - it previously required this same
+  // minimum with no visible explanation anywhere.
+  function remainingHint(value: string) {
+    const remaining = MIN_LENGTH - value.trim().length;
+    return remaining > 0 ? `Write a bit more - ${remaining} more character${remaining === 1 ? '' : 's'} needed` : null;
+  }
+
   async function handleSubmit() {
     setSubmitting(true);
     setError(null);
@@ -142,6 +150,7 @@ export function OnboardingWizard() {
               placeholder="We're a family-owned plumbing company serving homeowners across the Austin metro..."
               rows={3}
             />
+            {remainingHint(form.description) && <p className="text-xs text-text-secondary">{remainingHint(form.description)}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="products">Products/services</Label>
@@ -152,6 +161,9 @@ export function OnboardingWizard() {
               placeholder="Drain cleaning, water heater installation, emergency leak repair..."
               rows={3}
             />
+            {remainingHint(form.productsServices) && (
+              <p className="text-xs text-text-secondary">{remainingHint(form.productsServices)}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="audience">Target audience</Label>
@@ -162,6 +174,9 @@ export function OnboardingWizard() {
               placeholder="Homeowners aged 30-60 who want a reliable, trustworthy plumber..."
               rows={3}
             />
+            {remainingHint(form.targetAudience) && (
+              <p className="text-xs text-text-secondary">{remainingHint(form.targetAudience)}</p>
+            )}
           </div>
         </div>
       )}
