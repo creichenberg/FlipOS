@@ -9,16 +9,32 @@ import { Label } from '@/components/ui/label';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault();
     setStatus('sending');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setStatus(error ? 'error' : 'sent');
+    setErrorMessage(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (error) {
+        setErrorMessage(error.message);
+        setStatus('error');
+      } else {
+        setStatus('sent');
+      }
+    } catch (err) {
+      // signInWithOtp can throw outright (network failure, CORS, unreachable
+      // Supabase URL) rather than resolving with { error } - without this,
+      // status stays stuck on "sending" forever with zero feedback, which
+      // looks exactly like the button doing nothing at all.
+      setErrorMessage(err instanceof Error ? err.message : 'Request failed');
+      setStatus('error');
+    }
   }
 
   async function signInWithGoogle() {
@@ -58,7 +74,7 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={status === 'sending'}>
               {status === 'sending' ? 'Sending link…' : 'Send magic link'}
             </Button>
-            {status === 'error' && <p className="text-sm text-destructive">Something went wrong. Try again.</p>}
+            {status === 'error' && <p className="text-sm text-destructive">{errorMessage ?? 'Something went wrong. Try again.'}</p>}
           </form>
         )}
 
