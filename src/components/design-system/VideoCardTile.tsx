@@ -11,6 +11,13 @@ const GOAL_LABELS: Record<string, string> = {
   engage: 'Engage',
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pending_detail: 'Not started',
+  detail_ready: 'Ready to film',
+  filming: 'Filming',
+  complete: 'Filmed',
+};
+
 export function VideoCardTile({ card }: { card: VideoCard }) {
   return (
     <Link
@@ -25,9 +32,12 @@ export function VideoCardTile({ card }: { card: VideoCard }) {
         <h3 className="mt-3 text-base font-medium leading-snug">{card.title}</h3>
         <p className="mt-2 line-clamp-3 text-sm text-text-secondary">{card.concept}</p>
       </div>
-      <span className="mt-4 text-sm font-medium text-primary group-hover:underline">
-        {card.status === 'pending_detail' ? 'Generate shot list →' : 'View shot list →'}
-      </span>
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <StatusBadge label={STATUS_LABELS[card.status] ?? card.status} variant={card.status === 'complete' ? 'accent' : 'neutral'} />
+        <span className="text-sm font-medium text-primary group-hover:underline">
+          {card.status === 'pending_detail' ? 'Generate shot list →' : 'View shot list →'}
+        </span>
+      </div>
     </Link>
   );
 }

@@ -5,7 +5,9 @@ import { currentWeekStart } from '@/lib/week';
 import { PageHeader } from '@/components/design-system/PageHeader';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { VideoCardTile } from '@/components/design-system/VideoCardTile';
-import { GeneratePlanButton } from '@/components/features/dashboard/GeneratePlanButton';
+import { WeekProgress } from '@/components/design-system/WeekProgress';
+import { GeneratePlanButton, RegeneratePlanButton } from '@/components/features/dashboard/GeneratePlanButton';
+
 export default async function DashboardPage() {
   const business = await requireBusiness();
   const supabase = await createClient();
@@ -25,14 +27,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={`Welcome back, ${business.name}`} description="This week's video plan, ready to film." />
+      <PageHeader
+        title={`Welcome back, ${business.name}`}
+        description="This week's video plan, ready to film."
+        actions={plan?.status === 'ready' && cards.length > 0 ? <RegeneratePlanButton businessId={business.id} /> : undefined}
+      />
 
       {plan?.status === 'ready' && cards.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map((card) => (
-            <VideoCardTile key={card.id} card={card} />
-          ))}
-        </div>
+        <>
+          <WeekProgress cards={cards} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {cards.map((card) => (
+              <VideoCardTile key={card.id} card={card} />
+            ))}
+          </div>
+        </>
       ) : plan?.status === 'failed' ? (
         <EmptyState
           icon={CalendarDays}

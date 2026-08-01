@@ -18,6 +18,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ bus
   const { data: business } = await supabase.from('businesses').select('*').eq('id', businessId).eq('user_id', user.id).maybeSingle();
   if (!business) return NextResponse.json({ error: 'Business not found' }, { status: 404 });
 
+  const body = await request.json().catch(() => ({}));
+  const regenerate = body?.regenerate === true;
+
   const weekStartDate = currentWeekStart();
 
   const { data: existing } = await supabase
@@ -27,7 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ bus
     .eq('week_start_date', weekStartDate)
     .maybeSingle();
 
-  if (existing && existing.status === 'ready') {
+  if (existing && existing.status === 'ready' && !regenerate) {
     const { data: existingCards } = await supabase.from('video_cards').select('*').eq('weekly_plan_id', existing.id).order('day_of_week');
     return NextResponse.json({ ...existing, video_cards: existingCards ?? [] });
   }

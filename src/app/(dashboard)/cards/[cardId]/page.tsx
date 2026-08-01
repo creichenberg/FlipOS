@@ -4,6 +4,7 @@ import { requireBusiness } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/design-system/PageHeader';
 import { ShotListItem } from '@/components/design-system/ShotListItem';
+import { CopyButton } from '@/components/design-system/CopyButton';
 import { DetailGenerator } from '@/components/features/video-detail/DetailGenerator';
 import { Button } from '@/components/ui/button';
 import { DAY_LABELS } from '@/lib/week';
@@ -50,11 +51,17 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-border-subtle bg-surface p-6">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Script</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Script</h2>
+            <CopyButton text={detail.script} />
+          </div>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.script}</p>
         </section>
         <section className="rounded-lg border border-border-subtle bg-surface p-6">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Voiceover script</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Voiceover script</h2>
+            <CopyButton text={detail.voiceover_script} />
+          </div>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.voiceover_script}</p>
         </section>
       </div>
@@ -96,7 +103,12 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
       </section>
 
       <section className="rounded-lg border border-border-subtle bg-surface p-6">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Caption &amp; hashtags</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-text-secondary">Caption &amp; hashtags</h2>
+          <CopyButton
+            text={`${detail.caption}\n\n${detail.hashtags.map((t: string) => `#${t.replace(/^#/, '')}`).join(' ')}`}
+          />
+        </div>
         <p className="mt-2 text-sm leading-relaxed">{detail.caption}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {detail.hashtags.map((tag: string) => (

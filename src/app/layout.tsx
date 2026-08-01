@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/components/providers';
@@ -14,9 +14,31 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const DESCRIPTION = 'Your AI social media manager - a weekly content plan, a shot list, and a guided shoot.';
+
 export const metadata: Metadata = {
-  title: 'Blueprint Studio',
-  description: 'Your AI social media manager - a weekly content plan, a shot list, and a guided shoot.',
+  title: {
+    default: 'Blueprint Studio',
+    template: '%s · Blueprint Studio',
+  },
+  description: DESCRIPTION,
+  openGraph: {
+    title: 'Blueprint Studio',
+    description: DESCRIPTION,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Blueprint Studio',
+    description: DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

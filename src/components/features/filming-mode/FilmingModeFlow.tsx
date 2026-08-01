@@ -3,6 +3,7 @@
 import { useMemo, useReducer, useState } from 'react';
 import Link from 'next/link';
 import { Check, Camera, Mic } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { StepIndicator } from '@/components/design-system/StepIndicator';
 import type { Shot, VoiceoverLine } from '@/lib/types/database';
@@ -68,7 +69,7 @@ export function FilmingModeFlow({
     if (!current) return;
     setSaving(true);
     try {
-      await fetch(`/api/filming/${cardId}/progress`, {
+      const res = await fetch(`/api/filming/${cardId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -78,7 +79,16 @@ export function FilmingModeFlow({
           isComplete: true,
         }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Failed to save progress');
+      }
       dispatch({ type: 'MARK_DONE', id: current.id });
+    } catch (err) {
+      // Without this, a failed save (network blip, expired session) still
+      // advanced the step locally, so the user's real progress silently
+      // never persisted - they'd only find out on a later refresh.
+      toast.error(err instanceof Error ? err.message : 'Failed to save progress - try again');
     } finally {
       setSaving(false);
     }

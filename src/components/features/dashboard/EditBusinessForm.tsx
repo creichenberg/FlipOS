@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import type { Business } from '@/lib/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,9 +74,12 @@ export function EditBusinessForm({ business }: { business: Business }) {
         throw new Error(body.error ?? 'Something went wrong');
       }
       setStatus('saved');
+      toast.success('Business details saved');
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
+      const message = e instanceof Error ? e.message : 'Something went wrong';
+      setError(message);
+      toast.error(message);
       setStatus('error');
     }
   }
@@ -123,7 +127,6 @@ export function EditBusinessForm({ business }: { business: Business }) {
         <Button type="submit" disabled={!valid || status === 'saving'}>
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </Button>
-        {status === 'saved' && <p className="text-sm text-text-secondary">Saved.</p>}
       </div>
     </form>
   );
