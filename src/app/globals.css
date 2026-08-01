@@ -143,3 +143,23 @@
     @apply font-sans;
   }
 }
+
+/* Faint blueprint-paper grid, referencing the product name - a fine grid plus
+   a wider ruled grid layered on top, in the primary accent color at very low
+   opacity, faded out toward the edges via a radial mask so it reads as
+   texture rather than a busy pattern. */
+.bg-blueprint-grid {
+  background-color: var(--canvas);
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to right, color-mix(in oklch, var(--primary) 35%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--primary) 35%, transparent) 1px, transparent 1px);
+  background-size:
+    16px 16px,
+    16px 16px,
+    96px 96px,
+    96px 96px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
+}
