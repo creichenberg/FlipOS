@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Logo } from '@/components/design-system/Logo';
 
 type EmailStatus = 'idle' | 'sending' | 'sent' | 'error';
 type PhoneStatus = 'idle' | 'sending' | 'verifying' | 'error';
@@ -124,9 +125,7 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5)] backdrop-blur-md">
-            <span className="text-sm font-semibold text-primary">B</span>
-          </div>
+          <Logo className="mb-4 h-10 w-10 rounded-xl shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)]" />
           <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
         </div>
 

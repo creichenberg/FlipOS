@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/design-system/Logo';
 
 const STEPS = [
   {
@@ -81,7 +82,10 @@ export default async function LandingPage() {
     <div className="min-h-screen bg-canvas">
       <header className="border-b border-border-subtle">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
+          <div className="flex items-center gap-2">
+            <Logo className="h-6 w-6 rounded-md" />
+            <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
+          </div>
           <div className="flex items-center gap-4">
             <Link href="#pricing" className="hidden text-sm text-text-secondary hover:text-foreground sm:inline">
               Pricing
