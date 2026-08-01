@@ -6,7 +6,8 @@ import { Check, Camera, Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { StepIndicator } from '@/components/design-system/StepIndicator';
-import type { Shot, VoiceoverLine } from '@/lib/types/database';
+import { ClipUpload } from './ClipUpload';
+import type { MediaUpload, Shot, VoiceoverLine } from '@/lib/types/database';
 
 type Step =
   | { kind: 'shot'; id: string; shot: Shot }
@@ -33,16 +34,20 @@ function reducer(state: State, action: Action): State {
 
 export function FilmingModeFlow({
   cardId,
+  businessId,
   filmingSessionId,
   shots,
   voiceoverLines,
   initialDone,
+  initialUploads,
 }: {
   cardId: string;
+  businessId: string;
   filmingSessionId: string;
   shots: Shot[];
   voiceoverLines: VoiceoverLine[];
   initialDone: string[];
+  initialUploads: MediaUpload[];
 }) {
   const steps: Step[] = useMemo(
     () => [
@@ -51,6 +56,19 @@ export function FilmingModeFlow({
     ],
     [shots, voiceoverLines],
   );
+
+  // Latest uploaded clip's file name per shot/voiceover-line id, hydrated
+  // from server data so a mid-session refresh still shows what's already
+  // been captured - same pattern as initialDone below.
+  const initialClipNames = useMemo(() => {
+    const names: Record<string, string> = {};
+    for (const upload of initialUploads) {
+      const targetId = upload.shot_id ?? upload.voiceover_line_id;
+      if (targetId) names[targetId] = upload.file_name;
+    }
+    return names;
+  }, [initialUploads]);
+  const [clipNames, setClipNames] = useState(initialClipNames);
 
   // Resume at the first not-yet-done step, hydrated from server state, so a
   // mid-session refresh picks up where the user left off.
@@ -101,7 +119,11 @@ export function FilmingModeFlow({
           <Check className="h-5 w-5 text-primary" />
         </div>
         <h2 className="text-lg font-medium">Every shot and line is filmed</h2>
-        <p className="text-sm text-text-secondary">Next up: upload your clips and let Blueprint Studio put it together.</p>
+        <p className="text-sm text-text-secondary">
+          {Object.keys(clipNames).length > 0
+            ? "Your clips are saved and ready whenever you're ready to edit them together."
+            : 'Come back and upload your clips to any shot whenever they’re ready.'}
+        </p>
         <Button asChild>
           <Link href={`/cards/${cardId}`}>Back to shot list</Link>
         </Button>
@@ -140,7 +162,19 @@ export function FilmingModeFlow({
           </>
         )}
 
-        <Button className="mt-6 w-full" size="lg" onClick={markDone} disabled={saving}>
+        <div className="mt-6">
+          <ClipUpload
+            key={current.id}
+            businessId={businessId}
+            videoCardId={cardId}
+            targetId={current.id}
+            targetKind={current.kind}
+            initialFileName={clipNames[current.id] ?? null}
+            onUploaded={(fileName) => setClipNames((names) => ({ ...names, [current.id]: fileName }))}
+          />
+        </div>
+
+        <Button className="mt-3 w-full" size="lg" onClick={markDone} disabled={saving}>
           {saving ? 'Saving…' : 'Mark done'}
         </Button>
       </div>

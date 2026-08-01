@@ -7,9 +7,11 @@ recording it. See `/root/.claude/plans/functional-plotting-seal.md` for the full
 this was built from.
 
 **Phase 1 (this build):** auth, onboarding, weekly plan generation, video detail generation, guided
-Filming Mode, Stripe billing. **Phase 2 (not built):** the automatic AI video-editing pipeline
-(upload clips -> auto-edited final video) - vendors (rendering API, transcription, licensed music)
-are intentionally undecided pending cost research; see the plan doc §7 before starting that work.
+Filming Mode (including raw clip upload per shot/voiceover line - see `media_uploads` below), Stripe
+billing. **Phase 2 (not built):** the automatic AI video-*editing* pipeline (raw clips -> auto-edited
+final video) - vendors (rendering API, transcription, licensed music) are intentionally undecided
+pending cost research; see the plan doc §7 before starting that work. Storing the raw clips
+themselves doesn't need any of those vendor decisions, which is why that part is already built.
 
 ## Stack
 
@@ -22,8 +24,11 @@ Copy `.env.example` to `.env.local` and fill in a Supabase project, an Anthropic
 keys (checkout/portal/webhook won't work without them, but the app doesn't crash - routes return a
 clear 503 with a "not configured" message instead of throwing at import time).
 
-Run the schema migration (`supabase/migrations/0001_init.sql`) against your Supabase project before
-using the app - either via the Supabase SQL editor or `supabase db push` if you have the CLI linked.
+Run the schema migrations (`supabase/migrations/*.sql`, in order) against your Supabase project
+before using the app - either via the Supabase SQL editor or `supabase db push` if you have the CLI
+linked. `0002_media_uploads.sql` also creates a private `clips` Storage bucket via SQL (`insert into
+storage.buckets`), so running migrations is enough - no separate manual bucket-creation step in the
+dashboard.
 
 ## Key files
 
@@ -44,7 +49,22 @@ using the app - either via the Supabase SQL editor or `supabase db push` if you 
 - `src/components/features/filming-mode/FilmingModeFlow.tsx` - the guided shot-by-shot flow.
   Client-side reducer for the step machine, but every "mark done" persists to
   `shot_progress`/`voiceover_progress` immediately so a mid-session refresh resumes correctly
-  (hydrated from server data, not localStorage).
+  (hydrated from server data, not localStorage). `ClipUpload.tsx` sits inside each step - a plain
+  `<input type="file" capture="environment">` (opens the phone's native camera app directly, no
+  custom `getUserMedia` capture code to maintain) that uploads straight to the `clips` Storage bucket
+  and records a `media_uploads` row via the browser client, gated by the RLS policies in
+  `0002_media_uploads.sql` rather than a server route.
+- `src/components/design-system/QrCode.tsx` - shown desktop-only (`hidden ... lg:flex`) on the
+  Filming Mode page, encoding that page's own URL so scanning it continues the same guided flow (and
+  clip uploads) on a phone. Resolves the absolute URL from `window.location` client-side rather than
+  a server-computed host header, so it's correct on every deployment without configuration.
+- **Login `next` redirect param** (`src/lib/supabase/middleware.ts`, `login/page.tsx`,
+  `auth/callback/route.ts`) - middleware appends the originally-requested path when bouncing an
+  unauthenticated request to `/login` (e.g. a QR scan landing on `/cards/[id]/film` while logged
+  out), and login forwards it through every sign-in method so `/auth/callback` lands the user back
+  where they started instead of always on `/dashboard`. Only ever accepts a same-origin relative path
+  (`/...`, never `//...` or an absolute URL) - anything else is treated as unsafe and falls back to
+  `/dashboard`, since `next` rides along on an otherwise-public URL and can't be trusted as-is.
 - `src/lib/plans.ts` - the Base/Pro tier definitions (price, videos/week) plus the price-id <-> tier
   mapping helpers. `POST /api/plans/[businessId]/generate` looks up the business owner's active
   subscription tier (defaulting to Base if there isn't one) and passes `videosPerWeek` through to

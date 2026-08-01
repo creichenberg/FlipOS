@@ -2,8 +2,9 @@ import { notFound, redirect } from 'next/navigation';
 import { requireBusiness } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/design-system/PageHeader';
+import { QrCode } from '@/components/design-system/QrCode';
 import { FilmingModeFlow } from '@/components/features/filming-mode/FilmingModeFlow';
-import type { Shot, VoiceoverLine } from '@/lib/types/database';
+import type { MediaUpload, Shot, VoiceoverLine } from '@/lib/types/database';
 
 export default async function FilmPage({ params }: { params: Promise<{ cardId: string }> }) {
   const { cardId } = await params;
@@ -49,15 +50,24 @@ export default async function FilmPage({ params }: { params: Promise<{ cardId: s
     ...(voiceoverProgress ?? []).map((p) => p.voiceover_line_id),
   ];
 
+  const { data: uploads } = await supabase
+    .from('media_uploads')
+    .select('*')
+    .eq('video_card_id', cardId)
+    .order('uploaded_at', { ascending: false });
+
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <PageHeader title="Filming mode" description={card.title} />
+      <QrCode path={`/cards/${cardId}/film`} />
       <FilmingModeFlow
         cardId={cardId}
+        businessId={business.id}
         filmingSessionId={session.id}
         shots={(shots as Shot[]) ?? []}
         voiceoverLines={(voiceoverLines as VoiceoverLine[]) ?? []}
         initialDone={initialDone}
+        initialUploads={(uploads as MediaUpload[]) ?? []}
       />
     </div>
   );

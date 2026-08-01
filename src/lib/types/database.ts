@@ -105,6 +105,19 @@ export type VoiceoverProgress = {
   completed_at: string | null;
 }
 
+export type MediaUpload = {
+  id: string;
+  video_card_id: string;
+  business_id: string;
+  shot_id: string | null;
+  voiceover_line_id: string | null;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_at: string;
+}
+
 export type Subscription = {
   id: string;
   user_id: string;
@@ -153,6 +166,7 @@ export type Database = {
         Update: Partial<VoiceoverProgress>;
         Relationships: [];
       };
+      media_uploads: { Row: MediaUpload; Insert: Partial<MediaUpload>; Update: Partial<MediaUpload>; Relationships: [] };
       subscriptions: { Row: Subscription; Insert: Partial<Subscription>; Update: Partial<Subscription>; Relationships: [] };
       stripe_events: { Row: StripeEvent; Insert: Partial<StripeEvent>; Update: Partial<StripeEvent>; Relationships: [] };
     };

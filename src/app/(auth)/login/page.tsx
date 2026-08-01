@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Logo } from '@/components/design-system/Logo';
+
+// Only accept a same-origin relative path (never "//host/..." or an absolute
+// URL) - `next` comes from a query param on an otherwise-public URL, so
+// treating it as trusted would be an open-redirect vulnerability.
+function safeNext(next: string | null): string {
+  if (next && next.startsWith('/') && !next.startsWith('//')) return next;
+  return '/dashboard';
+}
 
 type EmailStatus = 'idle' | 'sending' | 'sent' | 'error';
 type PhoneStatus = 'idle' | 'sending' | 'verifying' | 'error';
@@ -33,8 +41,9 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const next = safeNext(useSearchParams().get('next'));
   const [method, setMethod] = useState<'email' | 'phone'>('email');
 
   const [email, setEmail] = useState('');
@@ -55,7 +64,7 @@ export default function LoginPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
       if (error) {
         setEmailError(error.message);
@@ -100,7 +109,7 @@ export default function LoginPage() {
         setPhoneError(error.message);
         setPhoneStatus('error');
       } else {
-        router.push('/dashboard');
+        router.push(next);
         router.refresh();
       }
     } catch (err) {
@@ -113,7 +122,7 @@ export default function LoginPage() {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
   }
 
@@ -263,5 +272,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

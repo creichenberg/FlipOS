@@ -50,7 +50,13 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
+    // Preserve the originally-requested page (e.g. a QR code deep-linking to
+    // Filming Mode) so login can send the user back there instead of always
+    // landing on the dashboard.
+    const next = `${pathname}${url.search}`;
     url.pathname = '/login';
+    url.search = '';
+    url.searchParams.set('next', next);
     return NextResponse.redirect(url);
   }
 
