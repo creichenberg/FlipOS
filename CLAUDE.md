@@ -208,20 +208,26 @@ sections on the landing page (hero and closing CTA), the login page, and the das
 use a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary
 accent color, radially masked - as a subtle nod to the product name. On landing, onboarding, and
 login, the grid's default constant diagonal drift is swapped for `MouseShine.tsx`
-(`src/components/design-system/`) - a small, barely-there radial-gradient "light" (a ~60px circle at
-16% opacity) that tracks the visitor's cursor instead of animating on its own, via the
+(`src/components/design-system/`) - a small light confined to the grid's own 1px lines (not the open
+squares between them) that tracks the visitor's cursor instead of animating on its own, via the
 `.bg-blueprint-grid-interactive` modifier class (`animation: none`) plus a `<MouseShine />` child.
-Deliberately simple: an earlier version clipped the gradient with a `mask-image` matching the grid's
-own line pattern so it would only ever light up the 1px lines themselves, not the open squares
-between them, but that turned out unreliable across browsers (reportedly invisible on-device despite
-verifying fine in one testing setup) and was only ever a nice-to-have, not a hard requirement - a
-single unmasked low-opacity gradient is far more robust and not worth re-attempting without a
-concrete cross-browser masking strategy. Also deliberately has no `mix-blend-mode`: these screens are
-locked to the light theme (near-white canvas), where `screen` blending is essentially invisible
-regardless of blend color (an earlier version used it and couldn't be seen even zoomed in). Went
-through several rounds of "too big/obvious" -> "now it's invisible" feedback before landing here -
-if adjusting this again, err toward small/faint rather than reintroducing masking complexity. It
-mutates a ref'd DOM node's `--shine-x`/`--shine-y` CSS custom properties directly from a `mousemove`
+Went through two failed attempts before landing on the current technique, both documented here so a
+third attempt doesn't repeat them: (1) a plain radial-gradient in `background` with no confinement to
+the lines at all, and (2) confining that gradient to the lines via `mask-image` built from four
+comma-separated line-pattern gradients (mirroring `.bg-blueprint-grid`'s own `background-image`
+structure) - reportedly invisible on-device despite verifying fine in this repo's testing setup, most
+likely inconsistent default `mask-composite` behavior across engines when multiple `mask-image` layers
+need to union together. The current version swaps which property holds which: the four-layer line
+pattern is the `background-image` (multiple `background-image` layers always just stack in paint
+order, no composite ambiguity to go wrong) and it's clipped to a small area around the cursor with a
+*single* `mask-image: radial-gradient(...)` - the exact same single-layer-mask technique
+`.bg-blueprint-grid` already uses successfully for its own edge fade a few lines above. Only verified
+in Chromium (the only engine available in this sandbox); if it's ever reported invisible again on a
+specific device, check `mask-composite`/engine-specific quirks before reaching for a different
+approach entirely. Also deliberately has no `mix-blend-mode`: these screens are locked to the light
+theme (near-white canvas), where `screen` blending is essentially invisible regardless of blend color
+(an earlier version used it and couldn't be seen even zoomed in). It mutates a ref'd DOM node's
+`--shine-x`/`--shine-y` CSS custom properties directly from a `mousemove`
 listener on its parent element (not React state, so cursor movement never triggers a re-render),
 rAF-throttled, and listens on the *parent* rather than `window` so the landing page's two independent
 sections each track correctly. Skips attaching the listener entirely under `prefers-reduced-motion`

@@ -184,23 +184,34 @@
   animation: none;
 }
 
-/* A barely-there soft glow at the cursor position. Deliberately simple -
-   an earlier version masked this to only the grid's own 1px lines via a
-   multi-layer mask-image, which turned out to be unreliable across browsers
-   (reportedly invisible on-device even though it verified fine in one
-   testing setup) and wasn't a hard requirement anyway, just an idea. A
-   single low-opacity radial gradient with no masking is far more robust and
-   easier to reason about, at the cost of not being pixel-perfectly confined
-   to the grid lines - it's small and faint enough that this doesn't read as
-   a wash regardless. No mix-blend-mode: these screens are locked to the
-   light theme (near-white canvas, see LIGHT_ONLY_PATHS), and `screen`
-   blending against a near-white base is essentially a no-op regardless of
-   blend color. Defaults to a fixed position (top center-ish) before the
-   first mousemove, and stays there permanently for touch devices, which
-   never fire mousemove at all. */
+/* Confined to the grid's own lines, but via a different (more reliable)
+   technique than the first attempt. That version put the line pattern in
+   mask-image (4 comma-separated gradient layers relying on implicit "add"
+   compositing to union together) and a plain radial-gradient in
+   background - reportedly invisible on-device despite verifying fine here,
+   most likely inconsistent default mask-composite behavior across engines.
+   This version swaps which property holds which: the line pattern (same
+   four linear-gradients/tile sizes as .bg-blueprint-grid) is the
+   background-image - multiple background-image layers always just stack in
+   order, no composite ambiguity - and it's clipped down to a small area
+   around the cursor with a *single* mask-image radial-gradient, the exact
+   same single-layer-mask technique .bg-blueprint-grid already uses for its
+   own edge fade (see above) and is known to work reliably. Defaults to a
+   fixed position (top center-ish) before the first mousemove, and stays
+   there permanently for touch devices, which never fire mousemove at all. */
 .mouse-shine {
-  background: radial-gradient(60px circle at var(--shine-x, 50%) var(--shine-y, 15%), color-mix(in oklch, var(--primary) 16%, transparent), transparent 70%);
-  transition: background 120ms linear;
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--primary) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--primary) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to right, color-mix(in oklch, var(--primary) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--primary) 70%, transparent) 1px, transparent 1px);
+  background-size:
+    16px 16px,
+    16px 16px,
+    96px 96px,
+    96px 96px;
+  mask-image: radial-gradient(70px circle at var(--shine-x, 50%) var(--shine-y, 15%), black, transparent 70%);
+  -webkit-mask-image: radial-gradient(70px circle at var(--shine-x, 50%) var(--shine-y, 15%), black, transparent 70%);
 }
 
 /* A small glossy highlight on the logo mark (InteractiveLogo.tsx) - blended
