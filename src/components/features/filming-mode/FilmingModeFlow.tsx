@@ -112,6 +112,7 @@ export function FilmingModeFlow({
   });
   const [saving, setSaving] = useState(false);
   const [skipWarningOpen, setSkipWarningOpen] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
 
   const current = steps[state.index];
   const isComplete = state.index >= steps.length;
@@ -133,6 +134,13 @@ export function FilmingModeFlow({
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? 'Failed to save progress');
+      }
+      // A clip was uploaded for this step - flash a checkmark before
+      // advancing so the upload feels confirmed, not just silently accepted.
+      if (clipNames[current.id]) {
+        setJustCompleted(true);
+        await new Promise((resolve) => setTimeout(resolve, 550));
+        setJustCompleted(false);
       }
       dispatch({ type: 'MARK_DONE', id: current.id, stepIds });
     } catch (err) {
@@ -232,7 +240,15 @@ export function FilmingModeFlow({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border-subtle bg-surface p-8 text-center shadow-sm">
+      <div className="relative rounded-2xl border border-border-subtle bg-surface p-8 text-center shadow-sm">
+        {justCompleted && (
+          <div className="animate-in fade-in zoom-in-95 absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-surface duration-200">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
+              <Check className="h-6 w-6 text-emerald-500" />
+            </div>
+          </div>
+        )}
+
         <div key={current.id} className="animate-in fade-in slide-in-from-right-2 duration-300">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             {current.kind === 'shot' ? <Camera className="h-5 w-5 text-primary" /> : <Mic className="h-5 w-5 text-primary" />}

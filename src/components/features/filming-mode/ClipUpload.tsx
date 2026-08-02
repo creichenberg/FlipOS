@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Film, Mic, Square, Upload, Check } from 'lucide-react';
+import { Mic, Square, Upload, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -160,12 +160,6 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
             {fileName ? 'Replace' : 'Upload file'}
           </Button>
         </div>
-        {fileName && (
-          <p className="mt-1.5 flex items-center justify-center gap-1.5 text-xs text-text-secondary">
-            <Mic className="h-3 w-3" />
-            {fileName}
-          </p>
-        )}
       </div>
     );
   }
@@ -188,12 +182,6 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
           </>
         )}
       </Button>
-      {fileName && (
-        <p className="mt-1.5 flex items-center justify-center gap-1.5 text-xs text-text-secondary">
-          <Film className="h-3 w-3" />
-          {fileName}
-        </p>
-      )}
     </div>
   );
 }
