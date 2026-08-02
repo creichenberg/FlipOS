@@ -139,6 +139,16 @@ export type StripeEvent = {
   payload: Record<string, unknown>;
 }
 
+export type QrLoginToken = {
+  id: string;
+  token: string;
+  user_id: string;
+  next_path: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -169,6 +179,7 @@ export type Database = {
       media_uploads: { Row: MediaUpload; Insert: Partial<MediaUpload>; Update: Partial<MediaUpload>; Relationships: [] };
       subscriptions: { Row: Subscription; Insert: Partial<Subscription>; Update: Partial<Subscription>; Relationships: [] };
       stripe_events: { Row: StripeEvent; Insert: Partial<StripeEvent>; Update: Partial<StripeEvent>; Relationships: [] };
+      qr_login_tokens: { Row: QrLoginToken; Insert: Partial<QrLoginToken>; Update: Partial<QrLoginToken>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

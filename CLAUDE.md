@@ -55,9 +55,25 @@ dashboard.
   and records a `media_uploads` row via the browser client, gated by the RLS policies in
   `0002_media_uploads.sql` rather than a server route.
 - `src/components/design-system/QrCode.tsx` - shown desktop-only (`hidden ... lg:flex`) on the
-  Filming Mode page, encoding that page's own URL so scanning it continues the same guided flow (and
-  clip uploads) on a phone. Resolves the absolute URL from `window.location` client-side rather than
-  a server-computed host header, so it's correct on every deployment without configuration.
+  Filming Mode page, encoding an auto-login URL (`/auth/qr?token=...`) so scanning it signs you in on
+  your phone and continues the same guided flow (and clip uploads) without re-entering credentials.
+  Resolves the absolute URL from `window.location` client-side rather than a server-computed host
+  header, so it's correct on every deployment without configuration.
+- **QR auto-login** (`src/lib/qrLogin.ts`, `src/app/auth/qr/route.ts`,
+  `supabase/migrations/0003_qr_login_tokens.sql`) - a real auth-bypass mechanism, built carefully on
+  purpose: the token is 256 bits of `crypto.randomBytes` (not guessable), single-use (consumed via an
+  atomic conditional `UPDATE ... WHERE used_at IS NULL AND expires_at > now() RETURNING ...`, so a
+  race between two requests for the same token can only let one through), expires in 2 minutes, and
+  `qr_login_tokens` has RLS enabled with **zero policies** - default-deny for the anon/authenticated
+  roles, reachable only through the service-role client, same as `stripe_events`. Redemption exchanges
+  the token for a real session via `admin.generateLink({type:'magiclink'})` +
+  `supabase.auth.verifyOtp({type:'magiclink', token_hash})` server-side (no email is actually sent).
+  Phone-only accounts (no email on file) fall back to a normal manual sign-in, same as before this
+  existed. `/auth/qr` has to be in `middleware.ts`'s `PUBLIC_PATHS` - it's hit while signed out by
+  design, and its own token validity is what gates it, not session state. If you ever touch this flow,
+  keep the short expiry and single-use consume - anyone who sees the QR code (a screenshot, a photo,
+  a shared screen) can use it until it expires, which is the tradeoff explicitly accepted here in
+  exchange for a much smoother scan-to-film handoff.
 - **Login `next` redirect param** (`src/lib/supabase/middleware.ts`, `login/page.tsx`,
   `auth/callback/route.ts`) - middleware appends the originally-requested path when bouncing an
   unauthenticated request to `/login` (e.g. a QR scan landing on `/cards/[id]/film` while logged

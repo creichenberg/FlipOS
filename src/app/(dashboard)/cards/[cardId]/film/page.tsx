@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { requireBusiness } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
+import { createQrLoginToken } from '@/lib/qrLogin';
 import { PageHeader } from '@/components/design-system/PageHeader';
 import { QrCode } from '@/components/design-system/QrCode';
 import { FilmingModeFlow } from '@/components/features/filming-mode/FilmingModeFlow';
@@ -56,10 +57,22 @@ export default async function FilmPage({ params }: { params: Promise<{ cardId: s
     .eq('video_card_id', cardId)
     .order('uploaded_at', { ascending: false });
 
+  // Auto-login handoff: falls back to a normal sign-in on the phone (same
+  // as before this existed) if token creation fails for any reason, e.g.
+  // the service-role key isn't configured in this environment.
+  let qrPath = `/cards/${cardId}/film`;
+  try {
+    const token = await createQrLoginToken(business.user_id, `/cards/${cardId}/film`);
+    qrPath = `/auth/qr?token=${token}`;
+  } catch {
+    // qrPath stays the plain page URL - scanning still works, just without
+    // the auto-login handoff.
+  }
+
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <PageHeader title="Filming mode" description={card.title} />
-      <QrCode path={`/cards/${cardId}/film`} />
+      <QrCode path={qrPath} />
       <FilmingModeFlow
         cardId={cardId}
         businessId={business.id}
