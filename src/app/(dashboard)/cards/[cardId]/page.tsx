@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Camera, ArrowRight } from 'lucide-react';
 import { requireBusiness } from '@/lib/session';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/design-system/PageHeader';
@@ -35,15 +35,28 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title={card.title}
-        description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`}
-        actions={
-          <Button asChild>
-            <Link href={`/cards/${cardId}/film`}>Start filming</Link>
-          </Button>
-        }
-      />
+      <PageHeader title={card.title} description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`} />
+
+      <Link
+        href={`/cards/${cardId}/film`}
+        className="hover-lift group flex flex-col items-center gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center shadow-[0_16px_36px_-24px_color-mix(in_oklch,var(--primary)_60%,transparent)] sm:flex-row sm:justify-between sm:text-left"
+      >
+        <div className="flex flex-col items-center gap-4 sm:flex-row">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <Camera className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Ready to film?</h2>
+            <p className="text-sm text-text-secondary">A guided, step-by-step flow walks you through every shot and line.</p>
+          </div>
+        </div>
+        <Button asChild size="lg" className="w-full shrink-0 sm:w-auto" tabIndex={-1}>
+          <span>
+            Start filming
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Button>
+      </Link>
 
       <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
         <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
