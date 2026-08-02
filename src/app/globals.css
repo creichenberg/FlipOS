@@ -184,41 +184,22 @@
   animation: none;
 }
 
-/* A small, dim light that only shows up where the grid's own lines are -
-   masked with the exact same two-scale line pattern and tile sizes as
-   .bg-blueprint-grid so the mask holes line up pixel-for-pixel with the
-   visible lines, so it reads as a glint traveling along the blueprint lines
-   themselves rather than a colored wash over the open squares between them.
-   No mix-blend-mode here on purpose - these screens are locked to the light
-   theme (near-white canvas, see LIGHT_ONLY_PATHS), and `screen` blending
-   against a near-white base is essentially a no-op regardless of the blend
-   color, which is why an earlier version of this was invisible; a plain
-   translucent color read directly against the (already line-pixel-masked)
-   background stays reliably visible. Defaults to a fixed position (top
-   center-ish) before the first mousemove, and stays there permanently for
-   touch devices, which never fire mousemove at all. */
+/* A barely-there soft glow at the cursor position. Deliberately simple -
+   an earlier version masked this to only the grid's own 1px lines via a
+   multi-layer mask-image, which turned out to be unreliable across browsers
+   (reportedly invisible on-device even though it verified fine in one
+   testing setup) and wasn't a hard requirement anyway, just an idea. A
+   single low-opacity radial gradient with no masking is far more robust and
+   easier to reason about, at the cost of not being pixel-perfectly confined
+   to the grid lines - it's small and faint enough that this doesn't read as
+   a wash regardless. No mix-blend-mode: these screens are locked to the
+   light theme (near-white canvas, see LIGHT_ONLY_PATHS), and `screen`
+   blending against a near-white base is essentially a no-op regardless of
+   blend color. Defaults to a fixed position (top center-ish) before the
+   first mousemove, and stays there permanently for touch devices, which
+   never fire mousemove at all. */
 .mouse-shine {
-  background: radial-gradient(80px circle at var(--shine-x, 50%) var(--shine-y, 15%), color-mix(in oklch, var(--primary) 40%, transparent), transparent 70%);
-  mask-image:
-    linear-gradient(to right, black 1px, transparent 1px),
-    linear-gradient(to bottom, black 1px, transparent 1px),
-    linear-gradient(to right, black 1px, transparent 1px),
-    linear-gradient(to bottom, black 1px, transparent 1px);
-  mask-size:
-    16px 16px,
-    16px 16px,
-    96px 96px,
-    96px 96px;
-  -webkit-mask-image:
-    linear-gradient(to right, black 1px, transparent 1px),
-    linear-gradient(to bottom, black 1px, transparent 1px),
-    linear-gradient(to right, black 1px, transparent 1px),
-    linear-gradient(to bottom, black 1px, transparent 1px);
-  -webkit-mask-size:
-    16px 16px,
-    16px 16px,
-    96px 96px,
-    96px 96px;
+  background: radial-gradient(60px circle at var(--shine-x, 50%) var(--shine-y, 15%), color-mix(in oklch, var(--primary) 16%, transparent), transparent 70%);
   transition: background 120ms linear;
 }
 

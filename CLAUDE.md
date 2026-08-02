@@ -208,26 +208,28 @@ sections on the landing page (hero and closing CTA), the login page, and the das
 use a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary
 accent color, radially masked - as a subtle nod to the product name. On landing, onboarding, and
 login, the grid's default constant diagonal drift is swapped for `MouseShine.tsx`
-(`src/components/design-system/`) - a small, dim radial-gradient "light" (a tight ~80px circle at
-low opacity - went through several rounds of "too big/obvious" feedback before landing here) that
-tracks the visitor's cursor instead of animating on its own, via the `.bg-blueprint-grid-interactive`
-modifier class (`animation: none`) plus a `<MouseShine />` child. Its `background` is clipped with a
-`mask-image` built from the exact same two-scale line pattern/tile sizes as `.bg-blueprint-grid`, so
-it only ever lights up the grid's own 1px lines - not the open squares between them - reading as a
-glint traveling along the blueprint lines rather than a colored wash. Deliberately has no
-`mix-blend-mode`: these screens are locked to the light theme (near-white canvas), where `screen`
-blending is essentially invisible regardless of blend color (an earlier version used it and couldn't
-be seen even zoomed in) - a plain translucent color read directly against the already-masked
-background stays reliably visible without needing a blend trick. It mutates a ref'd DOM node's
-`--shine-x`/`--shine-y` CSS custom properties directly from a `mousemove` listener on its parent
-element (not React state, so cursor movement never triggers a re-render), rAF-throttled, and listens
-on the *parent* rather than `window` so the landing page's two independent sections each track
-correctly. Skips attaching the listener entirely under `prefers-reduced-motion` (falls back to a
-fixed default position) and degrades the same way on touch devices, which never fire `mousemove`.
-Only the dashboard empty state keeps the original drift untouched - this is scoped to the
-marketing/auth screens, per explicit request, not a wholesale replacement of `.bg-blueprint-grid`'s
-default behavior. `MouseShine` takes a `stacking` prop (`'below-content'` default, or
-`'above-siblings'`)
+(`src/components/design-system/`) - a small, barely-there radial-gradient "light" (a ~60px circle at
+16% opacity) that tracks the visitor's cursor instead of animating on its own, via the
+`.bg-blueprint-grid-interactive` modifier class (`animation: none`) plus a `<MouseShine />` child.
+Deliberately simple: an earlier version clipped the gradient with a `mask-image` matching the grid's
+own line pattern so it would only ever light up the 1px lines themselves, not the open squares
+between them, but that turned out unreliable across browsers (reportedly invisible on-device despite
+verifying fine in one testing setup) and was only ever a nice-to-have, not a hard requirement - a
+single unmasked low-opacity gradient is far more robust and not worth re-attempting without a
+concrete cross-browser masking strategy. Also deliberately has no `mix-blend-mode`: these screens are
+locked to the light theme (near-white canvas), where `screen` blending is essentially invisible
+regardless of blend color (an earlier version used it and couldn't be seen even zoomed in). Went
+through several rounds of "too big/obvious" -> "now it's invisible" feedback before landing here -
+if adjusting this again, err toward small/faint rather than reintroducing masking complexity. It
+mutates a ref'd DOM node's `--shine-x`/`--shine-y` CSS custom properties directly from a `mousemove`
+listener on its parent element (not React state, so cursor movement never triggers a re-render),
+rAF-throttled, and listens on the *parent* rather than `window` so the landing page's two independent
+sections each track correctly. Skips attaching the listener entirely under `prefers-reduced-motion`
+(falls back to a fixed default position) and degrades the same way on touch devices, which never fire
+`mousemove`. Only the dashboard empty state keeps the original drift untouched - this is scoped to
+the marketing/auth screens, per explicit request, not a wholesale replacement of
+`.bg-blueprint-grid`'s default behavior. `MouseShine` takes a `stacking` prop (`'below-content'`
+default, or `'above-siblings'`)
 because the two screens need opposite z-index handling: on landing/onboarding the grid pattern is
 the section's own CSS background, so the shine needs a negative z-index to sit behind the plain
 static in-flow copy above it; on login the grid is a separate absolutely-positioned sibling `<div>`
