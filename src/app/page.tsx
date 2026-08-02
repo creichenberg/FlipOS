@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/design-system/Logo';
 import { Reveal } from '@/components/design-system/Reveal';
+import { MouseShine } from '@/components/design-system/MouseShine';
 
 const STEPS = [
   {
@@ -119,7 +120,8 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      <section className="bg-blueprint-grid flex flex-col items-center px-6 pb-20 pt-24 text-center">
+      <section className="bg-blueprint-grid bg-blueprint-grid-interactive relative flex flex-col items-center px-6 pb-20 pt-24 text-center">
+        <MouseShine />
         <p className="animate-in fade-in slide-in-from-bottom-2 font-mono text-xs font-medium uppercase tracking-[0.15em] text-primary duration-700">
           Blueprint Studio
         </p>
@@ -249,7 +251,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t border-border-subtle bg-blueprint-grid px-6 py-20 text-center">
+      <section className="bg-blueprint-grid bg-blueprint-grid-interactive relative border-t border-border-subtle px-6 py-20 text-center">
+        <MouseShine />
         <h2 className="text-2xl font-semibold tracking-tight">Ready to plan this week&apos;s content?</h2>
         <p className="mx-auto mt-3 max-w-md text-sm text-text-secondary">
           Set up your business profile in a few minutes and get your first weekly plan right away.

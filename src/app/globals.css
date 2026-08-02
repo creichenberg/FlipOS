@@ -177,6 +177,25 @@
   }
 }
 
+/* Landing and onboarding swap the grid's constant drift for a light that
+   follows the visitor's cursor instead (see MouseShine.tsx) - login and the
+   dashboard empty state keep the original ambient drift untouched. */
+.bg-blueprint-grid-interactive {
+  animation: none;
+}
+
+/* Two layers at the same tracked point - a soft wide glow plus a tighter,
+   brighter core - so it reads as an actual light source over the grid
+   rather than a single flat gradient. Defaults to a fixed position (top
+   center-ish) before the first mousemove, and stays there permanently for
+   touch devices, which never fire mousemove at all. */
+.mouse-shine {
+  background:
+    radial-gradient(220px circle at var(--shine-x, 50%) var(--shine-y, 15%), color-mix(in oklch, var(--primary) 45%, transparent), transparent 70%),
+    radial-gradient(520px circle at var(--shine-x, 50%) var(--shine-y, 15%), color-mix(in oklch, var(--primary) 22%, transparent), transparent 70%);
+  transition: background 120ms linear;
+}
+
 /* Slow ambient "breathing" for the login page's glow orbs - reinforces the
    glass-card depth without drawing the eye away from the sign-in form. */
 @keyframes glow-pulse {
@@ -218,6 +237,9 @@
   .glow-orb,
   .render-sweep {
     animation: none;
+  }
+  .mouse-shine {
+    transition: none;
   }
   /* Blanket safety net for every entrance animation added below (Reveal,
      Filming Mode step transitions, tw-animate-css's animate-in/out used by

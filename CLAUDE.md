@@ -203,10 +203,21 @@ user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashb
 just wiring, not new tokens. `src/components/providers.tsx`'s `LIGHT_ONLY_PATHS` (`/`, `/login`,
 `/onboarding`) forces `light` via `ThemeProvider`'s `forcedTheme` on the landing page, login, and
 onboarding - there's no toggle on any of them, so dark mode would just be an unstyled/unintended
-combination rather than a real supported state. The onboarding page, the landing page's hero section,
-and the dashboard's empty state additionally use a `.bg-blueprint-grid` utility (also in
-`globals.css`) - a faint two-scale grid in the primary accent color, radially masked - as a subtle
-nod to the product name.
+combination rather than a real supported state. The onboarding page, both `.bg-blueprint-grid`
+sections on the landing page (hero and closing CTA), and the dashboard's empty state use a
+`.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary accent
+color, radially masked - as a subtle nod to the product name. On the landing page and onboarding
+specifically, the grid's default constant diagonal drift is swapped for `MouseShine.tsx`
+(`src/components/design-system/`) - a two-layer radial-gradient "light" that tracks the visitor's
+cursor instead of animating on its own, via the `.bg-blueprint-grid-interactive` modifier class
+(`animation: none`) plus a `<MouseShine />` child. It mutates a ref'd DOM node's `--shine-x`/
+`--shine-y` CSS custom properties directly from a `mousemove` listener on its parent element (not
+React state, so cursor movement never triggers a re-render), rAF-throttled, and listens on the
+*parent* rather than `window` so the landing page's two independent sections each track correctly.
+Skips attaching the listener entirely under `prefers-reduced-motion` (falls back to a fixed default
+position) and degrades the same way on touch devices, which never fire `mousemove`. Login and the
+dashboard empty state keep the original drift untouched - this is scoped to landing/onboarding only,
+per explicit request, not a wholesale replacement of `.bg-blueprint-grid`'s default behavior.
 
 **Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
 this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,
