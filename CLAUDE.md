@@ -99,9 +99,23 @@ dashboard.
   as a mock so it's never mistaken for a real multi-clip, captioned edit. The render route validates
   every shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no
   music to paper over a gap. `RenderVideoPanel.tsx` polls `GET /api/cards/[cardId]/render` every 2s
-  while a job is queued/rendering. Adding a real vendor (Creatomate is the current front-runner - see
-  the plan doc and CLAUDE.md above for the cost/capability research) means implementing
-  `RenderProvider` and swapping the constructor in `getRenderProvider()` - nothing else changes.
+  while a job is queued/rendering, showing `RenderingAnimation.tsx` (a purely cosmetic 4-step
+  sequence - it doesn't track real backend progress, since queued/rendering/complete/failed is all
+  the status the API exposes) instead of a plain spinner. That panel enforces a **hard 5-second
+  minimum display time** for the animation, gated off the render job's real `created_at` (not
+  component-mount time, so a mid-render page refresh still gates correctly): `job`/`setJob` track the
+  true polled state, `displayJob`/`setDisplayJob` track what's rendered, and `revealWhenReady()`
+  delays flipping `displayJob` to a `complete`/`failed` result via `setTimeout` until 5s have elapsed
+  since `created_at`, even though the mock provider itself finishes in ~4s - a render that visibly
+  resolves in under a second reads as fake, not fast. The sweeping progress bar inside
+  `RenderingAnimation.tsx` uses a `.render-sweep` keyframe in `globals.css`, following the same
+  `prefers-reduced-motion` guard pattern as `.glow-orb`/`.bg-blueprint-grid`. Adding a real vendor
+  (Creatomate is the current front-runner - see the plan doc and CLAUDE.md above for the cost/
+  capability research) means implementing `RenderProvider` and swapping the constructor in
+  `getRenderProvider()` - nothing else changes.
+- `src/components/features/dashboard/TipOfTheDay.tsx` - a short filming/social-media tip shown at the
+  top of the dashboard, picked deterministically from a fixed list by day-of-year (`Date.UTC`-based,
+  no client state) so it's stable across refreshes without needing to persist anything.
 - `src/lib/plans.ts` - the Base/Pro tier definitions (price, videos/week) plus the price-id <-> tier
   mapping helpers. `POST /api/plans/[businessId]/generate` looks up the business owner's active
   subscription tier (defaulting to Base if there isn't one) and passes `videosPerWeek` through to

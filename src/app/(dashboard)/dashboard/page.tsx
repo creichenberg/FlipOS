@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/design-system/EmptyState';
 import { VideoCardTile } from '@/components/design-system/VideoCardTile';
 import { WeekProgress } from '@/components/design-system/WeekProgress';
 import { GeneratePlanButton, RegeneratePlanButton } from '@/components/features/dashboard/GeneratePlanButton';
+import { TipOfTheDay } from '@/components/features/dashboard/TipOfTheDay';
 
 export default async function DashboardPage() {
   const business = await requireBusiness();
@@ -32,6 +33,8 @@ export default async function DashboardPage() {
         description="This week's video plan, ready to film."
         actions={plan?.status === 'ready' && cards.length > 0 ? <RegeneratePlanButton businessId={business.id} /> : undefined}
       />
+
+      <TipOfTheDay />
 
       {plan?.status === 'ready' && cards.length > 0 ? (
         <>

@@ -5,9 +5,14 @@ import Link from 'next/link';
 import { Film, RefreshCw, TriangleAlert, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { RenderingAnimation } from './RenderingAnimation';
 import type { RenderJob } from '@/lib/types/database';
 
 const POLL_INTERVAL_MS = 2000;
+// However fast the real (or mock) render finishes, keep the loading
+// animation on screen for at least this long - a render that resolves in
+// under a second reads as broken/fake, not fast.
+const MIN_DISPLAY_MS = 5000;
 
 export function RenderVideoPanel({
   cardId,
@@ -21,14 +26,32 @@ export function RenderVideoPanel({
   initialJob: RenderJob | null;
 }) {
   const [job, setJob] = useState(initialJob);
+  const [displayJob, setDisplayJob] = useState(initialJob);
   const [starting, setStarting] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (revealTimeoutRef.current) clearTimeout(revealTimeoutRef.current);
     };
   }, []);
+
+  // Settled results (complete/failed) are held back until the job has been
+  // "in flight" for at least MIN_DISPLAY_MS, measured from the job's real
+  // created_at - so a page refresh mid-render still gates correctly instead
+  // of restarting the 5-second window from scratch.
+  function revealWhenReady(nextJob: RenderJob) {
+    const elapsed = Date.now() - new Date(nextJob.created_at).getTime();
+    const remaining = MIN_DISPLAY_MS - elapsed;
+    if (revealTimeoutRef.current) clearTimeout(revealTimeoutRef.current);
+    if (remaining <= 0) {
+      setDisplayJob(nextJob);
+    } else {
+      revealTimeoutRef.current = setTimeout(() => setDisplayJob(nextJob), remaining);
+    }
+  }
 
   function pollUntilDone() {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -41,6 +64,9 @@ export function RenderVideoPanel({
           setJob(body.job);
           if (body.job.status === 'complete' || body.job.status === 'failed') {
             if (pollRef.current) clearInterval(pollRef.current);
+            revealWhenReady(body.job);
+          } else {
+            setDisplayJob(body.job);
           }
         }
       } catch {
@@ -56,6 +82,7 @@ export function RenderVideoPanel({
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? 'Failed to start render');
       setJob(body);
+      setDisplayJob(body);
       pollUntilDone();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to start render');
@@ -95,7 +122,7 @@ export function RenderVideoPanel({
         </span>
       </div>
 
-      {!job && (
+      {!displayJob && (
         <div className="mt-4 text-center">
           <p className="text-sm text-text-secondary">Every clip is uploaded - combine them into one edited video with captions.</p>
           <Button className="mt-4" onClick={startRender} disabled={starting}>
@@ -105,18 +132,13 @@ export function RenderVideoPanel({
         </div>
       )}
 
-      {job?.status === 'queued' || job?.status === 'rendering' ? (
-        <div className="mt-4 flex items-center gap-3 rounded-lg border border-border-subtle bg-canvas px-4 py-3">
-          <RefreshCw className="h-4 w-4 animate-spin text-primary motion-reduce:animate-none" />
-          <p className="text-sm text-text-secondary">Rendering your video…</p>
-        </div>
-      ) : null}
+      {displayJob?.status === 'queued' || displayJob?.status === 'rendering' ? <RenderingAnimation /> : null}
 
-      {job?.status === 'failed' && (
+      {displayJob?.status === 'failed' && (
         <div className="mt-4 space-y-3">
           <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
             <TriangleAlert className="h-4 w-4 shrink-0 text-destructive" />
-            <p className="text-sm text-destructive">{job.error_message ?? 'The render failed.'}</p>
+            <p className="text-sm text-destructive">{displayJob.error_message ?? 'The render failed.'}</p>
           </div>
           <Button variant="outline" onClick={startRender} disabled={starting}>
             {starting ? 'Starting…' : 'Try again'}
@@ -124,9 +146,9 @@ export function RenderVideoPanel({
         </div>
       )}
 
-      {job?.status === 'complete' && job.video_url && (
+      {displayJob?.status === 'complete' && displayJob.video_url && (
         <div className="mt-4 space-y-3">
-          <video src={job.video_url} controls className="mx-auto max-h-[480px] w-full max-w-[270px] rounded-lg bg-black" />
+          <video src={displayJob.video_url} controls className="mx-auto max-h-[480px] w-full max-w-[270px] rounded-lg bg-black" />
           <p className="text-center text-xs text-text-secondary">
             This is a mock preview (your first uploaded clip) proving the pipeline works - not a real multi-clip, captioned
             edit. Swap in a real rendering vendor when you&apos;re ready for that.

@@ -70,7 +70,7 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
         ref={inputRef}
         type="file"
         accept={isAudio ? 'audio/*' : 'video/*'}
-        capture={isAudio ? true : 'environment'}
+        capture={isAudio ? 'user' : 'environment'}
         className="hidden"
         onChange={handleFile}
       />
