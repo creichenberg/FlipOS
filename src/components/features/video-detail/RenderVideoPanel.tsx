@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Film, RefreshCw, TriangleAlert, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -92,11 +93,24 @@ export function RenderVideoPanel({
   }
 
   const isActive = job?.status === 'queued' || job?.status === 'rendering';
+  const showFullScreenAnimation = displayJob?.status === 'queued' || displayJob?.status === 'rendering';
 
   useEffect(() => {
     if (isActive) pollUntilDone();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The edit itself is the product's main event, so it takes over the whole
+  // screen rather than playing out in a small panel - lock background scroll
+  // while it's up so it reads as a real takeover, not a floating overlay.
+  useEffect(() => {
+    if (!showFullScreenAnimation) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showFullScreenAnimation]);
 
   if (!canRender) {
     return (
@@ -132,8 +146,6 @@ export function RenderVideoPanel({
         </div>
       )}
 
-      {displayJob?.status === 'queued' || displayJob?.status === 'rendering' ? <RenderingAnimation /> : null}
-
       {displayJob?.status === 'failed' && (
         <div className="mt-4 space-y-3">
           <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3">
@@ -161,6 +173,19 @@ export function RenderVideoPanel({
           </div>
         </div>
       )}
+
+      {showFullScreenAnimation && typeof document !== 'undefined'
+        ? createPortal(
+            <div className="animate-in fade-in fixed inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-canvas/98 px-6 duration-300 backdrop-blur-sm">
+              <p className="font-mono text-xs font-medium uppercase tracking-wide text-primary">Editing your video</p>
+              <p className="text-sm text-text-secondary">This won&apos;t take long.</p>
+              <div className="mt-4 w-full max-w-sm">
+                <RenderingAnimation />
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </section>
   );
 }

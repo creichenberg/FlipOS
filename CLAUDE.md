@@ -119,7 +119,10 @@ dashboard.
   music to paper over a gap. `RenderVideoPanel.tsx` polls `GET /api/cards/[cardId]/render` every 2s
   while a job is queued/rendering, showing `RenderingAnimation.tsx` (a purely cosmetic 4-step
   sequence - it doesn't track real backend progress, since queued/rendering/complete/failed is all
-  the status the API exposes) instead of a plain spinner. That panel enforces a **hard 5-second
+  the status the API exposes) full-screen via `createPortal(..., document.body)` instead of inline in
+  the panel - the edit is the product's main event, not a background task, so it takes over the whole
+  viewport (with body scroll locked for the duration) rather than playing out in a small card. That
+  full-screen takeover enforces a **hard 5-second
   minimum display time** for the animation, gated off the render job's real `created_at` (not
   component-mount time, so a mid-render page refresh still gates correctly): `job`/`setJob` track the
   true polled state, `displayJob`/`setDisplayJob` track what's rendered, and `revealWhenReady()`
