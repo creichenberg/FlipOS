@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Logo } from '@/components/design-system/Logo';
+import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
 
 // Only accept a same-origin relative path (never "//host/..." or an absolute
 // URL) - `next` comes from a query param on an otherwise-public URL, so
@@ -134,7 +134,7 @@ function LoginForm() {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <Logo className="mb-4 h-10 w-10 rounded-xl shadow-[0_8px_20px_-6px_color-mix(in_oklch,var(--primary)_50%,transparent)]" />
+          <InteractiveLogo className="mb-4 h-10 w-10 rounded-xl shadow-[0_8px_20px_-6px_color-mix(in_oklch,var(--primary)_50%,transparent)]" />
           <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
         </div>
 

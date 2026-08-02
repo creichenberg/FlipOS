@@ -218,6 +218,14 @@ Skips attaching the listener entirely under `prefers-reduced-motion` (falls back
 position) and degrades the same way on touch devices, which never fire `mousemove`. Login and the
 dashboard empty state keep the original drift untouched - this is scoped to landing/onboarding only,
 per explicit request, not a wholesale replacement of `.bg-blueprint-grid`'s default behavior.
+`InteractiveLogo.tsx` (same directory) applies the same idea at icon scale: the "Blueprint Studio"
+logo mark on the landing header and the login page (explicitly included here, unlike the background
+treatment above) gets a small glossy highlight (`.logo-shine`, blended with `mix-blend-mode: overlay`
+so it reads as light on a glossy surface rather than a flat white smudge) clipped to the mark's own
+rounded-square shape via a wrapping `overflow-hidden` span. It tracks `window` mousemove rather than
+a parent element - unlike `MouseShine`, there's only ever one logo per page, so there's no risk of
+multiple instances needing independent tracking. Plain `Logo.tsx` (no client-side behavior) is still
+used as-is anywhere the shine wasn't requested, e.g. the dashboard nav.
 
 **Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
 this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,

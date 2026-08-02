@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/design-system/Logo';
+import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
 import { Reveal } from '@/components/design-system/Reveal';
 import { MouseShine } from '@/components/design-system/MouseShine';
 
@@ -106,7 +106,7 @@ export default async function LandingPage() {
       <header className="border-b border-border-subtle">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <Logo className="h-6 w-6 rounded-md" />
+            <InteractiveLogo className="h-6 w-6 rounded-md" />
             <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
           </div>
           <div className="flex items-center gap-4">
