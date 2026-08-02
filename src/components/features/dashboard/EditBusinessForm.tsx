@@ -85,7 +85,7 @@ export function EditBusinessForm({ business }: { business: Business }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border border-border-subtle bg-surface p-6">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-border-subtle bg-surface p-6 shadow-sm">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Business name</Label>

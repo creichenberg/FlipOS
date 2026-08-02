@@ -101,17 +101,26 @@ dashboard.
 ## Design language
 
 Neutral palette (`--bg-canvas`, `--bg-surface`/`bg-surface`, `--border-subtle`, `--text-secondary`)
-plus one accent (`--primary`, an indigo, not blue - blue reads as generic-SaaS) defined in
-`src/app/globals.css`. Radius capped at the shadcn default `--radius-lg` (10px) - never reach for
-Tailwind's `rounded-xl`/`2xl`/`3xl` in new components, that's the single most direct violation of the
-"don't look AI-generated" brief. Borders over shadows for separation; shadows reserved for genuinely
-elevated surfaces (dropdowns, modals). Dark-first via `next-themes` (`defaultTheme="dark"`), with a
+plus one accent (`--primary`, a warm terracotta/rust - not indigo/purple, which read as the most
+overused "trying not to be blue" SaaS accent; terracotta also nods to the red/amber pencil used to
+annotate blue technical drawings) defined in `src/app/globals.css`. **Radius is tiered on purpose,
+not uniform** - functional UI (buttons, inputs, badges) stays at the shadcn default `--radius-lg`
+(10px), but "showcase" surfaces (feature/pricing cards, the hook and "ready to post" panels on the
+card detail page, the onboarding card, Filming Mode's step card) use `rounded-xl`/`rounded-2xl`
+deliberately, so hierarchy comes from real variation instead of identical padding/radius everywhere -
+that uniformity is exactly what makes generated UI read as templated. Section eyebrows and small
+technical labels (`STEP 2 OF 5`, day-of-week tags, the landing page's section kickers) use
+`font-mono` (Geist Mono, already loaded as `--font-geist-mono`) to differentiate from body text and
+reinforce the "blueprint" identity - body copy stays on Geist Sans. Borders over shadows for
+separation; shadows reserved for genuinely elevated surfaces (dropdowns, modals, and now these
+tiered showcase cards). Interactive cards (video tiles, feature/pricing cards) use the `.hover-lift`
+utility (`globals.css`) - a small translateY + accent-tinted shadow on hover, not a decorative fade,
+skipped under `prefers-reduced-motion`. Dark-first via `next-themes` (`defaultTheme="dark"`), with a
 user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashboard nav) switching
 `resolvedTheme` between `dark`/`light` - both palettes are fully defined in `globals.css`, so this is
-just wiring, not new tokens. The onboarding page and the landing page's hero section additionally use
-a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary accent
-color, radially masked - as a subtle nod to the product name; keep it off other pages (dashboard,
-settings, etc.), it's decorative and meant for pre-auth/entry screens only.
+just wiring, not new tokens. The onboarding page, the landing page's hero section, and the dashboard's
+empty state additionally use a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint
+two-scale grid in the primary accent color, radially masked - as a subtle nod to the product name.
 
 **Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
 this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,

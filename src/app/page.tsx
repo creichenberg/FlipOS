@@ -8,17 +8,17 @@ import { Logo } from '@/components/design-system/Logo';
 const STEPS = [
   {
     icon: Calendar,
-    title: '1. Get your weekly plan',
+    title: 'Get your weekly plan',
     description: '5-10 video ideas a week (depending on your plan), built specifically for your business - no generic content calendar filler.',
   },
   {
     icon: Clapperboard,
-    title: '2. Open a card for the full package',
+    title: 'Open a card for the full package',
     description: 'Every idea expands into a hook, a full script, a shot-by-shot filming guide, and a caption ready to post.',
   },
   {
     icon: Camera,
-    title: '3. Film it with Filming Mode',
+    title: 'Film it with Filming Mode',
     description: 'A guided, step-by-step flow walks you through each shot and voiceover line - zero video experience required.',
   },
 ];
@@ -71,6 +71,27 @@ const PLANS = [
   },
 ];
 
+const PREVIEW_CARDS = [
+  {
+    day: 'Monday',
+    goal: 'Educate',
+    title: '3 Things Every Homeowner Should Know Before Hiring a Plumber',
+    concept: 'Quick, practical tips that build trust before they ever call.',
+  },
+  {
+    day: 'Wednesday',
+    goal: 'Sell',
+    title: 'Why Riverside Plumbing Is Different',
+    concept: "A direct case for why we're the right call in Austin.",
+  },
+  {
+    day: 'Friday',
+    goal: 'Engage',
+    title: 'This or That: Help Us Decide',
+    concept: 'A fast interactive prompt built to drive comments.',
+  },
+];
+
 export default async function LandingPage() {
   const supabase = await createClient();
   const {
@@ -97,8 +118,8 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      <section className="bg-blueprint-grid flex flex-col items-center px-6 py-24 text-center">
-        <p className="text-sm font-medium uppercase tracking-wide text-text-secondary">Blueprint Studio</p>
+      <section className="bg-blueprint-grid flex flex-col items-center px-6 pb-20 pt-24 text-center">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.15em] text-primary">Blueprint Studio</p>
         <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
           An AI social media manager for your business
         </h1>
@@ -114,16 +135,41 @@ export default async function LandingPage() {
             <Link href="#how-it-works">See how it works</Link>
           </Button>
         </div>
+
+        <div className="mt-16 w-full max-w-3xl overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl">
+          <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+            <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+            <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+            <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/dashboard</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
+            {PREVIEW_CARDS.map((card) => (
+              <div key={card.day} className="rounded-lg border border-border-subtle bg-canvas p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-wide text-text-secondary">{card.day}</span>
+                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{card.goal}</span>
+                </div>
+                <p className="mt-2.5 text-sm font-medium leading-snug">{card.title}</p>
+                <p className="mt-1.5 text-xs text-text-secondary">{card.concept}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section id="how-it-works" className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-semibold tracking-tight">From idea to posted video</h2>
+          <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">How it works</p>
+          <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">From idea to posted video</h2>
           <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {STEPS.map((step) => (
+            {STEPS.map((step, i) => (
               <div key={step.title} className="text-center sm:text-left">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-surface sm:mx-0">
-                  <step.icon className="h-5 w-5 text-primary" />
+                <div className="mx-auto flex items-center gap-3 sm:mx-0">
+                  <span className="font-mono text-3xl font-semibold text-primary/25">{String(i + 1).padStart(2, '0')}</span>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <step.icon className="h-4 w-4 text-primary" />
+                  </div>
                 </div>
                 <h3 className="mt-4 text-base font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-text-secondary">{step.description}</p>
@@ -135,12 +181,15 @@ export default async function LandingPage() {
 
       <section className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-semibold tracking-tight">Everything you need to post consistently</h2>
+          <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">Features</p>
+          <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">Everything you need to post consistently</h2>
           <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {FEATURES.map((feature) => (
-              <div key={feature.title} className="rounded-lg border border-border-subtle bg-surface p-6">
-                <feature.icon className="h-5 w-5 text-primary" />
-                <h3 className="mt-3 text-base font-medium">{feature.title}</h3>
+              <div key={feature.title} className="hover-lift rounded-xl border border-border-subtle bg-surface p-6">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                  <feature.icon className="h-4 w-4 text-primary" />
+                </div>
+                <h3 className="mt-4 text-base font-medium">{feature.title}</h3>
                 <p className="mt-1.5 text-sm text-text-secondary">{feature.description}</p>
               </div>
             ))}
@@ -151,16 +200,19 @@ export default async function LandingPage() {
       <section id="pricing" className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-3xl">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold tracking-tight">Simple, predictable pricing</h2>
+            <p className="font-mono text-xs uppercase tracking-[0.15em] text-primary">Pricing</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Simple, predictable pricing</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">Pick the plan that matches how often you want to post. Cancel anytime.</p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
             {PLANS.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-lg border p-6 ${
-                  plan.highlighted ? 'border-primary bg-surface' : 'border-border-subtle bg-surface'
-                }`}
+                className={
+                  plan.highlighted
+                    ? 'hover-lift relative rounded-xl border border-primary/30 bg-surface p-6 shadow-[0_20px_45px_-25px_color-mix(in_oklch,var(--primary)_60%,transparent)]'
+                    : 'hover-lift relative rounded-xl border border-border-subtle bg-surface p-6'
+                }
               >
                 {plan.highlighted && (
                   <span className="absolute -top-3 left-6 rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
@@ -173,7 +225,7 @@ export default async function LandingPage() {
                   <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
                   <span className="text-sm text-text-secondary">/ month</span>
                 </div>
-                <p className="mt-1 text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
+                <p className="mt-1 font-mono text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
                 <ul className="mt-5 space-y-2.5">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm">
@@ -191,7 +243,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t border-border-subtle px-6 py-20 text-center">
+      <section className="border-t border-border-subtle bg-blueprint-grid px-6 py-20 text-center">
         <h2 className="text-2xl font-semibold tracking-tight">Ready to plan this week&apos;s content?</h2>
         <p className="mx-auto mt-3 max-w-md text-sm text-text-secondary">
           Set up your business profile in a few minutes and get your first weekly plan right away.

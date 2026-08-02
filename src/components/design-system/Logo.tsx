@@ -3,7 +3,7 @@
 export function Logo({ className = 'h-8 w-8' }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} role="img" aria-label="Blueprint Studio">
-      <rect width="32" height="32" rx="7" fill="#4F46E5" />
+      <rect width="32" height="32" rx="7" fill="oklch(0.6 0.152 40)" />
       <g stroke="#ffffff" strokeOpacity="0.28" strokeWidth="1">
         <line x1="11" y1="4" x2="11" y2="28" />
         <line x1="21" y1="4" x2="21" y2="28" />

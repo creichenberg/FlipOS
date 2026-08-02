@@ -114,9 +114,9 @@ export function FilmingModeFlow({
 
   if (isComplete) {
     return (
-      <div className="space-y-4 rounded-lg border border-border-subtle bg-surface p-8 text-center">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-          <Check className="h-5 w-5 text-primary" />
+      <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-8 text-center">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
+          <Check className="h-5 w-5 text-emerald-500" />
         </div>
         <h2 className="text-lg font-medium">Every shot and line is filmed</h2>
         <p className="text-sm text-text-secondary">
@@ -134,7 +134,7 @@ export function FilmingModeFlow({
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-text-secondary">
+        <p className="font-mono text-xs uppercase tracking-wide text-text-secondary">
           Step {doneCount + 1} of {steps.length}
         </p>
         <div className="mt-2">
@@ -142,14 +142,14 @@ export function FilmingModeFlow({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border-subtle bg-surface p-8 text-center">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-border-subtle">
-          {current.kind === 'shot' ? <Camera className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+      <div className="rounded-2xl border border-border-subtle bg-surface p-8 text-center shadow-sm">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          {current.kind === 'shot' ? <Camera className="h-5 w-5 text-primary" /> : <Mic className="h-5 w-5 text-primary" />}
         </div>
 
         {current.kind === 'shot' ? (
           <>
-            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-text-secondary">
+            <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
               Shot {current.shot.shot_number} · {current.shot.camera_angle}
             </p>
             <p className="mt-2 text-lg leading-snug">{current.shot.description}</p>
@@ -157,7 +157,7 @@ export function FilmingModeFlow({
           </>
         ) : (
           <>
-            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover line {current.line.line_number}</p>
+            <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover line {current.line.line_number}</p>
             <p className="mt-2 text-lg leading-snug">&ldquo;{current.line.text}&rdquo;</p>
           </>
         )}

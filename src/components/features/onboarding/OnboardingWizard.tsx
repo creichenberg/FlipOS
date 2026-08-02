@@ -169,10 +169,10 @@ export function OnboardingWizard() {
   }
 
   return (
-    <div className="space-y-6 rounded-lg border border-border-subtle bg-surface p-8">
+    <div className="space-y-6 rounded-2xl border border-border-subtle bg-surface p-8 shadow-sm">
       <div>
-        <p className="text-sm font-medium text-text-secondary">Tell us about your business</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight">
+        <p className="font-mono text-xs uppercase tracking-wide text-primary">Tell us about your business</p>
+        <h2 className="mt-1.5 text-xl font-semibold tracking-tight">
           {step === 0 && 'The basics'}
           {step === 1 && 'What you do'}
           {step === 2 && 'Brand & goals'}

@@ -24,7 +24,7 @@ export function DashboardNav() {
             href={link.href}
             className={
               active
-                ? 'rounded-md bg-secondary px-3 py-1.5 font-medium text-secondary-foreground'
+                ? 'rounded-md bg-primary/10 px-3 py-1.5 font-medium text-primary'
                 : 'rounded-md px-3 py-1.5 text-text-secondary hover:bg-surface hover:text-foreground'
             }
           >
