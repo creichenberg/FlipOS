@@ -20,11 +20,13 @@ export function RenderVideoPanel({
   canRender,
   missingSummary,
   initialJob,
+  defaultProviderIsMock,
 }: {
   cardId: string;
   canRender: boolean;
   missingSummary: string | null;
   initialJob: RenderJob | null;
+  defaultProviderIsMock: boolean;
 }) {
   const [job, setJob] = useState(initialJob);
   const [displayJob, setDisplayJob] = useState(initialJob);
@@ -94,6 +96,11 @@ export function RenderVideoPanel({
 
   const isActive = job?.status === 'queued' || job?.status === 'rendering';
   const showFullScreenAnimation = displayJob?.status === 'queued' || displayJob?.status === 'rendering';
+  // Before a job exists, fall back to which provider is currently
+  // configured; once one exists, trust its own recorded provider - that's
+  // what actually produced this result, even if the env config changed
+  // since (e.g. mid-testing, or an old job from before a key was added).
+  const isMock = displayJob ? displayJob.provider === 'mock' : defaultProviderIsMock;
 
   useEffect(() => {
     if (isActive) pollUntilDone();
@@ -131,9 +138,11 @@ export function RenderVideoPanel({
     <section id="auto-edit" className="rounded-2xl border border-border-subtle bg-surface p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Auto-edited video</h2>
-        <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-          Mock render - test mode
-        </span>
+        {isMock && (
+          <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            Mock render - test mode
+          </span>
+        )}
       </div>
 
       {!displayJob && (
@@ -162,8 +171,9 @@ export function RenderVideoPanel({
         <div className="mt-4 space-y-3">
           <video src={displayJob.video_url} controls className="mx-auto max-h-[480px] w-full max-w-[270px] rounded-lg bg-black" />
           <p className="text-center text-xs text-text-secondary">
-            This is a mock preview (your first uploaded clip) proving the pipeline works - not a real multi-clip, captioned
-            edit. Swap in a real rendering vendor when you&apos;re ready for that.
+            {isMock
+              ? "This is a mock preview (your first uploaded clip) proving the pipeline works - not a real multi-clip, captioned edit. Swap in a real rendering vendor when you're ready for that."
+              : 'Your clips, cut together in order with captions synced to your script.'}
           </p>
           <div className="text-center">
             <Button variant="outline" onClick={startRender} disabled={starting}>

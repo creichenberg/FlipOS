@@ -9,17 +9,18 @@ this was built from.
 **Phase 1 (this build):** auth, onboarding, weekly plan generation, video detail generation, guided
 Filming Mode (including raw clip upload per shot/voiceover line - see `media_uploads` below), Stripe
 billing. **Phase 2, in progress:** the auto-editing pipeline (raw clips -> rendered final video with
-burned-in captions) - built provider-agnostic behind a swappable `RenderProvider` interface, with only
-a zero-cost `MockRenderProvider` implemented so far (see `src/lib/video/`). No real rendering vendor
-(Creatomate, Shotstack) is wired in yet - that's a real recurring cost (~$54/mo+ for Creatomate) the
-client hasn't committed to, so implementing `RenderProvider` for one is the next step whenever they
-do, not before. **Music is explicitly out of scope for now** (licensing terms for a SaaS platform
-serving many end customers are genuinely unclear even on libraries marketed as "free for commercial
-use" - see the chat log around 2026-08 for the research) - there's no `music_tracks` table and no
-music field on `RenderRecipe`. Captions are *not* a separate transcription step (no Deepgram) - the
-exact scripted `voiceover_lines.text` is used directly as caption text, since we already know
-verbatim what should be said; only word-level *timing* would need real ASR, which is deferred along
-with the transcription vendor decision.
+burned-in captions) - built provider-agnostic behind a swappable `RenderProvider` interface (see
+`src/lib/video/`). `CreatomateRenderProvider` is the real implementation, running on Creatomate's free
+50-credit trial (no card required, ~3.5 min of 720p video) until the client commits to a paid tier
+(~$54/mo+, Essential) - `getRenderProvider()` picks it automatically once `CREATOMATE_API_KEY` is set,
+falling back to the zero-cost `MockRenderProvider` otherwise, so local/CI development never needs the
+key. **Music is explicitly out of scope for now** (licensing terms for a SaaS platform serving many
+end customers are genuinely unclear even on libraries marketed as "free for commercial use" - see the
+chat log around 2026-08 for the research) - there's no `music_tracks` table and no music field on
+`RenderRecipe`. Captions are *not* a separate transcription step (no Deepgram) - the exact scripted
+`voiceover_lines.text` is used directly as caption text, since we already know verbatim what should be
+said; only word-level *timing* would need real ASR, which is deferred along with the transcription
+vendor decision.
 
 ## Stack
 
@@ -107,33 +108,42 @@ dashboard.
   where they started instead of always on `/dashboard`. Only ever accepts a same-origin relative path
   (`/...`, never `//...` or an absolute URL) - anything else is treated as unsafe and falls back to
   `/dashboard`, since `next` rides along on an otherwise-public URL and can't be trusted as-is.
-- **Auto-editing pipeline** (`src/lib/video/{render,recipeBuilder,mockProvider}.ts`,
+- **Auto-editing pipeline** (`src/lib/video/{render,recipeBuilder,mockProvider,creatomateProvider}.ts`,
   `POST /api/cards/[cardId]/render`, `render_jobs` table) - `recipeBuilder.ts` assembles a
   provider-agnostic `RenderRecipe` (shots in order for the visual track, voiceover lines' exact
   script text for captions, no music field) from a card's shots/voiceover_lines/media_uploads.
-  `RenderProvider` (`render.ts`) is the swappable interface `submitRenderJob`/`getStatus`; the only
-  implementation today is `MockRenderProvider`, which "renders" after a simulated 4s delay and
-  returns a signed URL to the first uploaded clip as an honest preview - the UI labels this clearly
-  as a mock so it's never mistaken for a real multi-clip, captioned edit. The render route validates
-  every shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no
-  music to paper over a gap. `RenderVideoPanel.tsx` polls `GET /api/cards/[cardId]/render` every 2s
-  while a job is queued/rendering, showing `RenderingAnimation.tsx` (a purely cosmetic 4-step
-  sequence - it doesn't track real backend progress, since queued/rendering/complete/failed is all
-  the status the API exposes) full-screen via `createPortal(..., document.body)` instead of inline in
-  the panel - the edit is the product's main event, not a background task, so it takes over the whole
-  viewport (with body scroll locked for the duration) rather than playing out in a small card. That
-  full-screen takeover enforces a **hard 5-second
-  minimum display time** for the animation, gated off the render job's real `created_at` (not
-  component-mount time, so a mid-render page refresh still gates correctly): `job`/`setJob` track the
-  true polled state, `displayJob`/`setDisplayJob` track what's rendered, and `revealWhenReady()`
-  delays flipping `displayJob` to a `complete`/`failed` result via `setTimeout` until 5s have elapsed
-  since `created_at`, even though the mock provider itself finishes in ~4s - a render that visibly
-  resolves in under a second reads as fake, not fast. The sweeping progress bar inside
-  `RenderingAnimation.tsx` uses a `.render-sweep` keyframe in `globals.css`, following the same
-  `prefers-reduced-motion` guard pattern as `.glow-orb`/`.bg-blueprint-grid`. Adding a real vendor
-  (Creatomate is the current front-runner - see the plan doc and CLAUDE.md above for the cost/
-  capability research) means implementing `RenderProvider` and swapping the constructor in
-  `getRenderProvider()` - nothing else changes.
+  `RenderProvider` (`render.ts`) is the swappable interface `submitRenderJob`/`getStatus`;
+  `getRenderProvider()` returns `CreatomateRenderProvider` when `CREATOMATE_API_KEY` is set, else
+  `MockRenderProvider`, which "renders" after a simulated 4s delay and returns a signed URL to the
+  first uploaded clip as an honest preview - the UI labels this clearly as a mock (`isMock` in
+  `RenderVideoPanel.tsx`, derived from the specific job's own `provider` column so a page never lies
+  about which one actually produced a given result) so it's never mistaken for a real multi-clip,
+  captioned edit. `CreatomateRenderProvider` (`creatomateProvider.ts`) builds a RenderScript
+  composition directly (no pre-built Creatomate template): shot clips play back to back muted on
+  track 1 (the voiceover carries the audio instead, same as a typical UGC edit), and each voiceover
+  line becomes its own `composition` element on track 2 pairing that line's audio with a caption
+  `text` element - grouping them lets Creatomate derive the caption's on-screen duration from the
+  audio's real length automatically, without us computing any timing ourselves (consistent with the
+  no-ASR decision above). Source clips are read via signed URLs from the private `clips` bucket
+  (1hr TTL, enough for Creatomate to fetch them even if queued); output aspect ratio is locked to
+  9:16 (1080x1920), the only ratio `RenderRecipe` supports. The render route validates every
+  shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no music to
+  paper over a gap. `RenderVideoPanel.tsx` polls `GET /api/cards/[cardId]/render` every 2s while a
+  job is queued/rendering, showing `RenderingAnimation.tsx` (a purely cosmetic 4-step sequence - it
+  doesn't track real backend progress, since queued/rendering/complete/failed is all the status the
+  API exposes) full-screen via `createPortal(..., document.body)` instead of inline in the panel -
+  the edit is the product's main event, not a background task, so it takes over the whole viewport
+  (with body scroll locked for the duration) rather than playing out in a small card. That full-screen
+  takeover enforces a **hard 5-second minimum display time** for the animation, gated off the render
+  job's real `created_at` (not component-mount time, so a mid-render page refresh still gates
+  correctly): `job`/`setJob` track the true polled state, `displayJob`/`setDisplayJob` track what's
+  rendered, and `revealWhenReady()` delays flipping `displayJob` to a `complete`/`failed` result via
+  `setTimeout` until 5s have elapsed since `created_at`, even though the mock provider itself finishes
+  in ~4s (a real Creatomate render can easily take longer, in which case this minimum is a no-op - the
+  gate only ever adds wait time, never cuts a real render short) - a render that visibly resolves in
+  under a second reads as fake, not fast. The sweeping progress bar inside `RenderingAnimation.tsx`
+  uses a `.render-sweep` keyframe in `globals.css`, following the same `prefers-reduced-motion` guard
+  pattern as `.glow-orb`/`.bg-blueprint-grid`.
 - `src/components/features/dashboard/TipOfTheDay.tsx` - a short filming/social-media tip shown at the
   top of the dashboard, picked deterministically from a fixed list by day-of-year (`Date.UTC`-based,
   no client state) so it's stable across refreshes without needing to persist anything.

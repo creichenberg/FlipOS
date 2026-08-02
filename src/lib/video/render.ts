@@ -1,4 +1,5 @@
 import { MockRenderProvider } from './mockProvider';
+import { CreatomateRenderProvider } from './creatomateProvider';
 
 // A pure, provider-agnostic description of what to render - built by
 // recipeBuilder.ts from the card's shots/voiceover lines/uploaded clips.
@@ -28,11 +29,10 @@ export interface RenderResult {
 }
 
 // Swappable so a real vendor (Creatomate, Shotstack) can be dropped in later
-// without touching any calling code - see MockRenderProvider for the only
-// implementation that exists today (the "Swappable" auto-editing decision
-// in CLAUDE.md). Adding a real one means implementing this interface and
-// returning it from getRenderProvider() based on an env var - nothing else
-// in the app needs to change.
+// without touching any calling code - see the "Swappable" auto-editing
+// decision in CLAUDE.md. CreatomateRenderProvider is the real implementation,
+// selected automatically once CREATOMATE_API_KEY is set (see
+// getRenderProvider() below) - nothing else in the app needs to change.
 export interface RenderProvider {
   readonly name: string;
   submitRenderJob(recipe: RenderRecipe): Promise<{ providerJobId: string }>;
@@ -43,5 +43,5 @@ export interface RenderProvider {
 }
 
 export function getRenderProvider(): RenderProvider {
-  return new MockRenderProvider();
+  return process.env.CREATOMATE_API_KEY ? new CreatomateRenderProvider() : new MockRenderProvider();
 }

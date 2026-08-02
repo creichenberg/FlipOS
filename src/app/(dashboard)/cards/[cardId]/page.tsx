@@ -165,7 +165,13 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <p className="mt-3 text-sm font-medium">{detail.call_to_action}</p>
       </section>
 
-      <RenderVideoPanel cardId={cardId} canRender={canRender} missingSummary={missingSummary} initialJob={latestRenderJob as RenderJob | null} />
+      <RenderVideoPanel
+        cardId={cardId}
+        canRender={canRender}
+        missingSummary={missingSummary}
+        initialJob={latestRenderJob as RenderJob | null}
+        defaultProviderIsMock={!process.env.CREATOMATE_API_KEY}
+      />
     </div>
   );
 }
