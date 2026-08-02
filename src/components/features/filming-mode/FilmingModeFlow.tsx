@@ -204,12 +204,19 @@ export function FilmingModeFlow({
         <h2 className="text-lg font-medium">Every shot and line is filmed</h2>
         <p className="text-sm text-text-secondary">
           {Object.keys(clipNames).length > 0
-            ? "Your clips are saved and ready whenever you're ready to edit them together."
+            ? 'Your clips are saved - combine them into one edited video with captions next.'
             : 'Come back and upload your clips to any shot whenever they’re ready.'}
         </p>
-        <Button asChild>
-          <Link href={`/cards/${cardId}`}>Back to shot list</Link>
-        </Button>
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          {Object.keys(clipNames).length > 0 && (
+            <Button asChild>
+              <Link href={`/cards/${cardId}#auto-edit`}>Create edited video</Link>
+            </Button>
+          )}
+          <Button asChild variant="outline">
+            <Link href={`/cards/${cardId}`}>Back to shot list</Link>
+          </Button>
+        </div>
       </div>
     );
   }

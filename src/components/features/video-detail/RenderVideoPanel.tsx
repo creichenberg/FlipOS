@@ -100,7 +100,7 @@ export function RenderVideoPanel({
 
   if (!canRender) {
     return (
-      <section className="rounded-2xl border border-dashed border-border-subtle p-6 text-center">
+      <section id="auto-edit" className="rounded-2xl border border-dashed border-border-subtle p-6 text-center">
         <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
           <Film className="h-5 w-5 text-primary" />
         </div>
@@ -114,7 +114,7 @@ export function RenderVideoPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-border-subtle bg-surface p-6 shadow-sm">
+    <section id="auto-edit" className="rounded-2xl border border-border-subtle bg-surface p-6 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Auto-edited video</h2>
         <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
