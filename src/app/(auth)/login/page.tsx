@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
+import { MouseShine } from '@/components/design-system/MouseShine';
 
 // Only accept a same-origin relative path (never "//host/..." or an absolute
 // URL) - `next` comes from a query param on an otherwise-public URL, so
@@ -128,7 +129,8 @@ function LoginForm() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas px-4 py-12">
-      <div className="bg-blueprint-grid absolute inset-0" />
+      <div className="bg-blueprint-grid bg-blueprint-grid-interactive absolute inset-0" />
+      <MouseShine stacking="above-siblings" />
       <div className="glow-orb pointer-events-none absolute -left-32 -top-40 h-96 w-96 rounded-full bg-primary/30 blur-[110px]" />
       <div className="glow-orb pointer-events-none absolute -bottom-40 -right-32 h-96 w-96 rounded-full bg-primary/25 blur-[110px]" />
 

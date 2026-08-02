@@ -204,10 +204,10 @@ just wiring, not new tokens. `src/components/providers.tsx`'s `LIGHT_ONLY_PATHS`
 `/onboarding`) forces `light` via `ThemeProvider`'s `forcedTheme` on the landing page, login, and
 onboarding - there's no toggle on any of them, so dark mode would just be an unstyled/unintended
 combination rather than a real supported state. The onboarding page, both `.bg-blueprint-grid`
-sections on the landing page (hero and closing CTA), and the dashboard's empty state use a
-`.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary accent
-color, radially masked - as a subtle nod to the product name. On the landing page and onboarding
-specifically, the grid's default constant diagonal drift is swapped for `MouseShine.tsx`
+sections on the landing page (hero and closing CTA), the login page, and the dashboard's empty state
+use a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary
+accent color, radially masked - as a subtle nod to the product name. On landing, onboarding, and
+login, the grid's default constant diagonal drift is swapped for `MouseShine.tsx`
 (`src/components/design-system/`) - a two-layer radial-gradient "light" that tracks the visitor's
 cursor instead of animating on its own, via the `.bg-blueprint-grid-interactive` modifier class
 (`animation: none`) plus a `<MouseShine />` child. It mutates a ref'd DOM node's `--shine-x`/
@@ -215,17 +215,24 @@ cursor instead of animating on its own, via the `.bg-blueprint-grid-interactive`
 React state, so cursor movement never triggers a re-render), rAF-throttled, and listens on the
 *parent* rather than `window` so the landing page's two independent sections each track correctly.
 Skips attaching the listener entirely under `prefers-reduced-motion` (falls back to a fixed default
-position) and degrades the same way on touch devices, which never fire `mousemove`. Login and the
-dashboard empty state keep the original drift untouched - this is scoped to landing/onboarding only,
-per explicit request, not a wholesale replacement of `.bg-blueprint-grid`'s default behavior.
+position) and degrades the same way on touch devices, which never fire `mousemove`. Only the
+dashboard empty state keeps the original drift untouched - this is scoped to the marketing/auth
+screens, per explicit request, not a wholesale replacement of `.bg-blueprint-grid`'s default
+behavior. `MouseShine` takes a `stacking` prop (`'below-content'` default, or `'above-siblings'`)
+because the two screens need opposite z-index handling: on landing/onboarding the grid pattern is
+the section's own CSS background, so the shine needs a negative z-index to sit behind the plain
+static in-flow copy above it; on login the grid is a separate absolutely-positioned sibling `<div>`
+(part of the glassmorphism layering below), where a negative z-index would instead hide the shine
+*behind* that div's own opaque background - `stacking="above-siblings"` leaves z-index at auto there
+so plain DOM order (placed right after the grid div) puts it on top correctly.
 `InteractiveLogo.tsx` (same directory) applies the same idea at icon scale: the "Blueprint Studio"
-logo mark on the landing header and the login page (explicitly included here, unlike the background
-treatment above) gets a small glossy highlight (`.logo-shine`, blended with `mix-blend-mode: overlay`
-so it reads as light on a glossy surface rather than a flat white smudge) clipped to the mark's own
-rounded-square shape via a wrapping `overflow-hidden` span. It tracks `window` mousemove rather than
-a parent element - unlike `MouseShine`, there's only ever one logo per page, so there's no risk of
-multiple instances needing independent tracking. Plain `Logo.tsx` (no client-side behavior) is still
-used as-is anywhere the shine wasn't requested, e.g. the dashboard nav.
+logo mark on the landing header and the login page gets a small glossy highlight (`.logo-shine`,
+blended with `mix-blend-mode: overlay` so it reads as light on a glossy surface rather than a flat
+white smudge) clipped to the mark's own rounded-square shape via a wrapping `overflow-hidden` span.
+It tracks `window` mousemove rather than a parent element - unlike `MouseShine`, there's only ever
+one logo per page, so there's no risk of multiple instances needing independent tracking. Plain
+`Logo.tsx` (no client-side behavior) is still used as-is anywhere the shine wasn't requested, e.g.
+the dashboard nav.
 
 **Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
 this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,

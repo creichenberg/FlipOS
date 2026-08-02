@@ -14,7 +14,18 @@ import { useEffect, useRef } from 'react';
 // the shine parked at its CSS default position - same graceful degradation
 // as this app's other hover-only effects. Skipped entirely under
 // prefers-reduced-motion, same as this app's other ambient animations.
-export function MouseShine() {
+//
+// `stacking` controls how it layers against its siblings, since that
+// depends on what else is in the parent: 'below-content' (default) uses a
+// negative z-index so it sits behind normal in-flow static content, e.g. the
+// landing/onboarding screens where the grid pattern is the parent's own CSS
+// background and the copy above it is plain static content. 'above-siblings'
+// leaves z-index at auto so DOM order alone decides stacking, e.g. the login
+// page, where the grid is a separate absolutely-positioned sibling <div> that
+// a negative z-index would otherwise hide behind (its own opaque background
+// would paint over a negative-z shine) - placing <MouseShine /> after that
+// div in the DOM is enough for it to paint on top there.
+export function MouseShine({ stacking = 'below-content' }: { stacking?: 'below-content' | 'above-siblings' }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,5 +58,11 @@ export function MouseShine() {
     };
   }, []);
 
-  return <div ref={ref} aria-hidden="true" className="mouse-shine pointer-events-none absolute inset-0 -z-10" />;
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className={`mouse-shine pointer-events-none absolute inset-0 ${stacking === 'below-content' ? '-z-10' : ''}`}
+    />
+  );
 }
