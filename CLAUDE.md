@@ -54,6 +54,18 @@ dashboard.
 - `src/app/api/plans/[businessId]/generate` and `src/app/api/cards/[cardId]/generate-detail` - the
   two generation endpoints. Both are synchronous (single Claude call each) - no queue needed for
   Phase 1. Video detail is generated lazily on first card open, not eagerly for all 7.
+- `src/app/api/cards/[cardId]/regenerate` (`src/lib/ai/regenerateCardIdea.ts`,
+  `RegenerateCardButton.tsx`) - swaps out a single day's video idea in place, keeping the same
+  `video_cards.id`/URL rather than the whole-week regenerate's delete-and-reinsert (which mints new
+  card ids). Fetches the week's other card titles first and tells Claude not to duplicate them. The
+  AI call happens *before* any deletion, so a failed regenerate (e.g. `AnthropicNotConfiguredError`)
+  never touches existing content. On success it deletes `video_details`/`shots`/`voiceover_lines`/
+  `filming_sessions` (cascades progress rows)/`render_jobs` for that card - they're built from the
+  old idea and no longer apply - and removes any uploaded clip blobs from the `clips` Storage bucket
+  first, since a cascaded row delete doesn't delete the underlying object. Resets `video_cards.status`
+  to `pending_detail`. The button only shows the destructive-action confirmation dialog when there's
+  actually a `video_details` row (i.e. a shot list/script/possibly filmed clips) to lose; before that
+  it regenerates immediately with no dialog since nothing is at stake yet.
 - `src/components/features/filming-mode/FilmingModeFlow.tsx` - the guided shot-by-shot flow.
   Client-side reducer for the step machine, but every "mark done" persists to
   `shot_progress`/`voiceover_progress` immediately so a mid-session refresh resumes correctly

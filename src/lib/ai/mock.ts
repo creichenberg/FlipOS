@@ -1,6 +1,7 @@
 import type { Business, ContentGoal, VideoCard } from '@/lib/types/database';
 import type { WeeklyPlanCard } from './generatePlan';
 import type { VideoDetailResult } from './generateVideoDetail';
+import type { RegeneratedCard } from './regenerateCardIdea';
 
 // Zero-cost stand-in for the real Claude calls, gated behind MOCK_AI=true.
 // Templated from the business's actual onboarding answers rather than Claude
@@ -57,6 +58,22 @@ export function mockWeeklyPlan(business: Business, count: number): WeeklyPlanCar
       contentGoal: entry.contentGoal,
     };
   });
+}
+
+export function mockRegeneratedCard(business: Business, card: VideoCard): RegeneratedCard {
+  // Deterministic on the card id rather than truly random, so mock mode
+  // stays reproducible - but walks the list from a per-card offset so
+  // repeated presses don't all land back on the same first alternative.
+  const seed = card.id.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+  for (let offset = 1; offset <= DAY_PLAN.length; offset++) {
+    const entry = DAY_PLAN[(seed + offset) % DAY_PLAN.length];
+    const title = entry.title(business);
+    if (title !== card.title) {
+      return { title, concept: entry.concept(business), contentGoal: entry.contentGoal };
+    }
+  }
+  const fallback = DAY_PLAN[seed % DAY_PLAN.length];
+  return { title: `${fallback.title(business)} (Alt)`, concept: fallback.concept(business), contentGoal: fallback.contentGoal };
 }
 
 export function mockVideoDetail(business: Business, card: VideoCard): VideoDetailResult {

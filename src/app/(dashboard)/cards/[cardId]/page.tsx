@@ -8,6 +8,7 @@ import { ShotListItem } from '@/components/design-system/ShotListItem';
 import { CopyButton } from '@/components/design-system/CopyButton';
 import { DetailGenerator } from '@/components/features/video-detail/DetailGenerator';
 import { RenderVideoPanel } from '@/components/features/video-detail/RenderVideoPanel';
+import { RegenerateCardButton } from '@/components/features/video-detail/RegenerateCardButton';
 import { Button } from '@/components/ui/button';
 import { DAY_LABELS } from '@/lib/week';
 import { missingClipCounts } from '@/lib/video/recipeBuilder';
@@ -26,7 +27,11 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
   if (!detail) {
     return (
       <div className="space-y-6">
-        <PageHeader title={card.title} description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`} />
+        <PageHeader
+          title={card.title}
+          description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`}
+          actions={<RegenerateCardButton cardId={cardId} hasProgress={false} />}
+        />
         <DetailGenerator cardId={cardId} />
       </div>
     );
@@ -52,7 +57,11 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
 
   return (
     <div className="space-y-8">
-      <PageHeader title={card.title} description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`} />
+      <PageHeader
+        title={card.title}
+        description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`}
+        actions={<RegenerateCardButton cardId={cardId} hasProgress={true} />}
+      />
 
       <Link
         href={`/cards/${cardId}/film`}
