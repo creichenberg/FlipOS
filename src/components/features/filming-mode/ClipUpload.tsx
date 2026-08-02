@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Film, Upload, Check } from 'lucide-react';
+import { Film, Mic, Upload, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,16 @@ interface ClipUploadProps {
 }
 
 // Plain file input with `capture` set, rather than a custom in-browser
-// camera - opens the phone's native camera app directly and hands back a
-// real video file, which is far more reliable across iOS/Android than
-// building and maintaining getUserMedia-based capture in the browser.
+// camera/microphone capture - opens the phone's native camera or voice
+// recorder directly and hands back a real file, which is far more reliable
+// across iOS/Android than building and maintaining getUserMedia-based
+// capture in the browser. Voiceover lines capture audio only, not video -
+// there's no shot to frame, just a line to read.
 export function ClipUpload({ businessId, videoCardId, targetId, targetKind, initialFileName, onUploaded }: ClipUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(initialFileName);
+  const isAudio = targetKind === 'voiceover';
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -53,7 +56,7 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
 
       setFileName(file.name);
       onUploaded(file.name);
-      toast.success('Clip uploaded');
+      toast.success(isAudio ? 'Recording uploaded' : 'Clip uploaded');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -63,25 +66,32 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
 
   return (
     <div>
-      <input ref={inputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleFile} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept={isAudio ? 'audio/*' : 'video/*'}
+        capture={isAudio ? true : 'environment'}
+        className="hidden"
+        onChange={handleFile}
+      />
       <Button type="button" variant="outline" className="w-full" onClick={() => inputRef.current?.click()} disabled={uploading}>
         {uploading ? (
           'Uploading…'
         ) : fileName ? (
           <>
             <Check className="h-3.5 w-3.5" />
-            Replace clip
+            {isAudio ? 'Replace recording' : 'Replace clip'}
           </>
         ) : (
           <>
             <Upload className="h-3.5 w-3.5" />
-            Film or upload a clip
+            {isAudio ? 'Record or upload audio' : 'Film or upload a clip'}
           </>
         )}
       </Button>
       {fileName && (
         <p className="mt-1.5 flex items-center justify-center gap-1.5 text-xs text-text-secondary">
-          <Film className="h-3 w-3" />
+          {isAudio ? <Mic className="h-3 w-3" /> : <Film className="h-3 w-3" />}
           {fileName}
         </p>
       )}
