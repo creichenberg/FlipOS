@@ -2,10 +2,18 @@
 
 import { useMemo, useReducer, useState } from 'react';
 import Link from 'next/link';
-import { Check, Camera, Mic } from 'lucide-react';
+import { Check, Camera, Mic, TriangleAlert, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { StepIndicator } from '@/components/design-system/StepIndicator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ClipUpload } from './ClipUpload';
 import type { MediaUpload, Shot, VoiceoverLine } from '@/lib/types/database';
 
@@ -16,16 +24,39 @@ type Step =
 interface State {
   index: number;
   done: Set<string>;
+  skipped: Set<string>;
 }
 
-type Action = { type: 'MARK_DONE'; id: string } | { type: 'GO_TO'; index: number };
+type Action =
+  | { type: 'MARK_DONE'; id: string; stepIds: string[] }
+  | { type: 'SKIP'; id: string; stepIds: string[] }
+  | { type: 'GO_TO'; index: number };
+
+// Advancing by a flat +1 breaks once "Resume" (GO_TO) is in the picture -
+// jumping back to an earlier skipped step and completing it would otherwise
+// walk forward into steps already resolved later in the original pass.
+// Instead, advance to the next step that isn't done or skipped yet,
+// wherever that is - or off the end if none remain.
+function nextUnresolvedIndex(stepIds: string[], done: Set<string>, skipped: Set<string>, from: number): number {
+  for (let i = from; i < stepIds.length; i++) {
+    if (!done.has(stepIds[i]) && !skipped.has(stepIds[i])) return i;
+  }
+  return stepIds.length;
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'MARK_DONE': {
       const done = new Set(state.done);
+      const skipped = new Set(state.skipped);
       done.add(action.id);
-      return { done, index: Math.min(state.index + 1, Number.MAX_SAFE_INTEGER) };
+      skipped.delete(action.id);
+      return { done, skipped, index: nextUnresolvedIndex(action.stepIds, done, skipped, state.index + 1) };
+    }
+    case 'SKIP': {
+      const skipped = new Set(state.skipped);
+      if (!state.done.has(action.id)) skipped.add(action.id);
+      return { ...state, skipped, index: nextUnresolvedIndex(action.stepIds, state.done, skipped, state.index + 1) };
     }
     case 'GO_TO':
       return { ...state, index: action.index };
@@ -56,6 +87,7 @@ export function FilmingModeFlow({
     ],
     [shots, voiceoverLines],
   );
+  const stepIds = useMemo(() => steps.map((s) => s.id), [steps]);
 
   // Latest uploaded clip's file name per shot/voiceover-line id, hydrated
   // from server data so a mid-session refresh still shows what's already
@@ -76,12 +108,13 @@ export function FilmingModeFlow({
   const [state, dispatch] = useReducer(reducer, {
     index: firstIncomplete === -1 ? steps.length : firstIncomplete,
     done: new Set(initialDone),
+    skipped: new Set<string>(),
   });
   const [saving, setSaving] = useState(false);
+  const [skipWarningOpen, setSkipWarningOpen] = useState(false);
 
   const current = steps[state.index];
   const isComplete = state.index >= steps.length;
-  const doneCount = state.done.size;
 
   async function markDone() {
     if (!current) return;
@@ -101,7 +134,7 @@ export function FilmingModeFlow({
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? 'Failed to save progress');
       }
-      dispatch({ type: 'MARK_DONE', id: current.id });
+      dispatch({ type: 'MARK_DONE', id: current.id, stepIds });
     } catch (err) {
       // Without this, a failed save (network blip, expired session) still
       // advanced the step locally, so the user's real progress silently
@@ -112,7 +145,57 @@ export function FilmingModeFlow({
     }
   }
 
+  function confirmSkip() {
+    if (!current) return;
+    dispatch({ type: 'SKIP', id: current.id, stepIds });
+    setSkipWarningOpen(false);
+  }
+
   if (isComplete) {
+    const skippedSteps = steps.filter((s) => state.skipped.has(s.id));
+
+    if (skippedSteps.length > 0) {
+      return (
+        <div className="animate-in fade-in zoom-in-95 space-y-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-8 duration-500">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/10">
+            <TriangleAlert className="h-5 w-5 text-amber-500" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-lg font-medium">
+              You&apos;ve gone through everything - {skippedSteps.length} skipped
+            </h2>
+            <p className="mt-1 text-sm text-text-secondary">Come back and finish these whenever you&apos;re ready.</p>
+          </div>
+          <ul className="space-y-2">
+            {skippedSteps.map((step) => (
+              <li
+                key={step.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface px-4 py-3 text-left"
+              >
+                <span className="text-sm">
+                  {step.kind === 'shot' ? `Shot ${step.shot.shot_number}: ${step.shot.description}` : `Voiceover line ${step.line.line_number}: "${step.line.text}"`}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => dispatch({ type: 'GO_TO', index: steps.findIndex((s) => s.id === step.id) })}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Resume
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <div className="text-center">
+            <Button asChild variant="outline">
+              <Link href={`/cards/${cardId}`}>Back to shot list</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="animate-in fade-in zoom-in-95 space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-8 text-center duration-500">
         <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
@@ -135,10 +218,10 @@ export function FilmingModeFlow({
     <div className="space-y-6">
       <div>
         <p className="font-mono text-xs uppercase tracking-wide text-text-secondary">
-          Step {doneCount + 1} of {steps.length}
+          Step {state.index + 1} of {steps.length}
         </p>
         <div className="mt-2">
-          <StepIndicator current={doneCount} total={steps.length} />
+          <StepIndicator current={state.index} total={steps.length} />
         </div>
       </div>
 
@@ -179,7 +262,35 @@ export function FilmingModeFlow({
         <Button className="mt-3 w-full" size="lg" onClick={markDone} disabled={saving}>
           {saving ? 'Saving…' : 'Mark done'}
         </Button>
+        <button
+          type="button"
+          onClick={() => setSkipWarningOpen(true)}
+          disabled={saving}
+          className="mt-3 text-xs text-text-secondary hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+        >
+          Skip this {current.kind === 'shot' ? 'shot' : 'line'}
+        </button>
       </div>
+
+      <Dialog open={skipWarningOpen} onOpenChange={setSkipWarningOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Skip this {current.kind === 'shot' ? 'shot' : 'line'}?</DialogTitle>
+            <DialogDescription>
+              Skipping isn&apos;t recommended - every shot and line was written for a reason, and missing one can leave
+              gaps when it&apos;s time to edit. You can always come back and finish it later from the summary at the end.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSkipWarningOpen(false)}>
+              Keep filming
+            </Button>
+            <Button variant="outline" onClick={confirmSkip}>
+              Skip anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
