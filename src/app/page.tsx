@@ -4,6 +4,7 @@ import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check } fro
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/design-system/Logo';
+import { Reveal } from '@/components/design-system/Reveal';
 
 const STEPS = [
   {
@@ -119,15 +120,17 @@ export default async function LandingPage() {
       </header>
 
       <section className="bg-blueprint-grid flex flex-col items-center px-6 pb-20 pt-24 text-center">
-        <p className="font-mono text-xs font-medium uppercase tracking-[0.15em] text-primary">Blueprint Studio</p>
-        <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
+        <p className="animate-in fade-in slide-in-from-bottom-2 font-mono text-xs font-medium uppercase tracking-[0.15em] text-primary duration-700">
+          Blueprint Studio
+        </p>
+        <h1 className="animate-in fade-in slide-in-from-bottom-3 mt-4 max-w-2xl text-4xl font-semibold tracking-tight delay-100 duration-700 fill-mode-both sm:text-5xl">
           An AI social media manager for your business
         </h1>
-        <p className="mt-4 max-w-xl text-text-secondary">
+        <p className="animate-in fade-in slide-in-from-bottom-3 mt-4 max-w-xl text-text-secondary delay-200 duration-700 fill-mode-both">
           Every week, get video ideas built for your business - each with a hook, a full script, and a shot-by-shot
           filming guide simple enough that anyone can film it.
         </p>
-        <div className="mt-8 flex gap-3">
+        <div className="animate-in fade-in slide-in-from-bottom-3 mt-8 flex gap-3 delay-300 duration-700 fill-mode-both">
           <Button asChild size="lg">
             <Link href="/login">Get started</Link>
           </Button>
@@ -136,7 +139,7 @@ export default async function LandingPage() {
           </Button>
         </div>
 
-        <div className="mt-16 w-full max-w-3xl overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl">
+        <div className="animate-in fade-in zoom-in-95 mt-16 w-full max-w-3xl overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl delay-500 duration-700 fill-mode-both">
           <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
             <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
             <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
@@ -164,7 +167,7 @@ export default async function LandingPage() {
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">From idea to posted video</h2>
           <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
             {STEPS.map((step, i) => (
-              <div key={step.title} className="text-center sm:text-left">
+              <Reveal key={step.title} delay={i * 100} className="text-center sm:text-left">
                 <div className="mx-auto flex items-center gap-3 sm:mx-0">
                   <span className="font-mono text-3xl font-semibold text-primary/25">{String(i + 1).padStart(2, '0')}</span>
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -173,7 +176,7 @@ export default async function LandingPage() {
                 </div>
                 <h3 className="mt-4 text-base font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-text-secondary">{step.description}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -184,14 +187,16 @@ export default async function LandingPage() {
           <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">Features</p>
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">Everything you need to post consistently</h2>
           <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {FEATURES.map((feature) => (
-              <div key={feature.title} className="hover-lift rounded-xl border border-border-subtle bg-surface p-6">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                  <feature.icon className="h-4 w-4 text-primary" />
+            {FEATURES.map((feature, i) => (
+              <Reveal key={feature.title} delay={i * 80}>
+                <div className="hover-lift rounded-xl border border-border-subtle bg-surface p-6">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <feature.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="mt-4 text-base font-medium">{feature.title}</h3>
+                  <p className="mt-1.5 text-sm text-text-secondary">{feature.description}</p>
                 </div>
-                <h3 className="mt-4 text-base font-medium">{feature.title}</h3>
-                <p className="mt-1.5 text-sm text-text-secondary">{feature.description}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -205,39 +210,40 @@ export default async function LandingPage() {
             <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">Pick the plan that matches how often you want to post. Cancel anytime.</p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.name}
-                className={
-                  plan.highlighted
-                    ? 'hover-lift relative rounded-xl border border-primary/30 bg-surface p-6 shadow-[0_20px_45px_-25px_color-mix(in_oklch,var(--primary)_60%,transparent)]'
-                    : 'hover-lift relative rounded-xl border border-border-subtle bg-surface p-6'
-                }
-              >
-                {plan.highlighted && (
-                  <span className="absolute -top-3 left-6 rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
-                    Most popular
-                  </span>
-                )}
-                <h3 className="text-base font-medium">{plan.name}</h3>
-                <p className="mt-1 text-sm text-text-secondary">{plan.description}</p>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
-                  <span className="text-sm text-text-secondary">/ month</span>
+            {PLANS.map((plan, i) => (
+              <Reveal key={plan.name} delay={i * 100}>
+                <div
+                  className={
+                    plan.highlighted
+                      ? 'hover-lift relative rounded-xl border border-primary/30 bg-surface p-6 shadow-[0_20px_45px_-25px_color-mix(in_oklch,var(--primary)_60%,transparent)]'
+                      : 'hover-lift relative rounded-xl border border-border-subtle bg-surface p-6'
+                  }
+                >
+                  {plan.highlighted && (
+                    <span className="absolute -top-3 left-6 rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">
+                      Most popular
+                    </span>
+                  )}
+                  <h3 className="text-base font-medium">{plan.name}</h3>
+                  <p className="mt-1 text-sm text-text-secondary">{plan.description}</p>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
+                    <span className="text-sm text-text-secondary">/ month</span>
+                  </div>
+                  <p className="mt-1 font-mono text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
+                  <ul className="mt-5 space-y-2.5">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2 text-sm">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button asChild className="mt-6 w-full" variant={plan.highlighted ? 'default' : 'outline'}>
+                    <Link href="/login">Get started</Link>
+                  </Button>
                 </div>
-                <p className="mt-1 font-mono text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
-                <ul className="mt-5 space-y-2.5">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild className="mt-6 w-full" variant={plan.highlighted ? 'default' : 'outline'}>
-                  <Link href="/login">Get started</Link>
-                </Button>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>

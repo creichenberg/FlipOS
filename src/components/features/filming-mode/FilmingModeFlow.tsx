@@ -114,7 +114,7 @@ export function FilmingModeFlow({
 
   if (isComplete) {
     return (
-      <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-8 text-center">
+      <div className="animate-in fade-in zoom-in-95 space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-8 text-center duration-500">
         <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
           <Check className="h-5 w-5 text-emerald-500" />
         </div>
@@ -143,24 +143,26 @@ export function FilmingModeFlow({
       </div>
 
       <div className="rounded-2xl border border-border-subtle bg-surface p-8 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          {current.kind === 'shot' ? <Camera className="h-5 w-5 text-primary" /> : <Mic className="h-5 w-5 text-primary" />}
-        </div>
+        <div key={current.id} className="animate-in fade-in slide-in-from-right-2 duration-300">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            {current.kind === 'shot' ? <Camera className="h-5 w-5 text-primary" /> : <Mic className="h-5 w-5 text-primary" />}
+          </div>
 
-        {current.kind === 'shot' ? (
-          <>
-            <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
-              Shot {current.shot.shot_number} · {current.shot.camera_angle}
-            </p>
-            <p className="mt-2 text-lg leading-snug">{current.shot.description}</p>
-            <p className="mt-1 text-sm text-text-secondary">~{current.shot.duration_seconds}s · {current.shot.shot_type}</p>
-          </>
-        ) : (
-          <>
-            <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover line {current.line.line_number}</p>
-            <p className="mt-2 text-lg leading-snug">&ldquo;{current.line.text}&rdquo;</p>
-          </>
-        )}
+          {current.kind === 'shot' ? (
+            <>
+              <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
+                Shot {current.shot.shot_number} · {current.shot.camera_angle}
+              </p>
+              <p className="mt-2 text-lg leading-snug">{current.shot.description}</p>
+              <p className="mt-1 text-sm text-text-secondary">~{current.shot.duration_seconds}s · {current.shot.shot_type}</p>
+            </>
+          ) : (
+            <>
+              <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover line {current.line.line_number}</p>
+              <p className="mt-2 text-lg leading-snug">&ldquo;{current.line.text}&rdquo;</p>
+            </>
+          )}
+        </div>
 
         <div className="mt-6">
           <ClipUpload

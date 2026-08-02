@@ -162,6 +162,53 @@
     96px 96px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
+  animation: blueprint-drift 24s linear infinite;
+}
+
+/* A slow diagonal pan of the grid itself - like a sheet of blueprint paper
+   held under drafting-table light, not a busy/attention-grabbing loop. Ends
+   each cycle on a whole multiple of both tile sizes so it never jumps. */
+@keyframes blueprint-drift {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 96px 96px, 96px 96px, 96px 96px, 96px 96px;
+  }
+}
+
+/* Slow ambient "breathing" for the login page's glow orbs - reinforces the
+   glass-card depth without drawing the eye away from the sign-in form. */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+.glow-orb {
+  animation: glow-pulse 8s ease-in-out infinite;
+}
+.glow-orb:nth-child(2) {
+  animation-delay: -4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-blueprint-grid,
+  .glow-orb {
+    animation: none;
+  }
+  /* Blanket safety net for every entrance animation added below (Reveal,
+     Filming Mode step transitions, tw-animate-css's animate-in/out used by
+     shadcn primitives) - one rule instead of re-guarding every call site. */
+  .animate-in,
+  .animate-out {
+    animation: none !important;
+  }
 }
 
 /* Purposeful hover motion for interactive surfaces (video tiles, pricing/

@@ -37,8 +37,14 @@ export default async function DashboardPage() {
         <>
           <WeekProgress cards={cards} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card) => (
-              <VideoCardTile key={card.id} card={card} />
+            {cards.map((card, i) => (
+              <div
+                key={card.id}
+                className="animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-both"
+                style={{ animationDelay: `${Math.min(i, 9) * 60}ms` }}
+              >
+                <VideoCardTile card={card} />
+              </div>
             ))}
           </div>
         </>

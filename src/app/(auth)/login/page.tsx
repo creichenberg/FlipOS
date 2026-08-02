@@ -129,16 +129,16 @@ function LoginForm() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas px-4 py-12">
       <div className="bg-blueprint-grid absolute inset-0" />
-      <div className="pointer-events-none absolute -left-32 -top-40 h-96 w-96 rounded-full bg-primary/30 blur-[110px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-32 h-96 w-96 rounded-full bg-primary/25 blur-[110px]" />
+      <div className="glow-orb pointer-events-none absolute -left-32 -top-40 h-96 w-96 rounded-full bg-primary/30 blur-[110px]" />
+      <div className="glow-orb pointer-events-none absolute -bottom-40 -right-32 h-96 w-96 rounded-full bg-primary/25 blur-[110px]" />
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <Logo className="mb-4 h-10 w-10 rounded-xl shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)]" />
+          <Logo className="mb-4 h-10 w-10 rounded-xl shadow-[0_8px_20px_-6px_color-mix(in_oklch,var(--primary)_50%,transparent)]" />
           <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
         </div>
 
-        <div className="rounded-3xl border border-white/20 bg-white/10 p-8 shadow-[0_25px_70px_-20px_rgba(79,70,229,0.45),inset_0_1px_0_0_rgba(255,255,255,0.3)] backdrop-blur-2xl">
+        <div className="rounded-3xl border border-white/20 bg-white/10 p-8 shadow-[0_25px_70px_-20px_color-mix(in_oklch,var(--primary)_45%,transparent),inset_0_1px_0_0_rgba(255,255,255,0.3)] backdrop-blur-2xl">
           <div className="mb-6">
             <h2 className="text-xl font-semibold tracking-tight">Sign in</h2>
             <p className="mt-1.5 text-sm text-text-secondary">Welcome back. Choose how you&apos;d like to continue.</p>
