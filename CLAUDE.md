@@ -8,10 +8,18 @@ this was built from.
 
 **Phase 1 (this build):** auth, onboarding, weekly plan generation, video detail generation, guided
 Filming Mode (including raw clip upload per shot/voiceover line - see `media_uploads` below), Stripe
-billing. **Phase 2 (not built):** the automatic AI video-*editing* pipeline (raw clips -> auto-edited
-final video) - vendors (rendering API, transcription, licensed music) are intentionally undecided
-pending cost research; see the plan doc §7 before starting that work. Storing the raw clips
-themselves doesn't need any of those vendor decisions, which is why that part is already built.
+billing. **Phase 2, in progress:** the auto-editing pipeline (raw clips -> rendered final video with
+burned-in captions) - built provider-agnostic behind a swappable `RenderProvider` interface, with only
+a zero-cost `MockRenderProvider` implemented so far (see `src/lib/video/`). No real rendering vendor
+(Creatomate, Shotstack) is wired in yet - that's a real recurring cost (~$54/mo+ for Creatomate) the
+client hasn't committed to, so implementing `RenderProvider` for one is the next step whenever they
+do, not before. **Music is explicitly out of scope for now** (licensing terms for a SaaS platform
+serving many end customers are genuinely unclear even on libraries marketed as "free for commercial
+use" - see the chat log around 2026-08 for the research) - there's no `music_tracks` table and no
+music field on `RenderRecipe`. Captions are *not* a separate transcription step (no Deepgram) - the
+exact scripted `voiceover_lines.text` is used directly as caption text, since we already know
+verbatim what should be said; only word-level *timing* would need real ASR, which is deferred along
+with the transcription vendor decision.
 
 ## Stack
 
@@ -81,6 +89,19 @@ dashboard.
   where they started instead of always on `/dashboard`. Only ever accepts a same-origin relative path
   (`/...`, never `//...` or an absolute URL) - anything else is treated as unsafe and falls back to
   `/dashboard`, since `next` rides along on an otherwise-public URL and can't be trusted as-is.
+- **Auto-editing pipeline** (`src/lib/video/{render,recipeBuilder,mockProvider}.ts`,
+  `POST /api/cards/[cardId]/render`, `render_jobs` table) - `recipeBuilder.ts` assembles a
+  provider-agnostic `RenderRecipe` (shots in order for the visual track, voiceover lines' exact
+  script text for captions, no music field) from a card's shots/voiceover_lines/media_uploads.
+  `RenderProvider` (`render.ts`) is the swappable interface `submitRenderJob`/`getStatus`; the only
+  implementation today is `MockRenderProvider`, which "renders" after a simulated 4s delay and
+  returns a signed URL to the first uploaded clip as an honest preview - the UI labels this clearly
+  as a mock so it's never mistaken for a real multi-clip, captioned edit. The render route validates
+  every shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no
+  music to paper over a gap. `RenderVideoPanel.tsx` polls `GET /api/cards/[cardId]/render` every 2s
+  while a job is queued/rendering. Adding a real vendor (Creatomate is the current front-runner - see
+  the plan doc and CLAUDE.md above for the cost/capability research) means implementing
+  `RenderProvider` and swapping the constructor in `getRenderProvider()` - nothing else changes.
 - `src/lib/plans.ts` - the Base/Pro tier definitions (price, videos/week) plus the price-id <-> tier
   mapping helpers. `POST /api/plans/[businessId]/generate` looks up the business owner's active
   subscription tier (defaulting to Base if there isn't one) and passes `videosPerWeek` through to

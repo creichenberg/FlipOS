@@ -7,6 +7,7 @@ export type VideoCardStatus = 'pending_detail' | 'detail_ready' | 'filming' | 'c
 export type WeeklyPlanStatus = 'generating' | 'ready' | 'failed';
 export type FilmingSessionStatus = 'in_progress' | 'complete';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete';
+export type RenderJobStatus = 'queued' | 'rendering' | 'complete' | 'failed';
 
 export type Business = {
   id: string;
@@ -149,6 +150,20 @@ export type QrLoginToken = {
   created_at: string;
 }
 
+export type RenderJob = {
+  id: string;
+  video_card_id: string;
+  business_id: string;
+  provider: string;
+  provider_job_id: string | null;
+  status: RenderJobStatus;
+  recipe: Record<string, unknown>;
+  video_url: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -180,6 +195,7 @@ export type Database = {
       subscriptions: { Row: Subscription; Insert: Partial<Subscription>; Update: Partial<Subscription>; Relationships: [] };
       stripe_events: { Row: StripeEvent; Insert: Partial<StripeEvent>; Update: Partial<StripeEvent>; Relationships: [] };
       qr_login_tokens: { Row: QrLoginToken; Insert: Partial<QrLoginToken>; Update: Partial<QrLoginToken>; Relationships: [] };
+      render_jobs: { Row: RenderJob; Insert: Partial<RenderJob>; Update: Partial<RenderJob>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

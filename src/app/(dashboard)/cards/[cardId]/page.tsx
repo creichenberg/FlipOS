@@ -7,9 +7,11 @@ import { PageHeader } from '@/components/design-system/PageHeader';
 import { ShotListItem } from '@/components/design-system/ShotListItem';
 import { CopyButton } from '@/components/design-system/CopyButton';
 import { DetailGenerator } from '@/components/features/video-detail/DetailGenerator';
+import { RenderVideoPanel } from '@/components/features/video-detail/RenderVideoPanel';
 import { Button } from '@/components/ui/button';
 import { DAY_LABELS } from '@/lib/week';
-import type { Shot, VoiceoverLine } from '@/lib/types/database';
+import { missingClipCounts } from '@/lib/video/recipeBuilder';
+import type { MediaUpload, RenderJob, Shot, VoiceoverLine } from '@/lib/types/database';
 
 export default async function VideoCardPage({ params }: { params: Promise<{ cardId: string }> }) {
   const { cardId } = await params;
@@ -32,6 +34,21 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
 
   const { data: shots } = await supabase.from('shots').select('*').eq('video_card_id', cardId).order('order_index');
   const { data: voiceoverLines } = await supabase.from('voiceover_lines').select('*').eq('video_card_id', cardId).order('order_index');
+  const { data: uploads } = await supabase.from('media_uploads').select('*').eq('video_card_id', cardId);
+  const { data: latestRenderJob } = await supabase
+    .from('render_jobs')
+    .select('*')
+    .eq('video_card_id', cardId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const missing = missingClipCounts((shots as Shot[]) ?? [], (voiceoverLines as VoiceoverLine[]) ?? [], (uploads as MediaUpload[]) ?? []);
+  const canRender = missing.shots === 0 && missing.voiceover === 0;
+  const missingSummary =
+    missing.shots > 0 || missing.voiceover > 0
+      ? `Upload every clip in Filming Mode first - ${missing.shots} shot(s) and ${missing.voiceover} line(s) still need one.`
+      : null;
 
   return (
     <div className="space-y-8">
@@ -138,6 +155,8 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         </div>
         <p className="mt-3 text-sm font-medium">{detail.call_to_action}</p>
       </section>
+
+      <RenderVideoPanel cardId={cardId} canRender={canRender} missingSummary={missingSummary} initialJob={latestRenderJob as RenderJob | null} />
     </div>
   );
 }
