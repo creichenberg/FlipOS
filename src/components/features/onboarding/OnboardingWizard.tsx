@@ -63,7 +63,6 @@ interface FormState {
   name: string;
   industry: string;
   location: string;
-  description: string;
   productsServices: string;
   targetAudience: string;
   brandPersonality: string[];
@@ -76,7 +75,6 @@ const initialState: FormState = {
   name: '',
   industry: '',
   location: '',
-  description: '',
   productsServices: '',
   targetAudience: '',
   brandPersonality: [],
@@ -117,10 +115,7 @@ export function OnboardingWizard() {
   }
 
   const step0Valid = form.name.trim().length > 0 && form.industry.trim().length > 0 && form.location.trim().length > 0;
-  const step1Valid =
-    form.description.trim().length >= MIN_LENGTH &&
-    form.productsServices.trim().length >= MIN_LENGTH &&
-    form.targetAudience.trim().length >= MIN_LENGTH;
+  const step1Valid = form.productsServices.trim().length >= MIN_LENGTH && form.targetAudience.trim().length >= MIN_LENGTH;
   const step2Valid = form.goals.length > 0;
 
   // Surfaced under each field on step 1 so the Continue button's disabled
@@ -142,7 +137,6 @@ export function OnboardingWizard() {
           name: form.name,
           industry: form.industry,
           location: form.location,
-          description: form.description,
           productsServices: form.productsServices,
           targetAudience: form.targetAudience,
           brandPersonality: [
@@ -213,23 +207,12 @@ export function OnboardingWizard() {
       {step === 1 && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="description">What do you do?</Label>
-            <Textarea
-              id="description"
-              value={form.description}
-              onChange={(e) => update('description', e.target.value)}
-              placeholder="We're a family-owned plumbing company serving homeowners across the Austin metro..."
-              rows={3}
-            />
-            {remainingHint(form.description) && <p className="text-xs text-text-secondary">{remainingHint(form.description)}</p>}
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="products">Products/services</Label>
             <Textarea
               id="products"
               value={form.productsServices}
               onChange={(e) => update('productsServices', e.target.value)}
-              placeholder="Drain cleaning, water heater installation, emergency leak repair..."
+              placeholder="We're a family-owned plumbing company - drain cleaning, water heater installation, emergency leak repair..."
               rows={3}
             />
             {remainingHint(form.productsServices) && (

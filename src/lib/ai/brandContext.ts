@@ -9,7 +9,6 @@ export function buildBrandContextBlock(business: Business): string {
   const lines = [
     `Business name: ${business.name}`,
     `Industry: ${business.industry}`,
-    `What they do: ${business.description}`,
     `Products/services: ${business.products_services}`,
     `Target audience: ${business.target_audience}`,
     `Location: ${business.location}`,

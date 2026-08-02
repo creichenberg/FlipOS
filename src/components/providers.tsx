@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 
-// Pre-auth pages are locked to light mode - no dark/light choice to make
-// before there's an account to save the preference against. Everything past
-// sign-in (dashboard, settings, onboarding, etc.) keeps the normal
+// Pre-auth pages, plus onboarding, are locked to light mode - matching the
+// landing page rather than the normal dark-first experience, and there's no
+// theme toggle yet to make a dark/light choice meaningful this early.
+// Everything past onboarding (dashboard, settings, etc.) keeps the normal
 // dark-first experience with the theme toggle.
-const LIGHT_ONLY_PATHS = ['/', '/login'];
+const LIGHT_ONLY_PATHS = ['/', '/login', '/onboarding'];
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

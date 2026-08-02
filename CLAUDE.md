@@ -190,9 +190,13 @@ utility (`globals.css`) - a small translateY + accent-tinted shadow on hover, no
 skipped under `prefers-reduced-motion`. Dark-first via `next-themes` (`defaultTheme="dark"`), with a
 user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashboard nav) switching
 `resolvedTheme` between `dark`/`light` - both palettes are fully defined in `globals.css`, so this is
-just wiring, not new tokens. The onboarding page, the landing page's hero section, and the dashboard's
-empty state additionally use a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint
-two-scale grid in the primary accent color, radially masked - as a subtle nod to the product name.
+just wiring, not new tokens. `src/components/providers.tsx`'s `LIGHT_ONLY_PATHS` (`/`, `/login`,
+`/onboarding`) forces `light` via `ThemeProvider`'s `forcedTheme` on the landing page, login, and
+onboarding - there's no toggle on any of them, so dark mode would just be an unstyled/unintended
+combination rather than a real supported state. The onboarding page, the landing page's hero section,
+and the dashboard's empty state additionally use a `.bg-blueprint-grid` utility (also in
+`globals.css`) - a faint two-scale grid in the primary accent color, radially masked - as a subtle
+nod to the product name.
 
 **Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
 this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,

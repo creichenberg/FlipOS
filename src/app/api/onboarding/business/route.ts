@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const body = await request.json();
-  const { name, industry, description, productsServices, targetAudience, location, brandPersonality, goals, website } = body;
+  const { name, industry, productsServices, targetAudience, location, brandPersonality, goals, website } = body;
 
   if (!name || !industry) {
     return NextResponse.json({ error: 'Business name and industry are required' }, { status: 400 });
@@ -21,7 +21,6 @@ export async function POST(request: Request) {
       user_id: user.id,
       name,
       industry,
-      description: description ?? '',
       products_services: productsServices ?? '',
       target_audience: targetAudience ?? '',
       location: location ?? '',
