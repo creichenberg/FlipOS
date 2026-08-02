@@ -57,11 +57,17 @@ dashboard.
 - `src/components/features/filming-mode/FilmingModeFlow.tsx` - the guided shot-by-shot flow.
   Client-side reducer for the step machine, but every "mark done" persists to
   `shot_progress`/`voiceover_progress` immediately so a mid-session refresh resumes correctly
-  (hydrated from server data, not localStorage). `ClipUpload.tsx` sits inside each step - a plain
-  `<input type="file" capture="environment">` (opens the phone's native camera app directly, no
-  custom `getUserMedia` capture code to maintain) that uploads straight to the `clips` Storage bucket
-  and records a `media_uploads` row via the browser client, gated by the RLS policies in
-  `0002_media_uploads.sql` rather than a server route.
+  (hydrated from server data, not localStorage). `ClipUpload.tsx` sits inside each step and splits by
+  target kind: shots use a plain `<input type="file" accept="video/*" capture="environment">` (opens
+  the phone's native camera app directly - reliable and needs no `getUserMedia` code to maintain);
+  voiceover lines record in-browser instead via `getUserMedia`/`MediaRecorder`, because the `capture`
+  attribute for *audio* is unreliable across mobile browsers (iOS Safari in particular has no real
+  "record audio" capture handler and silently falls back to opening the camera regardless of `accept`
+  - confirmed by hitting exactly that bug on-device). Feature-detected in a `useEffect` (avoids an SSR/
+  client hydration mismatch from checking `navigator` at render time) with a plain `accept="audio/*"`
+  file-picker fallback for browsers without `MediaRecorder` support. Either path uploads straight to
+  the `clips` Storage bucket and records a `media_uploads` row via the browser client, gated by the
+  RLS policies in `0002_media_uploads.sql` rather than a server route.
 - `src/components/design-system/QrCode.tsx` - shown desktop-only (`hidden ... lg:flex`) on the
   Filming Mode page, encoding an auto-login URL (`/auth/qr?token=...`) so scanning it signs you in on
   your phone and continues the same guided flow (and clip uploads) without re-entering credentials.
