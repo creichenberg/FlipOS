@@ -24,8 +24,9 @@ vendor decision.
 
 ## Stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui (Nova preset: Lucide + Geist) ·
-Supabase (Auth + Postgres) · Anthropic API (`claude-sonnet-5`) · Stripe · TanStack Query · next-themes.
+Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui (Nova preset: Lucide icons; Work
+Sans body / Archivo headings / Geist Mono eyebrows - see "Design language" below) · Supabase (Auth +
+Postgres) · Anthropic API (`claude-sonnet-5`) · Stripe · TanStack Query · next-themes.
 
 ## Environment
 
@@ -225,7 +226,20 @@ deliberately, so hierarchy comes from real variation instead of identical paddin
 that uniformity is exactly what makes generated UI read as templated. Section eyebrows and small
 technical labels (`STEP 2 OF 5`, day-of-week tags, the landing page's section kickers) use
 `font-mono` (Geist Mono, already loaded as `--font-geist-mono`) to differentiate from body text and
-reinforce the "blueprint" identity - body copy stays on Geist Sans. Borders over shadows for
+reinforce the "blueprint" identity. **Type system**: body copy is Work Sans (`--font-sans`); all
+headings (`h1`-`h6`, site-wide via a `@layer base` rule in `globals.css` rather than a class added to
+every heading individually) are Archivo (`--font-heading`/`--font-archivo`) for more presence than
+the body face without going all the way to a display weight everywhere. The landing page's hero `h1`
+specifically uses Archivo Black (`--font-display`/`--font-archivo-black`, applied via the `font-display`
+utility class) for one heavier, more declarative moment - Archivo Black is a single fixed weight, so
+it's reserved for that one large headline rather than blanket-applied to every heading (at smaller
+sizes, or combined with a `font-semibold`/`font-bold` utility, a single-weight face either does
+nothing extra or risks the browser faux-bolding an already-black face). The `h2` "section eyebrow"
+labels (`Script`, `Shot list`, `Voiceover script`, etc. on the card detail page) explicitly set
+`font-mono` on themselves - since that's a Tailwind *utility* class, it wins over the *base-layer*
+heading rule's `font-family` regardless of selector specificity (Tailwind's base layer is emitted
+before its utilities layer in the cascade), so those stay monospace as intended; verified this
+holds via computed-style checks, not just assumed. Borders over shadows for
 separation; shadows reserved for genuinely elevated surfaces (dropdowns, modals, and now these
 tiered showcase cards). Interactive cards (video tiles, feature/pricing cards) use the `.hover-lift`
 utility (`globals.css`) - a small translateY + accent-tinted shadow on hover, not a decorative fade,

@@ -142,7 +142,7 @@ export default async function LandingPage() {
         <p className="animate-in fade-in slide-in-from-bottom-2 font-mono text-xs font-medium uppercase tracking-[0.15em] text-primary duration-700">
           Blueprint Studio
         </p>
-        <h1 className="animate-in fade-in slide-in-from-bottom-3 mt-4 max-w-2xl text-4xl font-semibold tracking-tight delay-100 duration-700 fill-mode-both sm:text-5xl">
+        <h1 className="animate-in fade-in slide-in-from-bottom-3 font-display mt-4 max-w-2xl text-4xl tracking-tight delay-100 duration-700 fill-mode-both sm:text-5xl">
           An AI social media manager for your business
         </h1>
         <p className="animate-in fade-in slide-in-from-bottom-3 mt-4 max-w-xl text-text-secondary delay-200 duration-700 fill-mode-both">
