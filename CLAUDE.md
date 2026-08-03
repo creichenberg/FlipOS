@@ -287,7 +287,14 @@ the copy swapped; STEPS is now a single hairline-divided row (number + heading, 
 already carries the visual weight) and FEATURES is a plain editorial list paired with a second
 product-screenshot mockup (reusing the hero's browser-chrome treatment to show a Hook + shot list
 moment) rather than a second icon grid, per the "dense with product screenshots, not icon grids"
-principle. Interactive cards (video tiles, feature/pricing cards) use the `.hover-lift`
+principle. The landing header (`src/app/page.tsx`) is `sticky top-0 z-50` with a solid `bg-canvas` (not
+translucent - this app's one glassmorphism exception stays scoped to the login page) so it stays
+legible and present while scrolling instead of just being a static strip at the very top; it also
+carries a real nav (`How it works`/`Features`/`Pricing`, anchor-linking to each section's `id`) plus a
+`Sign in` + `Get started` button pair rather than a single ghost-button link - a client complaint that
+the bar felt "too plain/sparse" and "didn't feel premium." On mobile the nav links and `Sign in` both
+drop (`hidden sm:flex`/`hidden sm:inline-flex`), leaving just the logo and `Get started` rather than
+cramming everything into a narrow strip. Interactive cards (video tiles, feature/pricing cards) use the `.hover-lift`
 utility (`globals.css`) - a small translateY + accent-tinted shadow on hover, not a decorative fade,
 skipped under `prefers-reduced-motion`. Dark-first via `next-themes` (`defaultTheme="dark"`), with a
 user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashboard nav) switching

@@ -116,18 +116,29 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="border-b border-border-subtle">
+      <header className="sticky top-0 z-50 border-b border-border-subtle bg-canvas">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <InteractiveLogo className="h-6 w-6 rounded-md" />
             <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="#pricing" className="hidden text-sm text-text-secondary hover:text-foreground sm:inline">
+          <nav className="hidden items-center gap-6 sm:flex">
+            <Link href="#how-it-works" className="text-sm text-text-secondary hover:text-foreground">
+              How it works
+            </Link>
+            <Link href="#features" className="text-sm text-text-secondary hover:text-foreground">
+              Features
+            </Link>
+            <Link href="#pricing" className="text-sm text-text-secondary hover:text-foreground">
               Pricing
             </Link>
-            <Button asChild variant="ghost" size="sm">
+          </nav>
+          <div className="flex items-center gap-3">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
               <Link href="/login">Sign in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/login">Get started</Link>
             </Button>
           </div>
         </div>
@@ -193,7 +204,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t border-border-subtle px-6 py-20">
+      <section id="features" className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-5xl">
           <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">What&apos;s in every card</p>
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">Nothing left to figure out</h2>
