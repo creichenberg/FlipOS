@@ -52,12 +52,10 @@ export function VideoCardTile({ card }: { card: VideoCard }) {
     >
       <div>
         <div className="flex items-center justify-between gap-2">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10"
-            aria-label={GOAL_LABELS[card.content_goal] ?? card.content_goal}
-          >
-            <GoalIcon className="h-4 w-4 text-primary" />
-          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+            <GoalIcon className="h-3.5 w-3.5" />
+            {GOAL_LABELS[card.content_goal] ?? card.content_goal}
+          </span>
           <span
             className={`font-mono text-xs uppercase tracking-wide ${isToday ? 'font-semibold text-primary' : 'text-text-secondary'}`}
           >

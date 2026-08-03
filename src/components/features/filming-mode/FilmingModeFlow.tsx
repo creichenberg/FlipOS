@@ -240,7 +240,7 @@ export function FilmingModeFlow({
         </div>
       </div>
 
-      <div className="relative rounded-2xl border border-border-subtle bg-surface p-8 text-center shadow-sm">
+      <div className="relative rounded-2xl border border-border-subtle bg-surface p-8 text-center">
         {justCompleted && (
           <div className="animate-in fade-in zoom-in-95 absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-surface duration-200">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
@@ -250,13 +250,10 @@ export function FilmingModeFlow({
         )}
 
         <div key={current.id} className="animate-in fade-in slide-in-from-right-2 duration-300">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            {current.kind === 'shot' ? <Camera className="h-5 w-5 text-primary" /> : <Mic className="h-5 w-5 text-primary" />}
-          </div>
-
           {current.kind === 'shot' ? (
             <>
-              <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
+              <p className="flex items-center justify-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
+                <Camera className="h-3.5 w-3.5 text-primary" />
                 Shot {current.shot.shot_number} · {current.shot.camera_angle}
               </p>
               <p className="mt-2 text-lg leading-snug">{current.shot.description}</p>
@@ -264,7 +261,10 @@ export function FilmingModeFlow({
             </>
           ) : (
             <>
-              <p className="mt-4 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover line {current.line.line_number}</p>
+              <p className="flex items-center justify-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
+                <Mic className="h-3.5 w-3.5 text-primary" />
+                Voiceover line {current.line.line_number}
+              </p>
               <p className="mt-2 text-lg leading-snug">&ldquo;{current.line.text}&rdquo;</p>
             </>
           )}

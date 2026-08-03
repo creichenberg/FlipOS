@@ -155,10 +155,10 @@ function LoginForm() {
             <TabsContent value="email" className="mt-6">
               {emailStatus === 'sent' ? (
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
-                  <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                  <span className="inline-flex items-center gap-1.5">
                     <Mail className="h-4 w-4 text-primary" />
-                  </div>
-                  Check <span className="font-medium">{email}</span> for a sign-in link.
+                    Check <span className="font-medium">{email}</span> for a sign-in link.
+                  </span>
                 </div>
               ) : (
                 <form onSubmit={sendMagicLink} className="space-y-4">

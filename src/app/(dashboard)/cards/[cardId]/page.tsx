@@ -56,21 +56,20 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
       : null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         title={card.title}
         description={`${DAY_LABELS[card.day_of_week]} · ${card.concept}`}
         actions={<RegenerateCardButton cardId={cardId} hasProgress={true} />}
       />
 
+      {/* Zone 1 - CTA banner: the page's one intentional rounded-2xl showcase outlier, a nav/CTA element rather than a content-display section */}
       <Link
         href={`/cards/${cardId}/film`}
-        className="hover-lift group flex flex-col items-center gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center shadow-[0_16px_36px_-24px_color-mix(in_oklch,var(--primary)_60%,transparent)] sm:flex-row sm:justify-between sm:text-left"
+        className="hover-lift group flex flex-col items-center gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center sm:flex-row sm:justify-between sm:text-left"
       >
         <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10">
-            <Camera className="h-6 w-6 text-primary" />
-          </div>
+          <Camera className="h-7 w-7 shrink-0 text-primary" />
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Ready to film?</h2>
             <p className="text-sm text-text-secondary">
@@ -87,7 +86,8 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         </Button>
       </Link>
 
-      <section className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
+      {/* Zone 2 - Hook: a hairline accent rule instead of a second filled spotlight card */}
+      <section className="rounded-xl border border-l-2 border-border-subtle border-l-primary bg-surface p-6">
         <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
           <Sparkles className="h-3.5 w-3.5" />
           Hook · first 3 seconds
@@ -95,62 +95,66 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <p className="mt-2 text-lg leading-snug">{detail.hook}</p>
       </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-lg border border-border-subtle bg-surface p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Script</h2>
-            <CopyButton text={detail.script} />
+      {/* Zone 3 - consolidated reference card: script/shot list/voiceover/on-screen text/editing notes, one shell instead of six */}
+      <section className="rounded-xl border border-border-subtle bg-surface p-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <div className="flex items-center justify-between">
+              <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Script</h2>
+              <CopyButton text={detail.script} />
+            </div>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.script}</p>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.script}</p>
-        </section>
-        <section className="rounded-lg border border-border-subtle bg-surface p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover script</h2>
-            <CopyButton text={detail.voiceover_script} />
+          <div>
+            <div className="flex items-center justify-between">
+              <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover script</h2>
+              <CopyButton text={detail.voiceover_script} />
+            </div>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.voiceover_script}</p>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.voiceover_script}</p>
-        </section>
-      </div>
+        </div>
 
-      <section className="rounded-lg border border-border-subtle bg-surface p-6">
-        <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</h2>
-        <div className="mt-2">
-          {((shots as Shot[] | null) ?? []).map((shot) => (
-            <ShotListItem key={shot.id} shot={shot} />
-          ))}
+        <div className="mt-6 border-t border-border-subtle pt-6">
+          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</h2>
+          <div className="mt-2">
+            {((shots as Shot[] | null) ?? []).map((shot) => (
+              <ShotListItem key={shot.id} shot={shot} />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-border-subtle pt-6">
+          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover lines</h2>
+          <ol className="mt-3 space-y-2">
+            {((voiceoverLines as VoiceoverLine[] | null) ?? []).map((line) => (
+              <li key={line.id} className="text-sm text-text-secondary">
+                <span className="font-medium text-foreground">{line.line_number}.</span> {line.text}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 border-t border-border-subtle pt-6 lg:grid-cols-2">
+          {detail.on_screen_text.length > 0 && (
+            <div>
+              <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">On-screen text</h2>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">
+                {detail.on_screen_text.map((t: string, i: number) => (
+                  <li key={i}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div>
+            <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Editing suggestions</h2>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">{detail.editing_suggestions}</p>
+          </div>
         </div>
       </section>
 
-      <section className="rounded-lg border border-border-subtle bg-surface p-6">
-        <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover lines</h2>
-        <ol className="mt-3 space-y-2">
-          {((voiceoverLines as VoiceoverLine[] | null) ?? []).map((line) => (
-            <li key={line.id} className="text-sm text-text-secondary">
-              <span className="font-medium text-foreground">{line.line_number}.</span> {line.text}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {detail.on_screen_text.length > 0 && (
-          <section className="rounded-lg border border-dashed border-border-subtle p-6">
-            <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">On-screen text</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">
-              {detail.on_screen_text.map((t: string, i: number) => (
-                <li key={i}>{t}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section className="rounded-lg border border-dashed border-border-subtle p-6">
-          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Editing suggestions</h2>
-          <p className="mt-2 text-sm leading-relaxed text-text-secondary">{detail.editing_suggestions}</p>
-        </section>
-      </div>
-
-      <section className="rounded-2xl border border-border-subtle bg-surface p-6 shadow-sm">
+      {/* Zone 4 - Ready to post: categorically different (final output, not filming reference), stays its own card */}
+      <section className="rounded-xl border border-border-subtle bg-surface p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Ready to post</h2>
           <CopyButton
@@ -160,7 +164,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <p className="mt-2 text-sm leading-relaxed">{detail.caption}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {detail.hashtags.map((tag: string) => (
-            <span key={tag} className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+            <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               #{tag.replace(/^#/, '')}
             </span>
           ))}

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check, Wand2 } from 'lucide-react';
+import { Check, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
@@ -9,22 +9,18 @@ import { MouseShine } from '@/components/design-system/MouseShine';
 
 const STEPS = [
   {
-    icon: Calendar,
     title: 'Get your weekly plan',
     description: '5-10 video ideas a week (depending on your plan), built specifically for your business - no generic content calendar filler.',
   },
   {
-    icon: Clapperboard,
     title: 'Open a card for the full package',
     description: 'Every idea expands into a hook, a full script, a shot-by-shot filming guide, and a caption ready to post.',
   },
   {
-    icon: Camera,
     title: 'Film it with Filming Mode',
     description: 'A guided, step-by-step flow walks you through each shot and voiceover line - zero video experience required.',
   },
   {
-    icon: Wand2,
     title: 'We edit it for you',
     description: 'Upload your clips and we cut them together automatically, with captions burned in - no editing software, no learning curve.',
   },
@@ -32,30 +28,30 @@ const STEPS = [
 
 const FEATURES = [
   {
-    icon: Sparkles,
-    title: 'Personalized, not generic',
-    description: 'Every idea is grounded in your actual products, customers, and industry - not a template that could apply to anyone.',
+    title: 'Built from your actual business',
+    description: 'Every idea uses your real products, customers, and industry from onboarding - not a template that could apply to anyone else.',
   },
   {
-    icon: ScrollText,
     title: 'Scripts you can actually use',
-    description: 'Full on-camera scripts and voiceover lines, broken into short takes that are easy to record one at a time.',
+    description: 'A full on-camera script and voiceover lines, split into short takes you record one at a time.',
   },
   {
-    icon: Camera,
     title: 'Beginner-friendly shot lists',
-    description: 'Camera angle, shot type, and duration for every shot - specific enough that anyone can film it correctly.',
+    description: 'Camera angle, shot type, and duration for every shot - specific enough to hand to someone who\'s never filmed before.',
   },
   {
-    icon: Hash,
-    title: 'Post caption & hashtags written for you',
-    description: 'A ready-to-post caption and hashtags generated alongside every video, no extra copywriting needed.',
+    title: 'Caption and hashtags, done',
+    description: 'Ready to paste and post the moment your edit is back - no extra copywriting step.',
   },
   {
-    icon: Wand2,
     title: 'Auto-edited, captions burned in',
     description: 'Upload your filmed clips and we cut them together into one finished video, with captions burned in automatically - no editing skills needed.',
   },
+];
+
+const FEATURE_PREVIEW_SHOTS = [
+  { number: 1, description: 'Wide shot of the shop floor, camera panning slowly left to right', angle: 'Wide', duration: '4s' },
+  { number: 2, description: 'Close-up on hands demonstrating the repair', angle: 'Close-up', duration: '6s' },
 ];
 
 const PLANS = [
@@ -185,15 +181,10 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">How it works</p>
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">From idea to posted video</h2>
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid grid-cols-1 divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4">
             {STEPS.map((step, i) => (
-              <Reveal key={step.title} delay={i * 100} className="text-center sm:text-left">
-                <div className="mx-auto flex items-center gap-3 sm:mx-0">
-                  <span className="font-mono text-3xl font-semibold text-primary/25">{String(i + 1).padStart(2, '0')}</span>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                    <step.icon className="h-4 w-4 text-primary" />
-                  </div>
-                </div>
+              <Reveal key={step.title} delay={i * 100} className="p-6">
+                <span className="font-mono text-3xl font-semibold text-primary/25">{String(i + 1).padStart(2, '0')}</span>
                 <h3 className="mt-4 text-base font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-text-secondary">{step.description}</p>
               </Reveal>
@@ -204,20 +195,56 @@ export default async function LandingPage() {
 
       <section className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">Features</p>
-          <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">Everything you need to post consistently</h2>
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {FEATURES.map((feature, i) => (
-              <Reveal key={feature.title} delay={i * 80}>
-                <div className="hover-lift rounded-xl border border-border-subtle bg-surface p-6">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                    <feature.icon className="h-4 w-4 text-primary" />
+          <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">What&apos;s in every card</p>
+          <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">Nothing left to figure out</h2>
+          <div className="mt-12 grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <Reveal>
+              <div>
+                {FEATURES.map((feature, i) => (
+                  <div key={feature.title} className={`py-4 ${i === 0 ? 'border-t-0' : 'border-t border-border-subtle'}`}>
+                    <h3 className="text-base font-medium">{feature.title}</h3>
+                    <p className="mt-1.5 text-sm text-text-secondary">{feature.description}</p>
                   </div>
-                  <h3 className="mt-4 text-base font-medium">{feature.title}</h3>
-                  <p className="mt-1.5 text-sm text-text-secondary">{feature.description}</p>
+                ))}
+              </div>
+            </Reveal>
+            <Reveal delay={100}>
+              <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl">
+                <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
+                  <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+                  <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/cards/mon-01</span>
                 </div>
-              </Reveal>
-            ))}
+                <div className="p-5">
+                  <div className="rounded-xl border border-border-subtle bg-canvas p-5 border-l-2 border-l-primary">
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Hook · first 3 seconds
+                    </div>
+                    <p className="mt-2 text-sm leading-snug">
+                      &ldquo;Most homeowners wait too long to call a plumber - here&apos;s how to tell.&rdquo;
+                    </p>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-border-subtle bg-canvas p-5">
+                    <p className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</p>
+                    <div className="mt-1">
+                      {FEATURE_PREVIEW_SHOTS.map((shot) => (
+                        <div key={shot.number} className="flex gap-3 border-b border-border-subtle py-3 last:border-b-0">
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-medium text-primary">
+                            {shot.number}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs">{shot.description}</p>
+                            <p className="mt-1 text-[11px] text-text-secondary">{shot.angle} · {shot.duration}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>

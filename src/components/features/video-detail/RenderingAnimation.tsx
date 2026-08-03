@@ -42,12 +42,10 @@ export function RenderingAnimation() {
           return (
             <li key={step.label} className="flex items-center gap-3">
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors duration-300 ${
-                  isDone
-                    ? 'bg-primary/10 text-primary'
-                    : isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-secondary text-text-secondary'
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 ${
+                  isDone || isActive
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border-subtle bg-transparent text-text-secondary'
                 }`}
               >
                 <Icon className={`h-3.5 w-3.5 ${isActive ? 'animate-pulse motion-reduce:animate-none' : ''}`} />

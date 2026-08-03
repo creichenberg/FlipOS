@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Film, RefreshCw, TriangleAlert, Wand2 } from 'lucide-react';
+import { RefreshCw, TriangleAlert, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { RenderingAnimation } from './RenderingAnimation';
@@ -130,11 +130,8 @@ export function RenderVideoPanel({
 
   if (!canRender) {
     return (
-      <section id="auto-edit" className="rounded-2xl border border-dashed border-border-subtle p-6 text-center">
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-          <Film className="h-5 w-5 text-primary" />
-        </div>
-        <h2 className="mt-3 text-base font-medium">Auto-edited video</h2>
+      <section id="auto-edit" className="rounded-xl border border-dashed border-border-subtle p-6 text-center">
+        <h2 className="text-base font-medium">Auto-edited video</h2>
         <p className="mt-1 text-sm text-text-secondary">{missingSummary}</p>
         <Button asChild variant="outline" className="mt-4">
           <Link href={`/cards/${cardId}/film`}>Go to Filming Mode</Link>
@@ -144,7 +141,7 @@ export function RenderVideoPanel({
   }
 
   return (
-    <section id="auto-edit" className="rounded-2xl border border-border-subtle bg-surface p-6 shadow-sm">
+    <section id="auto-edit" className="rounded-xl border border-border-subtle bg-surface p-6">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Auto-edited video</h2>
         {isMock && (

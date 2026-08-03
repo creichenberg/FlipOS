@@ -224,10 +224,12 @@ plus one accent (`--primary`, a warm terracotta/rust - not indigo/purple, which 
 overused "trying not to be blue" SaaS accent; terracotta also nods to the red/amber pencil used to
 annotate blue technical drawings) defined in `src/app/globals.css`. **Radius is tiered on purpose,
 not uniform** - functional UI (buttons, inputs, badges) stays at the shadcn default `--radius-lg`
-(10px), but "showcase" surfaces (feature/pricing cards, the hook and "ready to post" panels on the
-card detail page, the onboarding card, Filming Mode's step card) use `rounded-xl`/`rounded-2xl`
-deliberately, so hierarchy comes from real variation instead of identical padding/radius everywhere -
-that uniformity is exactly what makes generated UI read as templated. Section eyebrows and small
+(10px); **every bordered content section uses one value, `rounded-xl`** (pricing/onboarding cards,
+the card detail page's Hook/reference/"Ready to post" sections, Filming Mode's step card, `RenderVideoPanel`)
+so there's a single, consistent "card container" affordance instead of three or four radii competing
+for the same job; `rounded-2xl` is reserved for exactly one genuinely-elevated showcase panel per
+screen (the landing hero/features browser-chrome mockups, the card page's "Ready to film?" CTA banner
+specifically as a nav/CTA element rather than a content-display section, the login glass card). Section eyebrows and small
 technical labels (`STEP 2 OF 5`, day-of-week tags, the landing page's section kickers) use
 `font-mono` (IBM Plex Mono, loaded as `--font-ibm-plex-mono` - replaced Geist Mono for a more
 deliberately professional/enterprise feel) to differentiate from body text and reinforce the
@@ -245,8 +247,34 @@ labels (`Script`, `Shot list`, `Voiceover script`, etc. on the card detail page)
 heading rule's `font-family` regardless of selector specificity (Tailwind's base layer is emitted
 before its utilities layer in the cascade), so those stay monospace as intended; verified this
 holds via computed-style checks, not just assumed. Borders over shadows for
-separation; shadows reserved for genuinely elevated surfaces (dropdowns, modals, and now these
-tiered showcase cards). Interactive cards (video tiles, feature/pricing cards) use the `.hover-lift`
+separation; shadows reserved for genuinely elevated surfaces (dropdowns, modals, and the `rounded-2xl`
+showcase panels above) - dropped from ordinary bordered sections (card detail page, `RenderVideoPanel`,
+Filming Mode's step card) since a shadow next to a border on a dark canvas is redundant and reads as
+noise, not depth. **Icon chips are used sparingly, not as a default decoration** - after a client
+review pass called out the app as "looking AI-made" (traced to Linear's own stated principle of no
+decorative icon backgrounds/"no spotlight card," researched directly rather than assumed), every
+`h-9 w-9 rounded-lg bg-primary/10` icon-in-a-tinted-circle instance in the app was re-evaluated
+individually rather than blanket-removed: purely decorative ones were deleted outright (landing STEPS,
+`WeekProgress`), meaning-carrying ones were de-chipped down to a plain icon next to a *visible* text
+label instead of an `aria-label`-only chip (`VideoCardTile`'s goal icon, `TipOfTheDay`, `EmptyState`,
+the login page's magic-link confirmation, the card page's "Ready to film?" banner, Filming Mode's
+per-step Camera/Mic icon), and `RenderingAnimation`'s 4 step icons became a real stepper (solid fill
+once done/active, bordered-transparent otherwise) instead of a static tinted circle. Legitimate
+terminal/transient result icons (Filming Mode's skipped/all-done/`justCompleted` states,
+`ShotListItem`'s numbered index circle) were left alone - the goal was removing decoration, not every
+icon. The card detail page (`cards/[cardId]/page.tsx`) collapsed from 9 independently-boxed sections
+at 3 different radii into 4 visual zones for the same reason: a CTA banner, a Hook section marked by a
+hairline `border-l-2 border-l-primary` accent rule instead of a second filled spotlight card, one
+consolidated `rounded-xl` reference shell (Script/Voiceover script side-by-side, then Shot list,
+Voiceover lines, and On-screen text/Editing suggestions behind `border-t` dividers - same conditional
+rendering as before, one container instead of six), and "Ready to post" kept separate since it's
+categorically different output, not filming reference. The landing page's "How it works" and
+"Features" sections used to be the same icon-chip-grid component repeated twice back to back with only
+the copy swapped; STEPS is now a single hairline-divided row (number + heading, no icon - the numeral
+already carries the visual weight) and FEATURES is a plain editorial list paired with a second
+product-screenshot mockup (reusing the hero's browser-chrome treatment to show a Hook + shot list
+moment) rather than a second icon grid, per the "dense with product screenshots, not icon grids"
+principle. Interactive cards (video tiles, feature/pricing cards) use the `.hover-lift`
 utility (`globals.css`) - a small translateY + accent-tinted shadow on hover, not a decorative fade,
 skipped under `prefers-reduced-motion`. Dark-first via `next-themes` (`defaultTheme="dark"`), with a
 user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashboard nav) switching

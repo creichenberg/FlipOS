@@ -13,9 +13,7 @@ export function EmptyState({
 }) {
   return (
     <div className="bg-blueprint-grid flex flex-col items-center justify-center rounded-xl border border-dashed border-border-subtle px-6 py-16 text-center">
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10">
-        <Icon className="h-5 w-5 text-primary" />
-      </div>
+      <Icon className="h-7 w-7 text-primary" />
       <h3 className="mt-4 text-base font-medium">{title}</h3>
       {description && <p className="mt-1.5 max-w-sm text-sm text-text-secondary">{description}</p>}
       {action && <div className="mt-6">{action}</div>}
