@@ -2,18 +2,21 @@ import { Lightbulb } from 'lucide-react';
 
 // Deterministic by day-of-year rather than random, so the tip is stable
 // across a refresh (and across a page revisited later the same day)
-// without needing any client state.
+// without needing any client state. These are specifically about how to get
+// more out of Blueprint Studio itself (features easy to miss otherwise),
+// not generic filming/social-media advice - every one of them should be
+// checkable against a real feature in the app, not just plausible-sounding.
 const TIPS = [
-  "Film in vertical 9:16 - it's how your audience is already holding their phone.",
-  "Face a window instead of a ring light. Natural light flatters faces better than almost any gear.",
-  'Say what you do in the first 3 seconds. Viewers decide whether to keep watching before you finish a sentence.',
-  'Keep individual clips short - quick cuts hold attention better than one long, static take.',
-  "Say your business name out loud early. Not everyone reads captions, and not every platform shows them by default.",
-  'A beat of silence before a punchline makes it land harder - resist the urge to fill every second.',
-  'Film a couple extra seconds before and after each shot. That buffer is what makes clean cuts possible later.',
-  'Consistency beats perfection - a decent video every week outperforms a great one every month.',
-  "Reply to your own top comment. It's an easy, low-effort second chance to mention your offer.",
-  'Hold the phone with both hands, elbows tucked in - the single biggest fix for shaky footage.',
+  "Don't love an idea? Regenerate just that one card instead of the whole week - it keeps the same link and leaves your other days untouched.",
+  'Your onboarding answers shape every idea we generate. The more specific you were about your business, the more personalized your videos will be.',
+  "Every card comes with a ready-to-post caption and hashtags - copy them straight from the card page once you're ready to publish.",
+  "You can skip a shot or voiceover line in Filming Mode and come back to it later - nothing is lost, and you'll get a reminder at the end.",
+  'Filming on your phone but planning from a laptop? Scan the QR code in Filming Mode to keep going from your phone - it signs you in instantly.',
+  'Recording a voiceover line happens right in your browser - no separate recording app needed, just hit record and read the line.',
+  "Once every shot and voiceover line has a clip, hit \"Create edited video\" - we'll cut them together and burn in captions automatically.",
+  'Captions in your auto-edited video are pulled straight from your script, so what appears on screen always matches what was said.',
+  "Started an edit and need to step away? You'll get notified the moment it's done, even from a different page.",
+  "Check the \"Editing suggestions\" note under your shot list - it's pacing and transition guidance written specifically for that video.",
 ];
 
 function dayOfYear(date: Date): number {

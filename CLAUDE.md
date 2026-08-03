@@ -158,9 +158,13 @@ dashboard.
   service worker/push infrastructure here, so that's the ceiling). Permission is requested
   best-effort from `RenderVideoPanel.startRender()` itself (tied to the action that will actually use
   it, not asked cold on page load).
-- `src/components/features/dashboard/TipOfTheDay.tsx` - a short filming/social-media tip shown at the
-  top of the dashboard, picked deterministically from a fixed list by day-of-year (`Date.UTC`-based,
-  no client state) so it's stable across refreshes without needing to persist anything.
+- `src/components/features/dashboard/TipOfTheDay.tsx` - a short tip shown at the top of the dashboard,
+  picked deterministically from a fixed list by day-of-year (`Date.UTC`-based, no client state) so
+  it's stable across refreshes without needing to persist anything. Tips are specifically about
+  getting more out of Blueprint Studio's own features (regenerating a single card, Filming Mode's
+  skip/resume, QR auto-login, in-browser voiceover recording, the auto-edit trigger and its
+  script-sourced captions, cross-page render notifications, the editing-suggestions field) rather
+  than generic filming/social-media advice - each one should be checkable against a real feature.
 - `src/components/design-system/VideoCardTile.tsx` - the dashboard grid's per-card tile, redesigned
   ("icon-led, progress-driven") after presenting three mockup directions to the client via
   `AskUserQuestion` previews. A `Record<ContentGoal, LucideIcon>` maps each of the 5 content goals to
