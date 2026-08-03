@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Archivo, Archivo_Black, Geist_Mono, Work_Sans } from 'next/font/google';
+import { Archivo, Archivo_Black, IBM_Plex_Mono, Work_Sans } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/components/providers';
 import './globals.css';
@@ -25,8 +25,14 @@ const archivoBlack = Archivo_Black({
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+// IBM Plex Mono for the small uppercase "eyebrow"/technical labels (section
+// kickers, day-of-week tags, STEP N OF M) - reads more deliberately
+// professional/enterprise than Geist Mono, which it replaces. Not a
+// variable font on Google Fonts, so weights used across the app (plain,
+// font-medium, font-semibold) are listed explicitly.
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: '--font-ibm-plex-mono',
+  weight: ['400', '500', '600'],
   subsets: ['latin'],
 });
 
@@ -62,7 +68,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${workSans.variable} ${archivo.variable} ${archivoBlack.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${workSans.variable} ${archivo.variable} ${archivoBlack.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-canvas text-foreground">
         <Providers>

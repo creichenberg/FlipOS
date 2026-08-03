@@ -25,7 +25,7 @@ vendor decision.
 ## Stack
 
 Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui (Nova preset: Lucide icons; Work
-Sans body / Archivo headings / Geist Mono eyebrows - see "Design language" below) · Supabase (Auth +
+Sans body / Archivo headings / IBM Plex Mono eyebrows - see "Design language" below) · Supabase (Auth +
 Postgres) · Anthropic API (`claude-sonnet-5`) · Stripe · TanStack Query · next-themes.
 
 ## Environment
@@ -225,8 +225,9 @@ card detail page, the onboarding card, Filming Mode's step card) use `rounded-xl
 deliberately, so hierarchy comes from real variation instead of identical padding/radius everywhere -
 that uniformity is exactly what makes generated UI read as templated. Section eyebrows and small
 technical labels (`STEP 2 OF 5`, day-of-week tags, the landing page's section kickers) use
-`font-mono` (Geist Mono, already loaded as `--font-geist-mono`) to differentiate from body text and
-reinforce the "blueprint" identity. **Type system**: body copy is Work Sans (`--font-sans`); all
+`font-mono` (IBM Plex Mono, loaded as `--font-ibm-plex-mono` - replaced Geist Mono for a more
+deliberately professional/enterprise feel) to differentiate from body text and reinforce the
+"blueprint" identity. **Type system**: body copy is Work Sans (`--font-sans`); all
 headings (`h1`-`h6`, site-wide via a `@layer base` rule in `globals.css` rather than a class added to
 every heading individually) are Archivo (`--font-heading`/`--font-archivo`) for more presence than
 the body face without going all the way to a display weight everywhere. The landing page's hero `h1`
