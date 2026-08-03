@@ -32,7 +32,7 @@ export function TipOfTheDay() {
     <div className="rounded-xl border border-border-subtle bg-surface px-5 py-4">
       <div className="flex items-center gap-1.5">
         <Lightbulb className="h-3.5 w-3.5 text-primary" />
-        <span className="font-mono text-xs font-medium uppercase tracking-wide text-primary">Tip of the day</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-primary">Tip of the day</span>
       </div>
       <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{tip}</p>
     </div>

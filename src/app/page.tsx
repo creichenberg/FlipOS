@@ -147,7 +147,7 @@ export default async function LandingPage() {
 
       <section className="bg-blueprint-grid bg-blueprint-grid-interactive relative flex flex-col items-center px-6 pb-20 pt-24 text-center">
         <MouseShine />
-        <p className="animate-in fade-in slide-in-from-bottom-2 font-mono text-xs font-medium uppercase tracking-[0.15em] text-primary duration-700">
+        <p className="animate-in fade-in slide-in-from-bottom-2 text-xs font-medium uppercase tracking-[0.15em] text-primary duration-700">
           Blueprint Studio
         </p>
         <h1 className="animate-in fade-in slide-in-from-bottom-3 font-display mt-4 max-w-2xl text-4xl tracking-tight delay-100 duration-700 fill-mode-both sm:text-5xl">
@@ -173,13 +173,13 @@ export default async function LandingPage() {
               <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
               <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
               <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-              <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/dashboard</span>
+              <span className="ml-3 text-xs text-text-secondary">blueprintstudio.app/dashboard</span>
             </div>
             <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
               {PREVIEW_CARDS.map((card) => (
                 <div key={card.day} className="rounded-lg border border-border-subtle bg-canvas p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] uppercase tracking-wide text-text-secondary">{card.day}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-text-secondary">{card.day}</span>
                     <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{card.goal}</span>
                   </div>
                   <p className="mt-2.5 text-sm font-medium leading-snug">{card.title}</p>
@@ -193,12 +193,12 @@ export default async function LandingPage() {
 
       <section id="how-it-works" className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">How it works</p>
+          <p className="text-center text-xs uppercase tracking-[0.15em] text-primary">How it works</p>
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">From idea to posted video</h2>
           <div className="mt-12 grid grid-cols-1 divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4">
             {STEPS.map((step, i) => (
               <Reveal key={step.title} delay={i * 100} className="p-6">
-                <span className="font-mono text-3xl font-semibold text-primary/25">{String(i + 1).padStart(2, '0')}</span>
+                <span className="text-3xl font-semibold text-primary/25">{String(i + 1).padStart(2, '0')}</span>
                 <h3 className="mt-4 text-base font-medium">{step.title}</h3>
                 <p className="mt-2 text-sm text-text-secondary">{step.description}</p>
               </Reveal>
@@ -209,7 +209,7 @@ export default async function LandingPage() {
 
       <section id="features" className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-5xl">
-          <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">What&apos;s in every card</p>
+          <p className="text-center text-xs uppercase tracking-[0.15em] text-primary">What&apos;s in every card</p>
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">Nothing left to figure out</h2>
           <div className="mt-12 grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
             <Reveal>
@@ -229,11 +229,11 @@ export default async function LandingPage() {
                     <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
                     <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
                     <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-                    <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/cards/mon-01</span>
+                    <span className="ml-3 text-xs text-text-secondary">blueprintstudio.app/cards/mon-01</span>
                   </div>
                   <div className="p-5">
                     <div className="rounded-xl border border-border-subtle bg-canvas p-5 border-l-2 border-l-primary">
-                      <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
+                      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-primary">
                         <Sparkles className="h-3.5 w-3.5" />
                         Hook · first 3 seconds
                       </div>
@@ -242,11 +242,11 @@ export default async function LandingPage() {
                       </p>
                     </div>
                     <div className="mt-3 rounded-xl border border-border-subtle bg-canvas p-5">
-                      <p className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</p>
+                      <p className="text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</p>
                       <div className="mt-1">
                         {FEATURE_PREVIEW_SHOTS.map((shot) => (
                           <div key={shot.number} className="flex gap-3 border-b border-border-subtle py-3 last:border-b-0">
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-medium text-primary">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
                               {shot.number}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -268,7 +268,7 @@ export default async function LandingPage() {
       <section id="pricing" className="border-t border-border-subtle px-6 py-20">
         <div className="mx-auto max-w-3xl">
           <div className="text-center">
-            <p className="font-mono text-xs uppercase tracking-[0.15em] text-primary">Pricing</p>
+            <p className="text-xs uppercase tracking-[0.15em] text-primary">Pricing</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight">Simple, predictable pricing</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">Pick the plan that matches how often you want to post. Cancel anytime.</p>
           </div>
@@ -293,7 +293,7 @@ export default async function LandingPage() {
                     <span className="text-3xl font-semibold tracking-tight">${plan.price}</span>
                     <span className="text-sm text-text-secondary">/ month</span>
                   </div>
-                  <p className="mt-1 font-mono text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
+                  <p className="mt-1 text-xs text-text-secondary">{plan.videosPerWeek} video ideas every week</p>
                   <ul className="mt-5 space-y-2.5">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2 text-sm">

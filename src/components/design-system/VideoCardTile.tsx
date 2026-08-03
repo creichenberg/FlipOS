@@ -57,7 +57,7 @@ export function VideoCardTile({ card }: { card: VideoCard }) {
             {GOAL_LABELS[card.content_goal] ?? card.content_goal}
           </span>
           <span
-            className={`font-mono text-xs uppercase tracking-wide ${isToday ? 'font-semibold text-primary' : 'text-text-secondary'}`}
+            className={`text-xs uppercase tracking-wide ${isToday ? 'font-semibold text-primary' : 'text-text-secondary'}`}
           >
             {DAY_LABELS[card.day_of_week]}
           </span>

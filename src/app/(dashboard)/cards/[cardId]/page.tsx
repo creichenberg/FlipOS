@@ -88,7 +88,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
 
       {/* Zone 2 - Hook: a hairline accent rule instead of a second filled spotlight card */}
       <section className="rounded-xl border border-l-2 border-border-subtle border-l-primary bg-surface p-6">
-        <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
+        <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-primary">
           <Sparkles className="h-3.5 w-3.5" />
           Hook · first 3 seconds
         </div>
@@ -100,14 +100,14 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <div className="flex items-center justify-between">
-              <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Script</h2>
+              <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Script</h2>
               <CopyButton text={detail.script} />
             </div>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.script}</p>
           </div>
           <div>
             <div className="flex items-center justify-between">
-              <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover script</h2>
+              <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover script</h2>
               <CopyButton text={detail.voiceover_script} />
             </div>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{detail.voiceover_script}</p>
@@ -115,7 +115,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         </div>
 
         <div className="mt-6 border-t border-border-subtle pt-6">
-          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</h2>
+          <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</h2>
           <div className="mt-2">
             {((shots as Shot[] | null) ?? []).map((shot) => (
               <ShotListItem key={shot.id} shot={shot} />
@@ -124,7 +124,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         </div>
 
         <div className="mt-6 border-t border-border-subtle pt-6">
-          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover lines</h2>
+          <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover lines</h2>
           <ol className="mt-3 space-y-2">
             {((voiceoverLines as VoiceoverLine[] | null) ?? []).map((line) => (
               <li key={line.id} className="text-sm text-text-secondary">
@@ -137,7 +137,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <div className="mt-6 grid grid-cols-1 gap-6 border-t border-border-subtle pt-6 lg:grid-cols-2">
           {detail.on_screen_text.length > 0 && (
             <div>
-              <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">On-screen text</h2>
+              <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">On-screen text</h2>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">
                 {detail.on_screen_text.map((t: string, i: number) => (
                   <li key={i}>{t}</li>
@@ -147,7 +147,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
           )}
 
           <div>
-            <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Editing suggestions</h2>
+            <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Editing suggestions</h2>
             <p className="mt-2 text-sm leading-relaxed text-text-secondary">{detail.editing_suggestions}</p>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
       {/* Zone 4 - Ready to post: categorically different (final output, not filming reference), stays its own card */}
       <section className="rounded-xl border border-border-subtle bg-surface p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Ready to post</h2>
+          <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Ready to post</h2>
           <CopyButton
             text={`${detail.caption}\n\n${detail.hashtags.map((t: string) => `#${t.replace(/^#/, '')}`).join(' ')}`}
           />

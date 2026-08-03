@@ -25,7 +25,7 @@ vendor decision.
 ## Stack
 
 Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui (Nova preset: Lucide icons; Work
-Sans body / Archivo headings / IBM Plex Mono eyebrows - see "Design language" below) · Supabase (Auth +
+Sans body / Archivo headings, no monospace face - see "Design language" below) · Supabase (Auth +
 Postgres) · Anthropic API (`claude-sonnet-5`) · Stripe · TanStack Query · next-themes.
 
 ## Environment
@@ -242,24 +242,24 @@ the card detail page's Hook/reference/"Ready to post" sections, Filming Mode's s
 so there's a single, consistent "card container" affordance instead of three or four radii competing
 for the same job; `rounded-2xl` is reserved for exactly one genuinely-elevated showcase panel per
 screen (the landing hero/features browser-chrome mockups, the card page's "Ready to film?" CTA banner
-specifically as a nav/CTA element rather than a content-display section, the login glass card). Section eyebrows and small
-technical labels (`STEP 2 OF 5`, day-of-week tags, the landing page's section kickers) use
-`font-mono` (IBM Plex Mono, loaded as `--font-ibm-plex-mono` - replaced Geist Mono for a more
-deliberately professional/enterprise feel) to differentiate from body text and reinforce the
-"blueprint" identity. **Type system**: body copy is Work Sans (`--font-sans`); all
+specifically as a nav/CTA element rather than a content-display section, the login glass card).
+**No monospace face anywhere in the app** - section eyebrows and small technical labels (`STEP 2 OF
+5`, day-of-week tags, the landing page's section kickers, the card detail page's `Script`/`Shot list`/
+etc. `h2` labels) previously used IBM Plex Mono (`font-mono`) to differentiate from body text, dropped
+per explicit client feedback that it read as unprofessional. They're differentiated the same way now
+as before, just without a typeface switch: small size (`text-xs`), uppercase, `tracking-wide`, and
+either `text-primary` or `text-text-secondary` depending on emphasis - the same visual hierarchy, one
+fewer typeface. **Type system**: body copy is Work Sans (`--font-sans`); all
 headings (`h1`-`h6`, site-wide via a `@layer base` rule in `globals.css` rather than a class added to
 every heading individually) are Archivo (`--font-heading`/`--font-archivo`) for more presence than
-the body face without going all the way to a display weight everywhere. The landing page's hero `h1`
+the body face without going all the way to a display weight everywhere - this now includes the
+`h2` eyebrow labels too, which used to need an explicit `font-mono` override to opt out of this rule
+and no longer do, since there's nothing left to opt out to. The landing page's hero `h1`
 specifically uses Archivo Black (`--font-display`/`--font-archivo-black`, applied via the `font-display`
 utility class) for one heavier, more declarative moment - Archivo Black is a single fixed weight, so
 it's reserved for that one large headline rather than blanket-applied to every heading (at smaller
 sizes, or combined with a `font-semibold`/`font-bold` utility, a single-weight face either does
-nothing extra or risks the browser faux-bolding an already-black face). The `h2` "section eyebrow"
-labels (`Script`, `Shot list`, `Voiceover script`, etc. on the card detail page) explicitly set
-`font-mono` on themselves - since that's a Tailwind *utility* class, it wins over the *base-layer*
-heading rule's `font-family` regardless of selector specificity (Tailwind's base layer is emitted
-before its utilities layer in the cascade), so those stay monospace as intended; verified this
-holds via computed-style checks, not just assumed. Borders over shadows for
+nothing extra or risks the browser faux-bolding an already-black face). Borders over shadows for
 separation; shadows reserved for genuinely elevated surfaces (dropdowns, modals, and the `rounded-2xl`
 showcase panels above) - dropped from ordinary bordered sections (card detail page, `RenderVideoPanel`,
 Filming Mode's step card) since a shadow next to a border on a dark canvas is redundant and reads as

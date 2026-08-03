@@ -143,7 +143,7 @@ export function RenderVideoPanel({
   return (
     <section id="auto-edit" className="rounded-xl border border-border-subtle bg-surface p-6">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Auto-edited video</h2>
+        <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Auto-edited video</h2>
         {isMock && (
           <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
             Mock render - test mode
@@ -193,7 +193,7 @@ export function RenderVideoPanel({
       {showFullScreenAnimation && typeof document !== 'undefined'
         ? createPortal(
             <div className="animate-in fade-in fixed inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-canvas/98 px-6 duration-300 backdrop-blur-sm">
-              <p className="font-mono text-xs font-medium uppercase tracking-wide text-primary">Editing your video</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-primary">Editing your video</p>
               <p className="text-sm text-text-secondary">This won&apos;t take long.</p>
               <div className="mt-4 w-full max-w-sm">
                 <RenderingAnimation />

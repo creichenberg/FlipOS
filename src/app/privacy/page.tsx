@@ -21,7 +21,7 @@ export default function PrivacyPolicyPage() {
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-16">
-        <p className="font-mono text-xs uppercase tracking-[0.15em] text-primary">Legal</p>
+        <p className="text-xs uppercase tracking-[0.15em] text-primary">Legal</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Privacy Policy</h1>
         <p className="mt-2 text-sm text-text-secondary">Last updated {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 

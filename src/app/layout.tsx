@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Archivo, Archivo_Black, IBM_Plex_Mono, Work_Sans } from 'next/font/google';
+import { Archivo, Archivo_Black, Work_Sans } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/components/providers';
 import './globals.css';
@@ -9,6 +9,11 @@ import './globals.css';
 // (--font-display, applied via the `font-display` utility) for one heavier,
 // more declarative moment - Archivo Black is a single-weight display face,
 // too heavy to use for every heading without the app reading over-shouty.
+// No monospace face anywhere - small uppercase "eyebrow"/technical labels
+// (section kickers, day-of-week tags, STEP N OF M) previously used IBM Plex
+// Mono, dropped per explicit client feedback that it read as unprofessional;
+// those labels now just use Work Sans/Archivo like everything else,
+// differentiated by size/weight/letter-spacing/color instead of typeface.
 const workSans = Work_Sans({
   variable: '--font-sans',
   subsets: ['latin'],
@@ -22,17 +27,6 @@ const archivo = Archivo({
 const archivoBlack = Archivo_Black({
   variable: '--font-archivo-black',
   weight: '400',
-  subsets: ['latin'],
-});
-
-// IBM Plex Mono for the small uppercase "eyebrow"/technical labels (section
-// kickers, day-of-week tags, STEP N OF M) - reads more deliberately
-// professional/enterprise than Geist Mono, which it replaces. Not a
-// variable font on Google Fonts, so weights used across the app (plain,
-// font-medium, font-semibold) are listed explicitly.
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: '--font-ibm-plex-mono',
-  weight: ['400', '500', '600'],
   subsets: ['latin'],
 });
 
@@ -68,7 +62,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${workSans.variable} ${archivo.variable} ${archivoBlack.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      className={`${workSans.variable} ${archivo.variable} ${archivoBlack.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-canvas text-foreground">
         <Providers>

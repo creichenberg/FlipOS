@@ -51,7 +51,7 @@ export function RenderingAnimation() {
                 <Icon className={`h-3.5 w-3.5 ${isActive ? 'animate-pulse motion-reduce:animate-none' : ''}`} />
               </span>
               <span
-                className={`font-mono text-xs uppercase tracking-wide transition-colors duration-300 ${
+                className={`text-xs uppercase tracking-wide transition-colors duration-300 ${
                   isDone || isActive ? 'text-foreground' : 'text-text-secondary'
                 }`}
               >

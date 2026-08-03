@@ -232,7 +232,7 @@ export function FilmingModeFlow({
   return (
     <div className="space-y-6">
       <div>
-        <p className="font-mono text-xs uppercase tracking-wide text-text-secondary">
+        <p className="text-xs uppercase tracking-wide text-text-secondary">
           Step {state.index + 1} of {steps.length}
         </p>
         <div className="mt-2">
@@ -252,7 +252,7 @@ export function FilmingModeFlow({
         <div key={current.id} className="animate-in fade-in slide-in-from-right-2 duration-300">
           {current.kind === 'shot' ? (
             <>
-              <p className="flex items-center justify-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
+              <p className="flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-wide text-text-secondary">
                 <Camera className="h-3.5 w-3.5 text-primary" />
                 Shot {current.shot.shot_number} · {current.shot.camera_angle}
               </p>
@@ -261,7 +261,7 @@ export function FilmingModeFlow({
             </>
           ) : (
             <>
-              <p className="flex items-center justify-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">
+              <p className="flex items-center justify-center gap-1.5 text-xs font-medium uppercase tracking-wide text-text-secondary">
                 <Mic className="h-3.5 w-3.5 text-primary" />
                 Voiceover line {current.line.line_number}
               </p>

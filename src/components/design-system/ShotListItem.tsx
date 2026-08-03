@@ -4,7 +4,7 @@ import type { Shot } from '@/lib/types/database';
 export function ShotListItem({ shot }: { shot: Shot }) {
   return (
     <div className="flex gap-4 border-b border-border-subtle py-4 last:border-b-0">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-sm font-medium text-primary">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
         {shot.shot_number}
       </div>
       <div className="min-w-0 flex-1">

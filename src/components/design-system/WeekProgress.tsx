@@ -13,7 +13,7 @@ export function WeekProgress({ cards }: { cards: VideoCard[] }) {
         <span className={`font-medium ${allDone ? 'text-emerald-500' : ''}`}>
           {allDone ? 'Every video is filmed' : "This week's progress"}
         </span>
-        <span className="font-mono text-xs text-text-secondary">
+        <span className="text-xs text-text-secondary">
           {complete}/{total} filmed
         </span>
       </div>
