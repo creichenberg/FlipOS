@@ -254,10 +254,13 @@ function LoginForm() {
               <TabsContent value="signup" className="mt-6">
                 {signupConfirmSent ? (
                   <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Mail className="h-4 w-4 text-primary" />
-                      Check <span className="font-medium">{email}</span> to confirm your account.
-                    </span>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <Mail className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="font-medium">Check your email</span>
+                    </div>
+                    <p className="mt-1.5 text-text-secondary">
+                      We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>.
+                    </p>
                   </div>
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
@@ -321,10 +324,13 @@ function LoginForm() {
             (resetSent ? (
               <div className="space-y-4">
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Mail className="h-4 w-4 text-primary" />
-                    Check <span className="font-medium">{email}</span> for a password reset link.
-                  </span>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Mail className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="font-medium">Check your email</span>
+                  </div>
+                  <p className="mt-1.5 text-text-secondary">
+                    We sent a password reset link to <span className="font-medium text-foreground">{email}</span>.
+                  </p>
                 </div>
                 <button
                   type="button"
