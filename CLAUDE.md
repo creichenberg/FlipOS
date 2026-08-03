@@ -143,7 +143,20 @@ dashboard.
   gate only ever adds wait time, never cuts a real render short) - a render that visibly resolves in
   under a second reads as fake, not fast. The sweeping progress bar inside `RenderingAnimation.tsx`
   uses a `.render-sweep` keyframe in `globals.css`, following the same `prefers-reduced-motion` guard
-  pattern as `.glow-orb`/`.bg-blueprint-grid`.
+  pattern as `.glow-orb`/`.bg-blueprint-grid`. **Cross-page render notifications**
+  (`RenderNotifications.tsx`, `GET /api/render-jobs/active`) - `RenderVideoPanel`'s own polling stops
+  the moment its component unmounts, so a render started on one card and then navigated away from
+  (increasingly likely once a real vendor's renders take longer than the mock's ~4s) would otherwise
+  finish silently. `RenderNotifications` is mounted once in `(dashboard)/layout.tsx` - no visible UI
+  of its own - and discovers any `queued`/`rendering` jobs for the signed-in business via the new
+  active-jobs route (re-polled every 8s, not just once on mount, so a render started *after* the
+  layout mounted still gets picked up), then polls each one's status every 5s independently. On
+  completion/failure it fires a `sonner` toast with a "View" action linking to
+  `/cards/[cardId]#auto-edit`, plus a native browser `Notification` if permission was already
+  granted (works even if the tab is backgrounded, though not if it's fully closed - there's no
+  service worker/push infrastructure here, so that's the ceiling). Permission is requested
+  best-effort from `RenderVideoPanel.startRender()` itself (tied to the action that will actually use
+  it, not asked cold on page load).
 - `src/components/features/dashboard/TipOfTheDay.tsx` - a short filming/social-media tip shown at the
   top of the dashboard, picked deterministically from a fixed list by day-of-year (`Date.UTC`-based,
   no client state) so it's stable across refreshes without needing to persist anything.

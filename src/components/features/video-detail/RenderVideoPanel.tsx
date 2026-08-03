@@ -79,6 +79,15 @@ export function RenderVideoPanel({
   }
 
   async function startRender() {
+    // Best-effort, non-blocking - lets RenderNotifications.tsx show a native
+    // browser notification (not just an in-app toast) if the user grants
+    // it, useful since a real render can take a while and they may well
+    // navigate away or switch tabs before it finishes. Tied to this button
+    // press rather than asked cold on page load, since a permission prompt
+    // only makes sense in the context of an action that will actually use it.
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      void Notification.requestPermission();
+    }
     setStarting(true);
     try {
       const res = await fetch(`/api/cards/${cardId}/render`, { method: 'POST' });
