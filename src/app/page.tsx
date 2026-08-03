@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check } from 'lucide-react';
+import { Calendar, Clapperboard, Camera, Sparkles, ScrollText, Hash, Check, Wand2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
@@ -23,6 +23,11 @@ const STEPS = [
     title: 'Film it with Filming Mode',
     description: 'A guided, step-by-step flow walks you through each shot and voiceover line - zero video experience required.',
   },
+  {
+    icon: Wand2,
+    title: 'We edit it for you',
+    description: 'Upload your clips and we cut them together automatically, with captions burned in - no editing software, no learning curve.',
+  },
 ];
 
 const FEATURES = [
@@ -43,8 +48,13 @@ const FEATURES = [
   },
   {
     icon: Hash,
-    title: 'Captions & hashtags included',
-    description: 'Ready-to-post captions and hashtags generated alongside every video, no extra copywriting needed.',
+    title: 'Post caption & hashtags written for you',
+    description: 'A ready-to-post caption and hashtags generated alongside every video, no extra copywriting needed.',
+  },
+  {
+    icon: Wand2,
+    title: 'Auto-edited, captions burned in',
+    description: 'Upload your filmed clips and we cut them together into one finished video, with captions burned in automatically - no editing skills needed.',
   },
 ];
 
@@ -54,7 +64,13 @@ const PLANS = [
     price: 15,
     videosPerWeek: 5,
     description: 'A steady stream of content without overcommitting.',
-    features: ['5 video ideas every week', 'Full script & shot list for each', 'Guided Filming Mode', 'Captions & hashtags included'],
+    features: [
+      '5 video ideas every week',
+      'Full script & shot list for each',
+      'Guided Filming Mode',
+      'Auto-edited video with captions',
+      'Post caption & hashtags included',
+    ],
     highlighted: false,
   },
   {
@@ -66,7 +82,8 @@ const PLANS = [
       '10 video ideas every week',
       'Full script & shot list for each',
       'Guided Filming Mode',
-      'Captions & hashtags included',
+      'Auto-edited video with captions',
+      'Post caption & hashtags included',
       'Priority support',
     ],
     highlighted: true,
@@ -130,7 +147,8 @@ export default async function LandingPage() {
         </h1>
         <p className="animate-in fade-in slide-in-from-bottom-3 mt-4 max-w-xl text-text-secondary delay-200 duration-700 fill-mode-both">
           Every week, get video ideas built for your business - each with a hook, a full script, and a shot-by-shot
-          filming guide simple enough that anyone can film it.
+          filming guide simple enough that anyone can film it. Upload your clips and we auto-edit them into a
+          finished video with captions.
         </p>
         <div className="animate-in fade-in slide-in-from-bottom-3 mt-8 flex gap-3 delay-300 duration-700 fill-mode-both">
           <Button asChild size="lg">
@@ -167,7 +185,7 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <p className="text-center font-mono text-xs uppercase tracking-[0.15em] text-primary">How it works</p>
           <h2 className="mt-2 text-center text-2xl font-semibold tracking-tight">From idea to posted video</h2>
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
               <Reveal key={step.title} delay={i * 100} className="text-center sm:text-left">
                 <div className="mx-auto flex items-center gap-3 sm:mx-0">

@@ -73,7 +73,10 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
           </div>
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Ready to film?</h2>
-            <p className="text-sm text-text-secondary">A guided, step-by-step flow walks you through every shot and line.</p>
+            <p className="text-sm text-text-secondary">
+              A guided, step-by-step flow walks you through every shot and line - then we&apos;ll auto-edit your clips
+              into a finished video with captions.
+            </p>
           </div>
         </div>
         <Button asChild size="lg" className="w-full shrink-0 sm:w-auto" tabIndex={-1}>
