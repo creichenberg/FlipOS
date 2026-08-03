@@ -160,6 +160,25 @@ dashboard.
 - `src/components/features/dashboard/TipOfTheDay.tsx` - a short filming/social-media tip shown at the
   top of the dashboard, picked deterministically from a fixed list by day-of-year (`Date.UTC`-based,
   no client state) so it's stable across refreshes without needing to persist anything.
+- `src/components/design-system/VideoCardTile.tsx` - the dashboard grid's per-card tile, redesigned
+  ("icon-led, progress-driven") after presenting three mockup directions to the client via
+  `AskUserQuestion` previews. A `Record<ContentGoal, LucideIcon>` maps each of the 5 content goals to
+  a distinct icon (Lightbulb/TrendingUp/PartyPopper/ShieldCheck/MessageCircle) shown in a chip instead
+  of a text badge - `VideoCard` has no thumbnail/image field, so goal-differentiation is the only
+  per-card visual variety available without a schema change. A static (non-animated) 4-segment
+  progress bar replaces the old status `StatusBadge`, stepped by `video_cards.status`
+  (`pending_detail`/`detail_ready`/`filming` = 1-3 segments in `bg-primary`; `complete` = all 4 in
+  `bg-emerald-500`, reusing `WeekProgress.tsx`'s existing "green when fully done" convention so the
+  grid and the week-summary bar agree on what "done" looks like). Deliberately *not* reusing
+  `StepIndicator.tsx`'s pulsing active-segment animation - that reads right for one in-progress flow
+  (Filming Mode) but would be distracting reproduced across a whole grid of simultaneously-pulsing
+  cards. Both the goal icon and the progress bar carry an `aria-label` so the goal and status are
+  still announced to screen readers despite no visible text label for either anymore. Cards due
+  today (`new Date().getDay() === card.day_of_week`, server-local time - this app has no stored
+  business timezone, acceptable for a soft cosmetic highlight) get a `ring-1 ring-primary/25` and a
+  bolded/colored day label. The hover arrow (`ArrowRight` with `group-hover:translate-x-0.5`) matches
+  the micro-interaction already used by the landing page's CTA and the card detail page's "Ready to
+  film?" banner - this tile was the one interactive card in the app without it.
 - `src/lib/plans.ts` - the Base/Pro tier definitions (price, videos/week) plus the price-id <-> tier
   mapping helpers. `POST /api/plans/[businessId]/generate` looks up the business owner's active
   subscription tier (defaulting to Base if there isn't one) and passes `videosPerWeek` through to
