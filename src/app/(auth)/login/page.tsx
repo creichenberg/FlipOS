@@ -56,6 +56,8 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [signupConfirmSent, setSignupConfirmSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [resendError, setResendError] = useState<string | null>(null);
 
   // Keeps whatever email was already typed (nice when hopping from "sign in"
   // to "forgot password") but clears passwords and any confirmation/error
@@ -68,6 +70,8 @@ function LoginForm() {
     setConfirmPassword('');
     setSignupConfirmSent(false);
     setResetSent(false);
+    setResendStatus('idle');
+    setResendError(null);
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -130,6 +134,34 @@ function LoginForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
       setStatus('error');
+    }
+  }
+
+  // Supabase's own default email service is often slow or unreliable
+  // (exactly the "signup didn't send me an email" case this button exists
+  // for) - resend() re-triggers it without making the user start signup
+  // over. Supabase itself enforces a cooldown between resends and returns a
+  // descriptive rate-limit error if hit too soon, so no separate client-side
+  // cooldown timer is needed here.
+  async function handleResend() {
+    setResendStatus('sending');
+    setResendError(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+      });
+      if (error) {
+        setResendError(error.message);
+        setResendStatus('error');
+        return;
+      }
+      setResendStatus('sent');
+    } catch (err) {
+      setResendError(err instanceof Error ? err.message : 'Request failed');
+      setResendStatus('error');
     }
   }
 
@@ -253,14 +285,33 @@ function LoginForm() {
 
               <TabsContent value="signup" className="mt-6">
                 {signupConfirmSent ? (
-                  <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <Mail className="h-4 w-4 shrink-0 text-primary" />
-                      <span className="font-medium">Check your email</span>
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Mail className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="font-medium">Check your email</span>
+                      </div>
+                      <p className="mt-1.5 text-text-secondary">
+                        We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>.
+                      </p>
                     </div>
-                    <p className="mt-1.5 text-text-secondary">
-                      We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>.
-                    </p>
+                    <div className="text-center text-sm">
+                      {resendStatus === 'sent' ? (
+                        <p className="text-text-secondary">Sent again - check your inbox.</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleResend}
+                          disabled={resendStatus === 'sending'}
+                          className="text-text-secondary underline decoration-dotted underline-offset-4 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                        >
+                          {resendStatus === 'sending' ? 'Resending…' : "Didn't get it? Resend email"}
+                        </button>
+                      )}
+                      {resendStatus === 'error' && (
+                        <p className="mt-1.5 text-destructive">{resendError ?? 'Something went wrong. Try again.'}</p>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
