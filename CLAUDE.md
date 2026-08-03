@@ -220,9 +220,15 @@ dashboard.
 ## Design language
 
 Neutral palette (`--bg-canvas`, `--bg-surface`/`bg-surface`, `--border-subtle`, `--text-secondary`)
-plus one accent (`--primary`, a warm terracotta/rust - not indigo/purple, which read as the most
-overused "trying not to be blue" SaaS accent; terracotta also nods to the red/amber pencil used to
-annotate blue technical drawings) defined in `src/app/globals.css`. **Radius is tiered on purpose,
+plus one accent (`--primary`, a blue - `oklch(0.6 0.152 255)` light / `oklch(0.68 0.16 255)` dark,
+per explicit client request; originally a warm terracotta/rust at the same lightness/chroma with hue
+40/42, swapped to hue 255 and nowhere else - every other token, and the whole rest of this section,
+is unchanged) defined in `src/app/globals.css`. Everything derives from the single `--primary` CSS
+variable via `color-mix(in oklch, var(--primary) ...)` (the blueprint-grid pattern, glow orbs, ring
+colors, hover-lift shadows), so the swap cascades automatically everywhere except two places that
+can't reference a CSS variable and hardcode the same OKLCH value directly: `src/app/icon.svg` (the
+favicon) and `Logo.tsx` (the in-app wordmark SVG, which `InteractiveLogo.tsx` wraps) - keep those two
+in sync with `--primary` by hand if the accent ever changes again. **Radius is tiered on purpose,
 not uniform** - functional UI (buttons, inputs, badges) stays at the shadcn default `--radius-lg`
 (10px); **every bordered content section uses one value, `rounded-xl`** (pricing/onboarding cards,
 the card detail page's Hook/reference/"Ready to post" sections, Filming Mode's step card, `RenderVideoPanel`)
