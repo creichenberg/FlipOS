@@ -360,14 +360,15 @@ one logo per page, so there's no risk of multiple instances needing independent 
 `Logo.tsx` (no client-side behavior) is still used as-is anywhere the shine wasn't requested, e.g.
 the dashboard nav.
 
-`Parallax.tsx` (same directory, same ref-mutation pattern as `MouseShine`) adds a subtle scroll-linked
-vertical drift to the landing page's two browser-chrome mockups (the hero's dashboard preview and the
-Features section's card-detail preview) - a client request for "parallax scrolling, subtle." Reads the
-element's own position relative to the viewport center on `scroll`/`resize` (rAF-throttled) and writes
-`translateY` directly via `el.style.transform`, clamped to +/-28px regardless of how far the element is
-from the viewport so a long scroll never sends it drifting noticeably out of place - kept intentionally
-small since the ask was specifically for subtlety, not a showy effect. The two mockups use opposite-sign
-`speed` values (`0.1` on the hero, `-0.08` on the Features one) so they drift in opposite directions as
+`Parallax.tsx` (same directory, same ref-mutation pattern as `MouseShine`) adds a scroll-linked vertical
+drift to the landing page's two browser-chrome mockups (the hero's dashboard preview and the Features
+section's card-detail preview) - a client request for "parallax scrolling," first shipped subtle
+(clamped to +/-28px, speeds of `0.1`/`-0.08`) then turned up a second pass per explicit feedback that it
+wasn't noticeable enough, to the current +/-80px clamp and `0.3`/`-0.25` speeds. Reads the element's own
+position relative to the viewport center on `scroll`/`resize` (rAF-throttled) and writes `translateY`
+directly via `el.style.transform`; still clamped to a fixed range regardless of how far the element is
+from the viewport so a long scroll doesn't send it drifting arbitrarily far, just a larger range than the
+initial pass. The two mockups use opposite-sign `speed` values so they drift in opposite directions as
 you scroll past them, reading as independent layers rather than the whole page moving in lockstep. Wraps
 around each mockup's existing entrance animation (`animate-in`/`Reveal`) as an outer layer rather than
 setting `transform` on the same element that animation targets - both are CSS-driven (keyframes/
