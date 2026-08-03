@@ -135,7 +135,19 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 transition-colors duration-200 ease-out;
+    @apply border-border outline-ring/50;
+  }
+  /* Scoped off svg descendants (path/line/circle inside every Lucide icon) -
+     those never carry their own color, they inherit currentColor from the
+     icon root, so transitioning them individually is pure overhead with no
+     visual benefit. Icons are used constantly throughout the app, so this
+     meaningfully cuts the number of elements animating at once on every
+     dark/light toggle, which is what was making the switch feel choppy
+     rather than a clean fade - a slower duration wouldn't have fixed that,
+     since the problem was dropped frames from too many simultaneous
+     transitions, not the transition being too fast. */
+  *:not(svg *) {
+    @apply transition-colors duration-150 ease-out;
   }
   body {
     @apply bg-canvas text-foreground;
@@ -172,6 +184,14 @@
   mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%);
   animation: blueprint-drift 24s linear infinite;
+  /* background-image isn't covered by transition-colors, so without this the
+     grid's line colors would snap instantly on a dark/light toggle (visible
+     on the dashboard empty state) while the canvas color around it fades -
+     that mismatch is its own small source of choppiness on top of the
+     *:not(svg *) fix above. The four gradient layers are structurally
+     identical before/after (same stops, only the color-mix inputs change),
+     so browsers can interpolate this smoothly. */
+  transition: background-color 150ms ease-out, background-image 150ms ease-out;
 }
 
 /* A slow diagonal pan of the grid itself - like a sheet of blueprint paper

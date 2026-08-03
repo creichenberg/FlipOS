@@ -292,9 +292,19 @@ utility (`globals.css`) - a small translateY + accent-tinted shadow on hover, no
 skipped under `prefers-reduced-motion`. Dark-first via `next-themes` (`defaultTheme="dark"`), with a
 user-facing toggle (`src/components/design-system/ThemeToggle.tsx`, in the dashboard nav) switching
 `resolvedTheme` between `dark`/`light` - both palettes are fully defined in `globals.css`, so this is
-just wiring, not new tokens. `src/components/providers.tsx`'s `LIGHT_ONLY_PATHS` (`/`, `/login`,
-`/onboarding`) forces `light` via `ThemeProvider`'s `forcedTheme` on the landing page, login, and
-onboarding - there's no toggle on any of them, so dark mode would just be an unstyled/unintended
+just wiring, not new tokens. The `@layer base` color-transition rule scopes `transition-colors` to
+`*:not(svg *)` rather than a bare `*` - Lucide icons' inner `<path>`/`<line>`/`<circle>` nodes never
+carry their own color (they inherit `currentColor` from the icon root), so transitioning them
+individually was pure overhead with zero visual benefit, and icons are used constantly throughout the
+app - on a client report that the dark/light toggle felt "choppy," this (not the 150ms duration itself)
+was the actual fix: too many elements animating at once on every toggle, not a too-slow transition.
+`.bg-blueprint-grid` also explicitly transitions `background-image` (not covered by `transition-colors`
+at all) so its line colors crossfade instead of snapping against the smoothly-fading canvas color
+around them - the two gradient states are structurally identical (same stops, only the `color-mix`
+inputs change), so browsers can interpolate between them. `src/components/providers.tsx`'s
+`LIGHT_ONLY_PATHS` (`/`, `/login`, `/onboarding`, `/privacy`) forces `light` via `ThemeProvider`'s
+`forcedTheme` on the landing page, login, onboarding, and the privacy policy - there's no toggle on any
+of them, so dark mode would just be an unstyled/unintended
 combination rather than a real supported state. The onboarding page, both `.bg-blueprint-grid`
 sections on the landing page (hero and closing CTA), the login page, and the dashboard's empty state
 use a `.bg-blueprint-grid` utility (also in `globals.css`) - a faint two-scale grid in the primary
