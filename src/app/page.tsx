@@ -308,9 +308,12 @@ export default async function LandingPage() {
       </section>
 
       <footer className="border-t border-border-subtle px-6 py-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between text-xs text-text-secondary">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 text-xs text-text-secondary sm:flex-row">
           <span>&copy; {new Date().getFullYear()} Blueprint Studio</span>
           <span>Made for small businesses that don&apos;t have time to be video editors.</span>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy Policy
+          </Link>
         </div>
       </footer>
     </div>

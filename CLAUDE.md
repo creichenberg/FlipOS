@@ -49,6 +49,13 @@ dashboard.
   service-role client, used only by the Stripe webhook.
 - `src/middleware.ts` - session refresh + route gating (no session -> `/login`; session but no
   business row -> `/onboarding`).
+- `src/app/privacy/page.tsx` - a plain-language Privacy Policy describing what the app actually
+  collects and does with it (account info, business profile, uploaded clips, billing) rather than
+  generic legal boilerplate - written to match the real data flows (Supabase, Anthropic, Stripe, and
+  the render provider) so it stays accurate as those change, not a substitute for real legal review.
+  Linked from the landing page footer. Public and light-only, same as the rest of the pre-auth pages
+  (`PUBLIC_PATHS` in `src/lib/supabase/middleware.ts`, `LIGHT_ONLY_PATHS` in
+  `src/components/providers.tsx`).
 - `src/lib/ai/{client,brandContext,generatePlan,generateVideoDetail}.ts` - the Claude integration.
   Uses `output_config.format` + `zodOutputFormat()` + `client.messages.parse()` (current structured
   outputs API - not the deprecated prefill-forced-JSON pattern), and a `cache_control` breakpoint

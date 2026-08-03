@@ -10,7 +10,7 @@ import { ThemeProvider } from 'next-themes';
 // theme toggle yet to make a dark/light choice meaningful this early.
 // Everything past onboarding (dashboard, settings, etc.) keeps the normal
 // dark-first experience with the theme toggle.
-const LIGHT_ONLY_PATHS = ['/', '/login', '/onboarding'];
+const LIGHT_ONLY_PATHS = ['/', '/login', '/onboarding', '/privacy'];
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
