@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
 import { Reveal } from '@/components/design-system/Reveal';
 import { MouseShine } from '@/components/design-system/MouseShine';
+import { Parallax } from '@/components/design-system/Parallax';
 
 const STEPS = [
   {
@@ -166,26 +167,28 @@ export default async function LandingPage() {
           </Button>
         </div>
 
-        <div className="animate-in fade-in zoom-in-95 mt-16 w-full max-w-3xl overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl delay-500 duration-700 fill-mode-both">
-          <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
-            <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-            <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-            <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-            <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/dashboard</span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
-            {PREVIEW_CARDS.map((card) => (
-              <div key={card.day} className="rounded-lg border border-border-subtle bg-canvas p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-wide text-text-secondary">{card.day}</span>
-                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{card.goal}</span>
+        <Parallax speed={0.1} className="mt-16 w-full max-w-3xl">
+          <div className="animate-in fade-in zoom-in-95 overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl delay-500 duration-700 fill-mode-both">
+            <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+              <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+              <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+              <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/dashboard</span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
+              {PREVIEW_CARDS.map((card) => (
+                <div key={card.day} className="rounded-lg border border-border-subtle bg-canvas p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-[10px] uppercase tracking-wide text-text-secondary">{card.day}</span>
+                    <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{card.goal}</span>
+                  </div>
+                  <p className="mt-2.5 text-sm font-medium leading-snug">{card.title}</p>
+                  <p className="mt-1.5 text-xs text-text-secondary">{card.concept}</p>
                 </div>
-                <p className="mt-2.5 text-sm font-medium leading-snug">{card.title}</p>
-                <p className="mt-1.5 text-xs text-text-secondary">{card.concept}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </Parallax>
       </section>
 
       <section id="how-it-works" className="border-t border-border-subtle px-6 py-20">
@@ -219,43 +222,45 @@ export default async function LandingPage() {
                 ))}
               </div>
             </Reveal>
-            <Reveal delay={100}>
-              <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl">
-                <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
-                  <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
-                  <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/cards/mon-01</span>
-                </div>
-                <div className="p-5">
-                  <div className="rounded-xl border border-border-subtle bg-canvas p-5 border-l-2 border-l-primary">
-                    <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Hook · first 3 seconds
-                    </div>
-                    <p className="mt-2 text-sm leading-snug">
-                      &ldquo;Most homeowners wait too long to call a plumber - here&apos;s how to tell.&rdquo;
-                    </p>
+            <Parallax speed={-0.08}>
+              <Reveal delay={100}>
+                <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl">
+                  <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
+                    <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
+                    <span className="ml-3 font-mono text-xs text-text-secondary">blueprintstudio.app/cards/mon-01</span>
                   </div>
-                  <div className="mt-3 rounded-xl border border-border-subtle bg-canvas p-5">
-                    <p className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</p>
-                    <div className="mt-1">
-                      {FEATURE_PREVIEW_SHOTS.map((shot) => (
-                        <div key={shot.number} className="flex gap-3 border-b border-border-subtle py-3 last:border-b-0">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-medium text-primary">
-                            {shot.number}
+                  <div className="p-5">
+                    <div className="rounded-xl border border-border-subtle bg-canvas p-5 border-l-2 border-l-primary">
+                      <div className="flex items-center gap-1.5 font-mono text-xs font-medium uppercase tracking-wide text-primary">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Hook · first 3 seconds
+                      </div>
+                      <p className="mt-2 text-sm leading-snug">
+                        &ldquo;Most homeowners wait too long to call a plumber - here&apos;s how to tell.&rdquo;
+                      </p>
+                    </div>
+                    <div className="mt-3 rounded-xl border border-border-subtle bg-canvas p-5">
+                      <p className="font-mono text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</p>
+                      <div className="mt-1">
+                        {FEATURE_PREVIEW_SHOTS.map((shot) => (
+                          <div key={shot.number} className="flex gap-3 border-b border-border-subtle py-3 last:border-b-0">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-mono text-xs font-medium text-primary">
+                              {shot.number}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs">{shot.description}</p>
+                              <p className="mt-1 text-[11px] text-text-secondary">{shot.angle} · {shot.duration}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs">{shot.description}</p>
-                            <p className="mt-1 text-[11px] text-text-secondary">{shot.angle} · {shot.duration}</p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Reveal>
+              </Reveal>
+            </Parallax>
           </div>
         </div>
       </section>

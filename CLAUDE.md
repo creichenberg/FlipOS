@@ -360,6 +360,21 @@ one logo per page, so there's no risk of multiple instances needing independent 
 `Logo.tsx` (no client-side behavior) is still used as-is anywhere the shine wasn't requested, e.g.
 the dashboard nav.
 
+`Parallax.tsx` (same directory, same ref-mutation pattern as `MouseShine`) adds a subtle scroll-linked
+vertical drift to the landing page's two browser-chrome mockups (the hero's dashboard preview and the
+Features section's card-detail preview) - a client request for "parallax scrolling, subtle." Reads the
+element's own position relative to the viewport center on `scroll`/`resize` (rAF-throttled) and writes
+`translateY` directly via `el.style.transform`, clamped to +/-28px regardless of how far the element is
+from the viewport so a long scroll never sends it drifting noticeably out of place - kept intentionally
+small since the ask was specifically for subtlety, not a showy effect. The two mockups use opposite-sign
+`speed` values (`0.1` on the hero, `-0.08` on the Features one) so they drift in opposite directions as
+you scroll past them, reading as independent layers rather than the whole page moving in lockstep. Wraps
+around each mockup's existing entrance animation (`animate-in`/`Reveal`) as an outer layer rather than
+setting `transform` on the same element that animation targets - both are CSS-driven (keyframes/
+transitions) and would otherwise fight the directly-set inline style for the same property. Skipped
+entirely under `prefers-reduced-motion`, same as this app's other ambient animations; unlike
+`MouseShine`, it works fine on touch devices too, since it's driven by `scroll` rather than `mousemove`.
+
 **Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
 this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,
 translucent `bg-white/10`/`dark:bg-white/[0.06]` fills, `rounded-3xl`, inset highlight via
