@@ -39,8 +39,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-base font-semibold text-foreground">Information we collect</h2>
             <ul className="mt-2 list-disc space-y-2 pl-5">
               <li>
-                <span className="font-medium text-foreground">Account info</span> - your email address or
-                phone number, used to sign you in via a magic link, SMS code, or Google sign-in.
+                <span className="font-medium text-foreground">Account info</span> - your name, email
+                address, and password (or your Google account, if you sign in that way), used to
+                create and secure your account.
               </li>
               <li>
                 <span className="font-medium text-foreground">Business profile</span> - the details you

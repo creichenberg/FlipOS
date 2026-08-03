@@ -94,6 +94,21 @@ dashboard.
   your phone and continues the same guided flow (and clip uploads) without re-entering credentials.
   Resolves the absolute URL from `window.location` client-side rather than a server-computed host
   header, so it's correct on every deployment without configuration.
+- **Auth** (`src/app/(auth)/login/page.tsx`, `src/app/auth/reset-password/page.tsx`) - email+password
+  (Sign in / Sign up tabs) plus Google OAuth; magic link and phone/SMS OTP were removed entirely per
+  explicit client feedback ("I don't like the magic link thing too much"). Sign-up calls
+  `supabase.auth.signUp()` and checks whether `data.session` came back immediately - it won't if the
+  Supabase project requires email confirmation, in which case a "check your email" state shows instead
+  of a false redirect. Forgot-password (`resetPasswordForEmail`) routes its reset link through
+  `/auth/callback?next=/auth/reset-password` rather than straight to the reset page - `/auth/callback`
+  already does the `exchangeCodeForSession` work needed to turn the emailed recovery code into a real
+  session (same code path Google OAuth uses), so `/auth/reset-password` itself stays a plain form with
+  no exchange logic of its own; by the time it renders, middleware sees a real session and lets it
+  through without needing to be in `PUBLIC_PATHS`. Onboarding collects a **`owner_name`** field
+  (`businesses.owner_name`, `supabase/migrations/0005_owner_name.sql`) - the person's own name,
+  separate from the business name - used for the dashboard's "Welcome back, `<first name>`" greeting
+  (`business.owner_name.split(' ')[0]`) instead of addressing the owner by their own company's name;
+  editable later from Settings (`EditBusinessForm.tsx`) alongside the rest of the business profile.
 - **QR auto-login** (`src/lib/qrLogin.ts`, `src/app/auth/qr/route.ts`,
   `supabase/migrations/0003_qr_login_tokens.sql`) - a real auth-bypass mechanism, built carefully on
   purpose: the token is 256 bits of `crypto.randomBytes` (not guessable), single-use (consumed via an
@@ -102,13 +117,16 @@ dashboard.
   `qr_login_tokens` has RLS enabled with **zero policies** - default-deny for the anon/authenticated
   roles, reachable only through the service-role client, same as `stripe_events`. Redemption exchanges
   the token for a real session via `admin.generateLink({type:'magiclink'})` +
-  `supabase.auth.verifyOtp({type:'magiclink', token_hash})` server-side (no email is actually sent).
-  Phone-only accounts (no email on file) fall back to a normal manual sign-in, same as before this
-  existed. `/auth/qr` has to be in `middleware.ts`'s `PUBLIC_PATHS` - it's hit while signed out by
-  design, and its own token validity is what gates it, not session state. If you ever touch this flow,
-  keep the short expiry and single-use consume - anyone who sees the QR code (a screenshot, a photo,
-  a shared screen) can use it until it expires, which is the tradeoff explicitly accepted here in
-  exchange for a much smoother scan-to-film handoff.
+  `supabase.auth.verifyOtp({type:'magiclink', token_hash})` server-side (no email is actually sent) -
+  an *internal* admin-generated mechanism unrelated to the user-facing magic-link login option removed
+  above; it never went through the login page's UI, so removing that option didn't touch this. A
+  phone-only account (no email on file) would fall back to a normal manual sign-in, though that's now
+  a purely legacy/defensive branch - phone/SMS sign-up no longer exists, so no new phone-only accounts
+  can be created. `/auth/qr` has to be in `middleware.ts`'s `PUBLIC_PATHS` - it's hit while signed out
+  by design, and its own token validity is what gates it, not session state. If you ever touch this
+  flow, keep the short expiry and single-use consume - anyone who sees the QR code (a screenshot, a
+  photo, a shared screen) can use it until it expires, which is the tradeoff explicitly accepted here
+  in exchange for a much smoother scan-to-film handoff.
 - **Login `next` redirect param** (`src/lib/supabase/middleware.ts`, `login/page.tsx`,
   `auth/callback/route.ts`) - middleware appends the originally-requested path when bouncing an
   unauthenticated request to `/login` (e.g. a QR scan landing on `/cards/[id]/film` while logged
@@ -376,10 +394,11 @@ transitions) and would otherwise fight the directly-set inline style for the sam
 entirely under `prefers-reduced-motion`, same as this app's other ambient animations; unlike
 `MouseShine`, it works fine on touch devices too, since it's driven by `scroll` rather than `mousemove`.
 
-**Exception - the login page.** `src/app/(auth)/login/page.tsx` intentionally breaks from the rest of
-this section per explicit client request: a "Liquid Glass" floating card (`backdrop-blur`,
-translucent `bg-white/10`/`dark:bg-white/[0.06]` fills, `rounded-3xl`, inset highlight via
-`shadow-[...inset...]`) over a full-bleed `.bg-blueprint-grid` background with two blurred `bg-primary`
-glow orbs for depth. This is the one place in the app that uses glassmorphism and a radius above
-`--radius-lg` - don't "fix" it back to the neutral/thin-border/capped-radius system used everywhere
-else; that's a deliberate, asked-for departure for this screen specifically, not drift.
+**Exception - the login page.** `src/app/(auth)/login/page.tsx` (and `src/app/auth/reset-password/
+page.tsx`, which reuses the identical markup as the natural continuation of the same auth flow)
+intentionally breaks from the rest of this section per explicit client request: a "Liquid Glass"
+floating card (`backdrop-blur`, translucent `bg-white/10`/`dark:bg-white/[0.06]` fills, `rounded-3xl`,
+inset highlight via `shadow-[...inset...]`) over a full-bleed `.bg-blueprint-grid` background with two
+blurred `bg-primary` glow orbs for depth. This is the one place in the app that uses glassmorphism and
+a radius above `--radius-lg` - don't "fix" it back to the neutral/thin-border/capped-radius system used
+everywhere else; that's a deliberate, asked-for departure for this screen specifically, not drift.

@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title={`Welcome back, ${business.name}`}
+        title={`Welcome back, ${business.owner_name.split(' ')[0] || business.name}`}
         description="This week's video plan - film it, and we'll auto-edit it into a finished video with captions."
         actions={plan?.status === 'ready' && cards.length > 0 ? <RegeneratePlanButton businessId={business.id} /> : undefined}
       />

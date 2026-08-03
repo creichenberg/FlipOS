@@ -9,15 +9,16 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const body = await request.json();
-  const { name, industry, description, productsServices, targetAudience, location, brandPersonality, goals, website } = body;
+  const { ownerName, name, industry, description, productsServices, targetAudience, location, brandPersonality, goals, website } = body;
 
-  if (!name || !industry) {
-    return NextResponse.json({ error: 'Business name and industry are required' }, { status: 400 });
+  if (!ownerName || !name || !industry) {
+    return NextResponse.json({ error: 'Your name, business name, and industry are required' }, { status: 400 });
   }
 
   const { data, error } = await supabase
     .from('businesses')
     .update({
+      owner_name: ownerName,
       name,
       industry,
       description: description ?? '',

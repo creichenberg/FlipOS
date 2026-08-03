@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 interface FormState {
+  ownerName: string;
   name: string;
   industry: string;
   location: string;
@@ -22,6 +23,7 @@ interface FormState {
 
 function toFormState(business: Business): FormState {
   return {
+    ownerName: business.owner_name,
     name: business.name,
     industry: business.industry,
     location: business.location,
@@ -44,7 +46,7 @@ export function EditBusinessForm({ business }: { business: Business }) {
     setStatus('idle');
   }
 
-  const valid = form.name.trim().length > 0 && form.industry.trim().length > 0;
+  const valid = form.ownerName.trim().length > 0 && form.name.trim().length > 0 && form.industry.trim().length > 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,6 +57,7 @@ export function EditBusinessForm({ business }: { business: Business }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ownerName: form.ownerName,
           name: form.name,
           industry: form.industry,
           location: form.location,
@@ -87,6 +90,10 @@ export function EditBusinessForm({ business }: { business: Business }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-border-subtle bg-surface p-6 shadow-sm">
       <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="owner-name">Your name</Label>
+          <Input id="owner-name" value={form.ownerName} onChange={(e) => update('ownerName', e.target.value)} />
+        </div>
         <div className="space-y-2">
           <Label htmlFor="name">Business name</Label>
           <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} />

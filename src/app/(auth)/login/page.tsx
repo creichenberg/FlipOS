@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Mail, Phone } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,10 @@ function safeNext(next: string | null): string {
   return '/dashboard';
 }
 
-type EmailStatus = 'idle' | 'sending' | 'sent' | 'error';
-type PhoneStatus = 'idle' | 'sending' | 'verifying' | 'error';
+type Mode = 'signin' | 'signup' | 'forgot';
+type Status = 'idle' | 'submitting' | 'error';
+
+const MIN_PASSWORD_LENGTH = 8;
 
 function GoogleIcon() {
   return (
@@ -45,77 +47,116 @@ function GoogleIcon() {
 function LoginForm() {
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
-  const [method, setMethod] = useState<'email' | 'phone'>('email');
+  const [mode, setMode] = useState<Mode>('signin');
 
   const [email, setEmail] = useState('');
-  const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle');
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [status, setStatus] = useState<Status>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const [signupConfirmSent, setSignupConfirmSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [codeSent, setCodeSent] = useState(false);
-  const [phoneStatus, setPhoneStatus] = useState<PhoneStatus>('idle');
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+  // Keeps whatever email was already typed (nice when hopping from "sign in"
+  // to "forgot password") but clears passwords and any confirmation/error
+  // state left over from the previous mode.
+  function switchMode(next: Mode) {
+    setMode(next);
+    setStatus('idle');
+    setError(null);
+    setPassword('');
+    setConfirmPassword('');
+    setSignupConfirmSent(false);
+    setResetSent(false);
+  }
 
-  async function sendMagicLink(e: React.FormEvent) {
+  async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
-    setEmailStatus('sending');
-    setEmailError(null);
+    setStatus('submitting');
+    setError(null);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        setStatus('error');
+        return;
+      }
+      router.push(next);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+      setStatus('error');
+    }
+  }
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+      setStatus('error');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setStatus('error');
+      return;
+    }
+    setStatus('submitting');
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
         email,
+        password,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
       if (error) {
-        setEmailError(error.message);
-        setEmailStatus('error');
-      } else {
-        setEmailStatus('sent');
+        setError(error.message);
+        setStatus('error');
+        return;
       }
-    } catch (err) {
-      setEmailError(err instanceof Error ? err.message : 'Request failed');
-      setEmailStatus('error');
-    }
-  }
-
-  async function sendSmsCode(e: React.FormEvent) {
-    e.preventDefault();
-    setPhoneStatus('sending');
-    setPhoneError(null);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOtp({ phone });
-      if (error) {
-        setPhoneError(error.message);
-        setPhoneStatus('error');
-      } else {
-        setPhoneStatus('idle');
-        setCodeSent(true);
-      }
-    } catch (err) {
-      setPhoneError(err instanceof Error ? err.message : 'Request failed');
-      setPhoneStatus('error');
-    }
-  }
-
-  async function verifySmsCode(e: React.FormEvent) {
-    e.preventDefault();
-    setPhoneStatus('verifying');
-    setPhoneError(null);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
-      if (error) {
-        setPhoneError(error.message);
-        setPhoneStatus('error');
-      } else {
+      // A session comes back immediately if the project doesn't require
+      // email confirmation - otherwise data.session is null until the user
+      // clicks the confirmation link, so show that instead of a false
+      // "you're in" redirect.
+      if (data.session) {
         router.push(next);
         router.refresh();
+      } else {
+        setSignupConfirmSent(true);
+        setStatus('idle');
       }
     } catch (err) {
-      setPhoneError(err instanceof Error ? err.message : 'Request failed');
-      setPhoneStatus('error');
+      setError(err instanceof Error ? err.message : 'Request failed');
+      setStatus('error');
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus('submitting');
+    setError(null);
+    try {
+      const supabase = createClient();
+      // Routed through /auth/callback (same code-exchange logic used for
+      // Google sign-in) rather than straight to /auth/reset-password, so the
+      // recovery code gets exchanged for a real session before that page
+      // loads - it's a plain client component with no exchange logic of its
+      // own.
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/auth/reset-password')}`,
+      });
+      if (error) {
+        setError(error.message);
+        setStatus('error');
+        return;
+      }
+      setResetSent(true);
+      setStatus('idle');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+      setStatus('error');
     }
   }
 
@@ -142,26 +183,27 @@ function LoginForm() {
 
         <div className="rounded-3xl border border-white/20 bg-white/10 p-8 shadow-[0_25px_70px_-20px_color-mix(in_oklch,var(--primary)_45%,transparent),inset_0_1px_0_0_rgba(255,255,255,0.3)] backdrop-blur-2xl">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold tracking-tight">Sign in</h2>
-            <p className="mt-1.5 text-sm text-text-secondary">Welcome back. Choose how you&apos;d like to continue.</p>
+            <h2 className="text-xl font-semibold tracking-tight">
+              {mode === 'signin' && 'Sign in'}
+              {mode === 'signup' && 'Create your account'}
+              {mode === 'forgot' && 'Reset your password'}
+            </h2>
+            <p className="mt-1.5 text-sm text-text-secondary">
+              {mode === 'signin' && 'Welcome back. Enter your email and password to continue.'}
+              {mode === 'signup' && "Let's get your business set up."}
+              {mode === 'forgot' && "We'll email you a link to reset your password."}
+            </p>
           </div>
 
-          <Tabs value={method} onValueChange={(v) => setMethod(v as 'email' | 'phone')}>
-            <TabsList className="grid w-full grid-cols-2 bg-black/5">
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="phone">Phone</TabsTrigger>
-            </TabsList>
+          {mode !== 'forgot' && (
+            <Tabs value={mode} onValueChange={(v) => switchMode(v as Mode)}>
+              <TabsList className="grid w-full grid-cols-2 bg-black/5">
+                <TabsTrigger value="signin">Sign in</TabsTrigger>
+                <TabsTrigger value="signup">Sign up</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="email" className="mt-6">
-              {emailStatus === 'sent' ? (
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Mail className="h-4 w-4 text-primary" />
-                    Check <span className="font-medium">{email}</span> for a sign-in link.
-                  </span>
-                </div>
-              ) : (
-                <form onSubmit={sendMagicLink} className="space-y-4">
+              <TabsContent value="signin" className="mt-6">
+                <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -178,99 +220,170 @@ function LoginForm() {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={emailStatus === 'sending'}>
-                    {emailStatus === 'sending' ? 'Sending link…' : 'Send magic link'}
-                  </Button>
-                  {emailStatus === 'error' && (
-                    <p className="text-sm text-destructive">{emailError ?? 'Something went wrong. Try again.'}</p>
-                  )}
-                </form>
-              )}
-            </TabsContent>
-
-            <TabsContent value="phone" className="mt-6">
-              {codeSent ? (
-                <form onSubmit={verifySmsCode} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="code">Verification code</Label>
-                    <Input
-                      id="code"
-                      type="text"
-                      inputMode="numeric"
-                      required
-                      autoFocus
-                      placeholder="123456"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="border-white/20 bg-white/40 text-center text-lg tracking-[0.3em] backdrop-blur-sm"
-                    />
-                    <p className="text-xs text-text-secondary">
-                      Sent to <span className="font-medium">{phone}</span>.
-                    </p>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={phoneStatus === 'verifying'}>
-                    {phoneStatus === 'verifying' ? 'Verifying…' : 'Verify code'}
-                  </Button>
-                  {phoneStatus === 'error' && (
-                    <p className="text-sm text-destructive">{phoneError ?? 'Something went wrong. Try again.'}</p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCodeSent(false);
-                      setPhoneStatus('idle');
-                      setPhoneError(null);
-                      setCode('');
-                    }}
-                    className="w-full text-center text-xs text-text-secondary hover:text-foreground"
-                  >
-                    Use a different number
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={sendSmsCode} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone number</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <button
+                        type="button"
+                        onClick={() => switchMode('forgot')}
+                        className="text-xs text-text-secondary hover:text-foreground"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     <div className="relative">
-                      <Phone className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                      <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
                       <Input
-                        id="phone"
-                        type="tel"
+                        id="password"
+                        type="password"
                         required
-                        autoFocus
-                        placeholder="+15125550100"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
                       />
                     </div>
-                    <p className="text-xs text-text-secondary">Include country code, e.g. +1 for the US.</p>
                   </div>
-                  <Button type="submit" className="w-full" disabled={phoneStatus === 'sending'}>
-                    {phoneStatus === 'sending' ? 'Sending code…' : 'Send code'}
+                  <Button type="submit" className="w-full" disabled={status === 'submitting'}>
+                    {status === 'submitting' ? 'Signing in…' : 'Sign in'}
                   </Button>
-                  {phoneStatus === 'error' && (
-                    <p className="text-sm text-destructive">{phoneError ?? 'Something went wrong. Try again.'}</p>
-                  )}
+                  {status === 'error' && <p className="text-sm text-destructive">{error ?? 'Something went wrong. Try again.'}</p>}
                 </form>
-              )}
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
 
-          <div className="my-6 flex items-center gap-3 text-xs text-text-secondary">
-            <div className="h-px flex-1 bg-white/15" />
-            or
-            <div className="h-px flex-1 bg-white/15" />
-          </div>
+              <TabsContent value="signup" className="mt-6">
+                {signupConfirmSent ? (
+                  <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Mail className="h-4 w-4 text-primary" />
+                      Check <span className="font-medium">{email}</span> to confirm your account.
+                    </span>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSignUp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          required
+                          autoFocus
+                          placeholder="you@business.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <div className="relative">
+                        <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                        <Input
+                          id="signup-password"
+                          type="password"
+                          required
+                          placeholder="At least 8 characters"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm password</Label>
+                      <div className="relative">
+                        <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
+                        />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={status === 'submitting'}>
+                      {status === 'submitting' ? 'Creating account…' : 'Create account'}
+                    </Button>
+                    {status === 'error' && <p className="text-sm text-destructive">{error ?? 'Something went wrong. Try again.'}</p>}
+                  </form>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
 
-          <Button
-            variant="outline"
-            className="w-full border-white/20 bg-white/40 backdrop-blur-sm"
-            onClick={signInWithGoogle}
-          >
-            <GoogleIcon />
-            Continue with Google
-          </Button>
+          {mode === 'forgot' &&
+            (resetSent ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-white/15 bg-white/10 p-6 text-center text-sm backdrop-blur-md">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="h-4 w-4 text-primary" />
+                    Check <span className="font-medium">{email}</span> for a password reset link.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => switchMode('signin')}
+                  className="w-full text-center text-xs text-text-secondary hover:text-foreground"
+                >
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      required
+                      autoFocus
+                      placeholder="you@business.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="border-white/20 bg-white/40 pl-8 backdrop-blur-sm"
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={status === 'submitting'}>
+                  {status === 'submitting' ? 'Sending link…' : 'Send reset link'}
+                </Button>
+                {status === 'error' && <p className="text-sm text-destructive">{error ?? 'Something went wrong. Try again.'}</p>}
+                <button
+                  type="button"
+                  onClick={() => switchMode('signin')}
+                  className="w-full text-center text-xs text-text-secondary hover:text-foreground"
+                >
+                  Back to sign in
+                </button>
+              </form>
+            ))}
+
+          {mode !== 'forgot' && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-xs text-text-secondary">
+                <div className="h-px flex-1 bg-white/15" />
+                or
+                <div className="h-px flex-1 bg-white/15" />
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full border-white/20 bg-white/40 backdrop-blur-sm"
+                onClick={signInWithGoogle}
+              >
+                <GoogleIcon />
+                Continue with Google
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

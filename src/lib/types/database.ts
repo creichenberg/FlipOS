@@ -13,6 +13,7 @@ export type Business = {
   id: string;
   user_id: string;
   name: string;
+  owner_name: string;
   industry: string;
   description: string;
   products_services: string;

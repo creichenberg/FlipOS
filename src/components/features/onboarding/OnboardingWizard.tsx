@@ -60,6 +60,7 @@ const PERSONALITY_OPTIONS = [
 const TOTAL_STEPS = 3;
 
 interface FormState {
+  ownerName: string;
   name: string;
   industry: string;
   location: string;
@@ -72,6 +73,7 @@ interface FormState {
 }
 
 const initialState: FormState = {
+  ownerName: '',
   name: '',
   industry: '',
   location: '',
@@ -114,7 +116,11 @@ export function OnboardingWizard() {
     }));
   }
 
-  const step0Valid = form.name.trim().length > 0 && form.industry.trim().length > 0 && form.location.trim().length > 0;
+  const step0Valid =
+    form.ownerName.trim().length > 0 &&
+    form.name.trim().length > 0 &&
+    form.industry.trim().length > 0 &&
+    form.location.trim().length > 0;
   const step1Valid = form.productsServices.trim().length >= MIN_LENGTH && form.targetAudience.trim().length >= MIN_LENGTH;
   const step2Valid = form.goals.length > 0;
 
@@ -134,6 +140,7 @@ export function OnboardingWizard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ownerName: form.ownerName,
           name: form.name,
           industry: form.industry,
           location: form.location,
@@ -178,6 +185,15 @@ export function OnboardingWizard() {
 
       {step === 0 && (
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="owner-name">Your name</Label>
+            <Input
+              id="owner-name"
+              value={form.ownerName}
+              onChange={(e) => update('ownerName', e.target.value)}
+              placeholder="Jamie Rivera"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="name">Business name</Label>
             <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Riverside Plumbing Co." />
