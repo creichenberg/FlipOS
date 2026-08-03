@@ -253,7 +253,15 @@ variable via `color-mix(in oklch, var(--primary) ...)` (the blueprint-grid patte
 colors, hover-lift shadows), so the swap cascades automatically everywhere except two places that
 can't reference a CSS variable and hardcode the same OKLCH value directly: `src/app/icon.svg` (the
 favicon) and `Logo.tsx` (the in-app wordmark SVG, which `InteractiveLogo.tsx` wraps) - keep those two
-in sync with `--primary` by hand if the accent ever changes again. **Radius is tiered on purpose,
+in sync with `--primary` by hand if the accent ever changes again. **The mark itself** (drawn identically
+in both of those files) changed from a plain play-button-in-a-square to a chat-bubble outline containing
+a 3-bar ascending bar chart and a growth arrow breaking out toward the top-right corner - a client-
+provided reference image, redrawn as a simplified flat SVG (not traced/embedded as-is) sized to still
+read clearly at 16px favicon scale, verified via a zoomed-in render before committing to the final path
+coordinates. Kept the existing solid-square/white-icon treatment rather than the reference's outline-
+on-transparent style specifically because a thin-stroke outline mark disappears at favicon size and
+would've broken from every other "icon in a filled shape" moment in the app - client confirmed this
+tradeoff directly via `AskUserQuestion` with rendered previews of both options. **Radius is tiered on purpose,
 not uniform** - functional UI (buttons, inputs, badges) stays at the shadcn default `--radius-lg`
 (10px); **every bordered content section uses one value, `rounded-xl`** (pricing/onboarding cards,
 the card detail page's Hook/reference/"Ready to post" sections, Filming Mode's step card, `RenderVideoPanel`)
