@@ -183,13 +183,24 @@ dashboard.
   service worker/push infrastructure here, so that's the ceiling). Permission is requested
   best-effort from `RenderVideoPanel.startRender()` itself (tied to the action that will actually use
   it, not asked cold on page load).
-- `src/components/features/dashboard/TipOfTheDay.tsx` - a short tip shown at the top of the dashboard,
-  picked deterministically from a fixed list by day-of-year (`Date.UTC`-based, no client state) so
-  it's stable across refreshes without needing to persist anything. Tips are specifically about
-  getting more out of Blueprint Studio's own features (regenerating a single card, Filming Mode's
-  skip/resume, QR auto-login, in-browser voiceover recording, the auto-edit trigger and its
-  script-sourced captions, cross-page render notifications, the editing-suggestions field) rather
-  than generic filming/social-media advice - each one should be checkable against a real feature.
+- `src/components/features/dashboard/TipOfTheDay.tsx` - a short tip shown at the bottom of the
+  dashboard, below the card grid, picked deterministically from a fixed list by day-of-year
+  (`Date.UTC`-based, no client state) so it's stable across refreshes without needing to persist
+  anything. Tips are specifically about getting more out of Blueprint Studio's own features
+  (regenerating a single card, Filming Mode's skip/resume, QR auto-login, in-browser voiceover
+  recording, the auto-edit trigger and its script-sourced captions, cross-page render notifications,
+  the editing-suggestions field) rather than generic filming/social-media advice - each one should be
+  checkable against a real feature. Unboxed - a `border-t` hairline divider and plain text rather than
+  its own bordered card, since it's a minor aside, not primary content; originally sat boxed at the
+  *top* of the page, but a client complaint that the dashboard felt cluttered moved it here and
+  dropped the border. `WeekProgress.tsx` got the same treatment for the same reason: it's now a slim
+  unboxed stat line (label + a `Progress` bar capped at `max-w-40`) directly under the `PageHeader`
+  instead of its own bordered section - between the old boxed tip and boxed progress bar, the page had
+  three stacked bordered containers before reaching the actual card grid, which read as noisy/dense
+  rather than clean. The dashboard's sticky nav header (`(dashboard)/layout.tsx`) also had its
+  `backdrop-blur-sm`/`bg-canvas/80` translucency dropped for a plain solid `bg-canvas` in the same
+  pass - glassmorphism is meant to stay scoped to the login page exception (see "Design language"
+  below), and a blurred nav bar was drift from that rule, not an intentional second exception.
 - `src/components/design-system/VideoCardTile.tsx` - the dashboard grid's per-card tile, redesigned
   ("icon-led, progress-driven") after presenting three mockup directions to the client via
   `AskUserQuestion` previews. A `Record<ContentGoal, LucideIcon>` maps each of the 5 content goals to

@@ -7,7 +7,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-canvas">
       <RenderNotifications />
-      <header className="sticky top-0 z-10 border-b border-border-subtle bg-canvas/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 border-b border-border-subtle bg-canvas">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
             <Logo className="h-6 w-6 rounded-md" />

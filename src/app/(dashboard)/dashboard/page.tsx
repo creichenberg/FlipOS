@@ -34,8 +34,6 @@ export default async function DashboardPage() {
         actions={plan?.status === 'ready' && cards.length > 0 ? <RegeneratePlanButton businessId={business.id} /> : undefined}
       />
 
-      <TipOfTheDay />
-
       {plan?.status === 'ready' && cards.length > 0 ? (
         <>
           <WeekProgress cards={cards} />
@@ -50,6 +48,7 @@ export default async function DashboardPage() {
               </div>
             ))}
           </div>
+          <TipOfTheDay />
         </>
       ) : plan?.status === 'failed' ? (
         <EmptyState

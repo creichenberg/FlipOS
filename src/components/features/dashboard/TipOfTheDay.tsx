@@ -29,12 +29,12 @@ export function TipOfTheDay() {
   const tip = TIPS[dayOfYear(new Date()) % TIPS.length];
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface px-5 py-4">
-      <div className="flex items-center gap-1.5">
-        <Lightbulb className="h-3.5 w-3.5 text-primary" />
-        <span className="text-xs font-medium uppercase tracking-wide text-primary">Tip of the day</span>
-      </div>
-      <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{tip}</p>
+    <div className="flex items-start gap-2 border-t border-border-subtle pt-6 text-sm">
+      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+      <p className="text-text-secondary">
+        <span className="font-medium text-foreground">Tip: </span>
+        {tip}
+      </p>
     </div>
   );
 }
