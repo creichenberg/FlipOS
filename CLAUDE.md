@@ -252,20 +252,8 @@ is unchanged) defined in `src/app/globals.css`. Everything derives from the sing
 variable via `color-mix(in oklch, var(--primary) ...)` (the blueprint-grid pattern, glow orbs, ring
 colors, hover-lift shadows), so the swap cascades automatically everywhere except two places that
 can't reference a CSS variable and hardcode the same OKLCH value directly: `src/app/icon.svg` (the
-favicon) and `Logo.tsx` (the in-app wordmark SVG) - keep those two in sync with `--primary` by hand if
-the accent ever changes again. **The mark itself** (drawn identically in both of those files) is a
-chat-bubble outline containing a 3-bar ascending bar chart and a growth arrow breaking out past the
-top-right corner - a client-provided reference image, redrawn as a simplified flat SVG (not traced/
-embedded as-is), replacing the original play-button-in-a-square. First shipped as a solid-square/
-white-icon version (matching the old mark's treatment, since a thin-stroke outline risked disappearing
-at 16px favicon scale) but the client asked to match the reference exactly - now pure outline linework
-and solid bar/arrow fills in `--primary`, no background square, `stroke-width` tuned so it still reads
-at 16px despite that risk. `InteractiveLogo.tsx` (the mousemove-driven glossy-highlight wrapper used on
-the landing header, login, and privacy pages) was deleted along with it, not just left unused - its
-`.logo-shine` effect used `mix-blend-mode: overlay` against the mark's own solid fill, which made sense
-for the old filled-square version but is a no-op blending against transparent/white now that the square
-is gone, so every former call site went back to plain `Logo.tsx` (the same fallback already used
-elsewhere, e.g. the dashboard nav). **Radius is tiered on purpose,
+favicon) and `Logo.tsx` (the in-app wordmark SVG, which `InteractiveLogo.tsx` wraps) - keep those two
+in sync with `--primary` by hand if the accent ever changes again. **Radius is tiered on purpose,
 not uniform** - functional UI (buttons, inputs, badges) stays at the shadcn default `--radius-lg`
 (10px); **every bordered content section uses one value, `rounded-xl`** (pricing/onboarding cards,
 the card detail page's Hook/reference/"Ready to post" sections, Filming Mode's step card, `RenderVideoPanel`)
@@ -381,10 +369,14 @@ static in-flow copy above it; on login the grid is a separate absolutely-positio
 (part of the glassmorphism layering below), where a negative z-index would instead hide the shine
 *behind* that div's own opaque background - `stacking="above-siblings"` leaves z-index at auto there
 so plain DOM order (placed right after the grid div) puts it on top correctly.
-`Logo.tsx` is used plain everywhere the mark appears (landing header, login, privacy, reset-password,
-dashboard nav) - it previously had an `InteractiveLogo.tsx` wrapper adding a mousemove-driven glossy
-highlight at icon scale, removed when the mark itself switched to pure outline (see "Design language"
-above for why that made the highlight a no-op).
+`InteractiveLogo.tsx` (same directory) applies the same idea at icon scale: the "Blueprint Studio"
+logo mark on the landing header, login, privacy, and reset-password pages gets a small glossy
+highlight (`.logo-shine`, blended with `mix-blend-mode: overlay` so it reads as light on a glossy
+surface rather than a flat white smudge) clipped to the mark's own rounded-square shape via a wrapping
+`overflow-hidden` span. It tracks `window` mousemove rather than a parent element - unlike
+`MouseShine`, there's only ever one logo per page, so there's no risk of multiple instances needing
+independent tracking. Plain `Logo.tsx` (no client-side behavior) is still used as-is anywhere the
+shine wasn't requested, e.g. the dashboard nav.
 
 `Parallax.tsx` (same directory, same ref-mutation pattern as `MouseShine`) adds a scroll-linked vertical
 drift to the landing page's two browser-chrome mockups (the hero's dashboard preview and the Features

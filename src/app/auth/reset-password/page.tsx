@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/design-system/Logo';
+import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
 import { MouseShine } from '@/components/design-system/MouseShine';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <Logo className="mb-4 h-10 w-10" />
+          <InteractiveLogo className="mb-4 h-10 w-10 rounded-xl shadow-[0_8px_20px_-6px_color-mix(in_oklch,var(--primary)_50%,transparent)]" />
           <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
         </div>
 
