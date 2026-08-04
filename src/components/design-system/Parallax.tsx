@@ -2,17 +2,17 @@
 
 import { useEffect, useRef } from 'react';
 
-// A vertical drift as the element scrolls through the viewport - moves at a
-// fraction of scroll speed via a directly-mutated transform (not React
+// A small vertical drift as the element scrolls through the viewport - moves
+// at a fraction of scroll speed via a directly-mutated transform (not React
 // state, so scrolling never triggers a re-render - same rAF-throttled,
-// ref-driven pattern as MouseShine). The offset is still clamped to a fixed
-// pixel range regardless of how far the element sits from the viewport, so a
-// long scroll never sends it drifting off arbitrarily far, but both the
-// default speed and that clamp were raised from an earlier, barely-visible
-// pass per explicit client feedback that it wasn't noticeable enough. Driven
-// by `scroll`/`resize` rather than an IntersectionObserver since the offset
-// needs to keep updating continuously while the element is on screen, not
-// just once on entry (that's what Reveal.tsx is for). Skipped entirely under
+// ref-driven pattern as MouseShine). Kept deliberately subtle: the offset is
+// clamped to a small pixel range regardless of how far the element sits from
+// the viewport, so a long scroll never sends it drifting far from its
+// natural position (a client request to turn this up was tried and then
+// reverted - back to the original subtle range). Driven by `scroll`/`resize`
+// rather than an IntersectionObserver since the offset needs to keep
+// updating continuously while the element is on screen, not just once on
+// entry (that's what Reveal.tsx is for). Skipped entirely under
 // prefers-reduced-motion, same as this app's other ambient animations.
 export function Parallax({
   children,
@@ -37,7 +37,7 @@ export function Parallax({
       const rect = el!.getBoundingClientRect();
       const viewportCenter = window.innerHeight / 2;
       const elementCenter = rect.top + rect.height / 2;
-      const offset = Math.max(-80, Math.min(80, (viewportCenter - elementCenter) * speed));
+      const offset = Math.max(-28, Math.min(28, (viewportCenter - elementCenter) * speed));
       el!.style.transform = `translateY(${offset.toFixed(1)}px)`;
     }
 

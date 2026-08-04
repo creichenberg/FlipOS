@@ -167,7 +167,7 @@ export default async function LandingPage() {
           </Button>
         </div>
 
-        <Parallax speed={0.3} className="mt-16 w-full max-w-3xl">
+        <Parallax speed={0.1} className="mt-16 w-full max-w-3xl">
           <div className="animate-in fade-in zoom-in-95 overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl delay-500 duration-700 fill-mode-both">
             <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">
               <span className="h-2.5 w-2.5 rounded-full bg-border-subtle" />
@@ -222,7 +222,7 @@ export default async function LandingPage() {
                 ))}
               </div>
             </Reveal>
-            <Parallax speed={-0.25}>
+            <Parallax speed={-0.08}>
               <Reveal delay={100}>
                 <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl">
                   <div className="flex items-center gap-1.5 border-b border-border-subtle px-4 py-3">

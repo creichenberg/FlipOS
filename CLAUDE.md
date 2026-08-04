@@ -389,15 +389,17 @@ surface rather than a flat white smudge) clipped to the mark's own rounded-squar
 independent tracking. Plain `Logo.tsx` (no client-side behavior) is still used as-is anywhere the
 shine wasn't requested, e.g. the dashboard nav.
 
-`Parallax.tsx` (same directory, same ref-mutation pattern as `MouseShine`) adds a scroll-linked vertical
-drift to the landing page's two browser-chrome mockups (the hero's dashboard preview and the Features
-section's card-detail preview) - a client request for "parallax scrolling," first shipped subtle
-(clamped to +/-28px, speeds of `0.1`/`-0.08`) then turned up a second pass per explicit feedback that it
-wasn't noticeable enough, to the current +/-80px clamp and `0.3`/`-0.25` speeds. Reads the element's own
-position relative to the viewport center on `scroll`/`resize` (rAF-throttled) and writes `translateY`
-directly via `el.style.transform`; still clamped to a fixed range regardless of how far the element is
-from the viewport so a long scroll doesn't send it drifting arbitrarily far, just a larger range than the
-initial pass. The two mockups use opposite-sign `speed` values so they drift in opposite directions as
+`Parallax.tsx` (same directory, same ref-mutation pattern as `MouseShine`) adds a subtle scroll-linked
+vertical drift to the landing page's two browser-chrome mockups (the hero's dashboard preview and the
+Features section's card-detail preview) - a client request for "parallax scrolling." Went through a
+second pass turning it up (clamp raised to +/-80px, speeds to `0.3`/`-0.25`) per feedback that it wasn't
+noticeable enough, then back down to the original +/-28px clamp and `0.1`/`-0.08` speeds per a follow-up
+"it's too much" - both tuning passes are one-line changes (the clamp in `Parallax.tsx`, the `speed` prop
+at each call site), not a rewrite, if it needs adjusting again. Reads the element's own position relative
+to the viewport center on `scroll`/`resize` (rAF-throttled) and writes `translateY` directly via
+`el.style.transform`, clamped to a fixed range regardless of how far the element is from the viewport so
+a long scroll doesn't send it drifting arbitrarily far. The two mockups use opposite-sign `speed` values
+so they drift in opposite directions as
 you scroll past them, reading as independent layers rather than the whole page moving in lockstep. Wraps
 around each mockup's existing entrance animation (`animate-in`/`Reveal`) as an outer layer rather than
 setting `transform` on the same element that animation targets - both are CSS-driven (keyframes/
