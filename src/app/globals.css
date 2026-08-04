@@ -242,15 +242,6 @@
   -webkit-mask-image: radial-gradient(32px circle at var(--shine-x, 50%) var(--shine-y, 15%), black, transparent 70%);
 }
 
-/* A small glossy highlight on the logo mark (InteractiveLogo.tsx) - blended
-   with overlay so it reads as light catching a glossy surface rather than a
-   flat white smudge on top of the terracotta fill. */
-.logo-shine {
-  background: radial-gradient(70px circle at var(--shine-x, 30%) var(--shine-y, 20%), rgba(255, 255, 255, 0.65), transparent 70%);
-  mix-blend-mode: overlay;
-  transition: background 120ms linear;
-}
-
 /* Slow ambient "breathing" for the login page's glow orbs - reinforces the
    glass-card depth without drawing the eye away from the sign-in form. */
 @keyframes glow-pulse {
@@ -293,8 +284,7 @@
   .render-sweep {
     animation: none;
   }
-  .mouse-shine,
-  .logo-shine {
+  .mouse-shine {
     transition: none;
   }
   /* Blanket safety net for every entrance animation added below (Reveal,

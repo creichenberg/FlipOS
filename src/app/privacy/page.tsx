@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { InteractiveLogo } from '@/components/design-system/InteractiveLogo';
+import { Logo } from '@/components/design-system/Logo';
 
 export const metadata = {
   title: 'Privacy Policy',
@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
       <header className="border-b border-border-subtle">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <InteractiveLogo className="h-6 w-6 rounded-md" />
+            <Logo className="h-6 w-6" />
             <span className="text-sm font-semibold tracking-tight">Blueprint Studio</span>
           </Link>
           <Link href="/login" className="text-sm text-text-secondary hover:text-foreground">
