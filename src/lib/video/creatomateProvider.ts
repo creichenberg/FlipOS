@@ -16,6 +16,15 @@ const SOURCE_URL_TTL_SECONDS = 60 * 60;
 // 9:16 - the only aspect ratio RenderRecipe supports today.
 const OUTPUT_WIDTH = 1080;
 const OUTPUT_HEIGHT = 1920;
+// A quick crossfade instead of a hard cut between shots - long enough to
+// read as an intentional edit, short enough to still feel like a punchy
+// UGC cut rather than a slideshow dissolve.
+const CUT_TRANSITION_SECONDS = 0.25;
+// Subtle continuous zoom-in over each clip's own duration ("Ken Burns") so
+// static handheld shots don't sit perfectly still - kept small since this
+// plays on every single clip in the video, not just one hero shot.
+const ZOOM_START_SCALE = '100%';
+const ZOOM_END_SCALE = '106%';
 
 function apiKey(): string {
   const key = process.env.CREATOMATE_API_KEY;
@@ -49,13 +58,26 @@ export class CreatomateRenderProvider implements RenderProvider {
 
     // Visual track: shot clips back to back, in order, muted - the
     // voiceover track below carries the audio instead of each clip's own,
-    // same as a typical UGC-style edit (B-roll under narration).
+    // same as a typical UGC-style edit (B-roll under narration). Trimmed to
+    // each shot's own planned duration_seconds (not however long the raw
+    // recording happens to run) so pacing matches the shot list instead of
+    // rambling on for however long the clip was left recording; a subtle
+    // zoom keeps every clip from sitting perfectly static; a short crossfade
+    // on every clip but the first turns the hard cuts into a real edit.
     const visualElements = await Promise.all(
-      recipe.clips.map(async (clip) => ({
+      recipe.clips.map(async (clip, i) => ({
         type: 'video',
         track: 1,
         source: await signedUrl(clip.storagePath),
         volume: '0%',
+        trim_start: 0,
+        trim_duration: clip.durationSeconds,
+        animations: [
+          { type: 'scale', scope: 'element', easing: 'linear', start_scale: ZOOM_START_SCALE, end_scale: ZOOM_END_SCALE, fade: false },
+          ...(i > 0
+            ? [{ type: 'fade', transition: true, duration: CUT_TRANSITION_SECONDS, easing: 'linear' }]
+            : []),
+        ],
       })),
     );
 

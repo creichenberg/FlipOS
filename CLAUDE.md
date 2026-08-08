@@ -159,9 +159,21 @@ dashboard.
   about which one actually produced a given result) so it's never mistaken for a real multi-clip,
   captioned edit. `CreatomateRenderProvider` (`creatomateProvider.ts`) builds a RenderScript
   composition directly (no pre-built Creatomate template): shot clips play back to back muted on
-  track 1 (the voiceover carries the audio instead, same as a typical UGC edit), and each voiceover
-  line becomes its own `composition` element on track 2 pairing that line's audio with a caption
-  `text` element - grouping them lets Creatomate derive the caption's on-screen duration from the
+  track 1 (the voiceover carries the audio instead, same as a typical UGC edit). Each clip is
+  **trimmed to its own shot's planned `duration_seconds`** (`trim_start: 0`/`trim_duration`, a
+  Zod-enforced `min(1)` so it's never zero/negative) rather than playing however long the raw
+  recording happens to run, so pacing matches the shot list instead of rambling; every clip gets a
+  subtle continuous zoom (`type: "scale"`, 100% -> 106% over the clip's own duration - a "Ken Burns"
+  effect, kept small since it plays on *every* clip, not one hero shot) so nothing sits perfectly
+  static; every clip but the first also gets a quick 0.25s crossfade (`type: "fade", transition:
+  true`, the Creatomate mechanism for bridging two consecutive elements on the same track) instead of
+  a hard cut, so shot changes read as an edit rather than a slideshow. All three are purely mechanical
+  RenderScript properties verified against Creatomate's docs - no new vendor, no added cost. The
+  actual word-by-word animated-caption look most real UGC content has is a bigger lift deliberately
+  not done here: it needs real word-level timing (ASR), which is the same deferred transcription-
+  vendor decision as the no-Deepgram note above, not something these three tweaks substitute for.
+  Each voiceover line becomes its own `composition` element on track 2 pairing that line's audio with
+  a caption `text` element - grouping them lets Creatomate derive the caption's on-screen duration from the
   audio's real length automatically, without us computing any timing ourselves (consistent with the
   no-ASR decision above). Source clips are read via signed URLs from the private `clips` bucket
   (1hr TTL, enough for Creatomate to fetch them even if queued); output aspect ratio is locked to
