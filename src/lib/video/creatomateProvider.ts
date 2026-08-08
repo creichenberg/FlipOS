@@ -20,20 +20,50 @@ const OUTPUT_HEIGHT = 1920;
 // read as an intentional edit, short enough to still feel like a punchy
 // UGC cut rather than a slideshow dissolve.
 const CUT_TRANSITION_SECONDS = 0.25;
-// Subtle continuous zoom-in over each clip's own duration ("Ken Burns") so
-// static handheld shots don't sit perfectly still - kept small since this
-// plays on every single clip in the video, not just one hero shot.
-const ZOOM_START_SCALE = '100%';
-const ZOOM_END_SCALE = '106%';
+// Continuous zoom over each clip's own duration ("Ken Burns") so static
+// handheld shots don't sit perfectly still. Alternates in/out by clip index
+// (see zoomRange() below) rather than always zooming in the same way on
+// every clip - identical motion repeated across 7-10 consecutive shots reads
+// as mechanical, not edited. The hook (first) clip gets a bigger push since
+// it's the scroll-stopping moment.
+const ZOOM_REST_SCALE = '100%';
+const ZOOM_PUSH_SCALE = '106%';
+const HOOK_ZOOM_PUSH_SCALE = '112%';
 // Shared local track number for a caption's word elements (scoped to that
 // one composition's own elements array, unrelated to the top-level track
 // numbers the shot clips/caption compositions use) - every word needs the
 // *same* explicit track so they queue up one after another instead of each
 // getting auto-assigned its own overlaid track.
 const CAPTION_WORD_TRACK = 1;
+// Quick scale+fade entrance so each word visibly punches in instead of just
+// appearing - the single biggest "does this look edited" tell captioning
+// apps use. Short enough to stay clear of the word's own "1 fr" on-screen
+// slice even on a fast-paced line.
+const WORD_POP_SECONDS = 0.1;
+const WORD_POP_START_SCALE = '70%';
+const HOOK_WORD_POP_START_SCALE = '50%';
+const WORD_POP_EASING = 'quadratic-out';
+// Numbers/stats ("50%", "3 minutes", "24/7") are naturally the highest-value
+// words in a line of marketing copy - a defensible, always-on heuristic that
+// doesn't need an AI call or a schema change to pick out. Kept in sync with
+// --primary's light-mode value (see globals.css) by hand, same as the two
+// other places (icon.svg, Logo.tsx) that can't reference the CSS variable.
+const EMPHASIS_COLOR = '#3881d8';
 
 function splitIntoWords(text: string): string[] {
   return text.split(/\s+/).filter(Boolean);
+}
+
+function hasDigit(word: string): boolean {
+  return /\d/.test(word);
+}
+
+// First-clip zoom pushes further than the rest (the hook deserves a bigger
+// moment); direction alternates by index so the motion doesn't repeat
+// identically down the whole shot list.
+function zoomRange(index: number): { start: string; end: string } {
+  const push = index === 0 ? HOOK_ZOOM_PUSH_SCALE : ZOOM_PUSH_SCALE;
+  return index % 2 === 0 ? { start: ZOOM_REST_SCALE, end: push } : { start: push, end: ZOOM_REST_SCALE };
 }
 
 // Shared styling for both the per-word captions and the (defensive,
@@ -90,24 +120,29 @@ export class CreatomateRenderProvider implements RenderProvider {
     // same as a typical UGC-style edit (B-roll under narration). Trimmed to
     // each shot's own planned duration_seconds (not however long the raw
     // recording happens to run) so pacing matches the shot list instead of
-    // rambling on for however long the clip was left recording; a subtle
-    // zoom keeps every clip from sitting perfectly static; a short crossfade
-    // on every clip but the first turns the hard cuts into a real edit.
+    // rambling on for however long the clip was left recording; a zoom (see
+    // zoomRange()) keeps every clip from sitting perfectly static and varies
+    // by clip so the motion doesn't repeat identically down the whole shot
+    // list; a short crossfade on every clip but the first turns the hard
+    // cuts into a real edit.
     const visualElements = await Promise.all(
-      recipe.clips.map(async (clip, i) => ({
-        type: 'video',
-        track: 1,
-        source: await signedUrl(clip.storagePath),
-        volume: '0%',
-        trim_start: 0,
-        trim_duration: clip.durationSeconds,
-        animations: [
-          { type: 'scale', scope: 'element', easing: 'linear', start_scale: ZOOM_START_SCALE, end_scale: ZOOM_END_SCALE, fade: false },
-          ...(i > 0
-            ? [{ type: 'fade', transition: true, duration: CUT_TRANSITION_SECONDS, easing: 'linear' }]
-            : []),
-        ],
-      })),
+      recipe.clips.map(async (clip, i) => {
+        const zoom = zoomRange(i);
+        return {
+          type: 'video',
+          track: 1,
+          source: await signedUrl(clip.storagePath),
+          volume: '0%',
+          trim_start: 0,
+          trim_duration: clip.durationSeconds,
+          animations: [
+            { type: 'scale', scope: 'element', easing: 'linear', start_scale: zoom.start, end_scale: zoom.end, fade: false },
+            ...(i > 0
+              ? [{ type: 'fade', transition: true, duration: CUT_TRANSITION_SECONDS, easing: 'linear' }]
+              : []),
+          ],
+        };
+      }),
     );
 
     // Voiceover + caption track: each line's recording paired with its
@@ -122,19 +157,42 @@ export class CreatomateRenderProvider implements RenderProvider {
     // synced to pacing/pauses in the actual take) without adding an ASR
     // vendor. The words share one explicit track so they queue up in
     // sequence; the audio is left on its own auto-assigned track so it
-    // still spans (and drives) the whole composition's duration.
+    // still spans (and drives) the whole composition's duration. Each word
+    // also gets a quick pop-in (scale + fade) instead of just appearing, and
+    // any word containing a digit is emphasized (bigger, accent-colored) -
+    // both purely mechanical, no ASR/AI call needed to pick them out. The
+    // first line (the hook) gets a punchier pop and slightly bigger base
+    // size, matching the bigger zoom the first clip gets above.
     const captionElements = await Promise.all(
-      recipe.captions.map(async (caption) => {
+      recipe.captions.map(async (caption, lineIndex) => {
+        const isHookLine = lineIndex === 0;
         const words = splitIntoWords(caption.text);
         const wordElements =
           words.length > 0
-            ? words.map((word) => ({
-                ...CAPTION_TEXT_BASE,
-                track: CAPTION_WORD_TRACK,
-                duration: '1 fr',
-                text: word,
-                font_size: '7 vmin',
-              }))
+            ? words.map((word) => {
+                const emphasized = hasDigit(word);
+                const fontSize = emphasized ? (isHookLine ? '10 vmin' : '8.5 vmin') : isHookLine ? '8 vmin' : '7 vmin';
+                return {
+                  ...CAPTION_TEXT_BASE,
+                  ...(emphasized ? { fill_color: EMPHASIS_COLOR } : {}),
+                  track: CAPTION_WORD_TRACK,
+                  duration: '1 fr',
+                  text: word,
+                  font_size: fontSize,
+                  animations: [
+                    {
+                      type: 'scale',
+                      scope: 'element',
+                      time: 0,
+                      duration: WORD_POP_SECONDS,
+                      easing: WORD_POP_EASING,
+                      start_scale: isHookLine ? HOOK_WORD_POP_START_SCALE : WORD_POP_START_SCALE,
+                      end_scale: '100%',
+                      fade: true,
+                    },
+                  ],
+                };
+              })
             : [{ ...CAPTION_TEXT_BASE, text: caption.text, font_size: '6 vmin' }];
 
         return {

@@ -166,12 +166,19 @@ dashboard.
   **trimmed to its own shot's planned `duration_seconds`** (`trim_start: 0`/`trim_duration`, a
   Zod-enforced `min(1)` so it's never zero/negative) rather than playing however long the raw
   recording happens to run, so pacing matches the shot list instead of rambling; every clip gets a
-  subtle continuous zoom (`type: "scale"`, 100% -> 106% over the clip's own duration - a "Ken Burns"
-  effect, kept small since it plays on *every* clip, not one hero shot) so nothing sits perfectly
-  static; every clip but the first also gets a quick 0.25s crossfade (`type: "fade", transition:
-  true`, the Creatomate mechanism for bridging two consecutive elements on the same track) instead of
-  a hard cut, so shot changes read as an edit rather than a slideshow. All three are purely mechanical
-  RenderScript properties verified against Creatomate's docs - no new vendor, no added cost.
+  continuous zoom (`type: "scale"` - a "Ken Burns" effect, `zoomRange()`) over the clip's own
+  duration so nothing sits perfectly static; every clip but the first also gets a quick 0.25s
+  crossfade (`type: "fade", transition: true`, the Creatomate mechanism for bridging two consecutive
+  elements on the same track) instead of a hard cut, so shot changes read as an edit rather than a
+  slideshow. All three are purely mechanical RenderScript properties verified against Creatomate's
+  docs - no new vendor, no added cost. **Per-clip variety pass** (`zoomRange()`): the client felt the
+  auto-edit needed to look more like a real edit than "something thrown together in CapCut in 10
+  seconds" - clarified via `AskUserQuestion` into a scoped, no-new-vendor polish pass rather than
+  committing to the still-deferred ASR/music vendor decisions. The zoom now alternates direction by
+  clip index (even clips push in from 100%, odd clips pull back from 106%) instead of the exact same
+  zoom-in on every single clip, since identical motion repeated across 7-10 consecutive shots read as
+  mechanical rather than edited; the first clip (the hook) pushes further (112% vs the usual 106%)
+  since that's the scroll-stopping moment.
   **Word-by-word captions**: each voiceover line becomes its own `composition` element on track 2
   pairing that line's audio with one `text` element *per word* (split on whitespace) instead of one
   text element for the whole line. There's still no real word-level timing (ASR) - per the standing
@@ -192,7 +199,22 @@ dashboard.
   hint ("Read it at a steady, even pace...") directly under the line's script, right where the person
   is about to hit record. This is UX guidance for a real technical constraint, not filler copy - if
   real word-level ASR timing is ever added, this hint stops being necessary and should come out with
-  it. Source clips are read via signed URLs from the private `clips` bucket
+  it. The same variety pass above also touched captions, purely as styling on top of the existing
+  word-by-word mechanism (no new AI call, no schema change): every word gets a quick scale+fade
+  pop-in (`WORD_POP_SECONDS`, 100ms, `quadratic-out` easing - confirmed against Creatomate's docs
+  before use, not guessed) instead of just appearing, since a punch-in per word is the single most
+  recognizable "this looks professionally captioned" tell real caption apps use. Any word containing
+  a digit (`hasDigit()` - "50%", "3 minutes", "24/7") is emphasized: bigger and rendered in
+  `EMPHASIS_COLOR`, a hex value hand-kept in sync with `--primary`'s light-mode value, same as the
+  two other places (`icon.svg`, `Logo.tsx`) that can't reference the CSS variable directly. Numbers
+  were picked as the emphasis heuristic specifically because it needs no AI call to judge which words
+  actually matter in a line - a "longest word" or similar fuzzier heuristic risks emphasizing the
+  wrong word and reading as arbitrary noise instead of intentional design; if smarter (AI-picked)
+  emphasis is ever wanted, that's a real schema/prompt change to `generateVideoDetail.ts`, not a
+  drop-in swap. The hook (first) line also gets a bigger base font size and a punchier pop
+  (`HOOK_WORD_POP_START_SCALE`, 50% vs the usual 70%) to match the first clip's bigger zoom push -
+  the first ~3 seconds is what stops the scroll, so it gets more visual weight than the rest of the
+  video. Source clips are read via signed URLs from the private `clips` bucket
   (1hr TTL, enough for Creatomate to fetch them even if queued); output aspect ratio is locked to
   9:16 (1080x1920), the only ratio `RenderRecipe` supports. The render route validates every
   shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no music to
