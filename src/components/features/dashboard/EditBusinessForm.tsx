@@ -131,7 +131,7 @@ export function EditBusinessForm({ business }: { business: Business }) {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={!valid || status === 'saving'}>
+        <Button type="submit" disabled={!valid || status === 'saving'} className="disabled:opacity-70">
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </Button>
       </div>
