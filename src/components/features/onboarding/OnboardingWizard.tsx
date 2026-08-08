@@ -148,7 +148,7 @@ export function OnboardingWizard() {
           {step === 2 && 'Brand & goals'}
         </h2>
         <div className="mt-4">
-          <StepIndicator current={step} total={TOTAL_STEPS} />
+          <StepIndicator current={step} total={TOTAL_STEPS} activeColor="emerald" />
         </div>
       </div>
 

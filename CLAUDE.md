@@ -115,6 +115,13 @@ dashboard.
   separate from the business name - used for the dashboard's "Welcome back, `<first name>`" greeting
   (`business.owner_name.split(' ')[0]`) instead of addressing the owner by their own company's name;
   editable later from Settings (`EditBusinessForm.tsx`) alongside the rest of the business profile.
+  Its Industry field is plain free text - a `<datalist>`-backed autocomplete was tried and then
+  removed per explicit client feedback that it should only be typed, not selected from suggestions.
+- `StepIndicator.tsx` takes an `activeColor` prop (`'primary'` default, or `'emerald'`) controlling
+  the currently-active segment's pulsing overlay color - the done/not-done segments are always
+  green/grey regardless, only the in-progress segment's accent changes. Filming Mode (the only other
+  caller) keeps the default blue pulse; onboarding passes `activeColor="emerald"` per a client
+  request that its progress bar read as strictly grey-to-green with no blue accent introduced.
 - **QR auto-login** (`src/lib/qrLogin.ts`, `src/app/auth/qr/route.ts`,
   `supabase/migrations/0003_qr_login_tokens.sql`) - a real auth-bypass mechanism, built carefully on
   purpose: the token is 256 bits of `crypto.randomBytes` (not guessable), single-use (consumed via an
