@@ -201,13 +201,16 @@ export function RenderVideoPanel({
         </div>
       )}
 
-      {showFullScreenAnimation && typeof document !== 'undefined'
+      {showFullScreenAnimation && displayJob && typeof document !== 'undefined'
         ? createPortal(
             <div className="animate-in fade-in fixed inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-canvas/98 px-6 duration-300 backdrop-blur-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-primary">Editing your video</p>
               <p className="text-sm text-text-secondary">This won&apos;t take long.</p>
               <div className="mt-4 w-full max-w-sm">
-                <RenderingAnimation />
+                <RenderingAnimation
+                  startedAt={displayJob.created_at}
+                  isReallyDone={job?.status === 'complete' || job?.status === 'failed'}
+                />
               </div>
             </div>,
             document.body,

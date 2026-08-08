@@ -271,26 +271,9 @@
   animation-delay: -4s;
 }
 
-/* Indeterminate sweep for the render-in-progress loading panel - the mock
-   provider (and any real one) reports coarse queued/rendering/complete
-   status only, no real percentage, so this communicates "actively working"
-   without pretending to track true progress. */
-@keyframes render-sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(300%);
-  }
-}
-.render-sweep {
-  animation: render-sweep 1.6s ease-in-out infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .bg-blueprint-grid,
-  .glow-orb,
-  .render-sweep {
+  .glow-orb {
     animation: none;
   }
   .mouse-shine,

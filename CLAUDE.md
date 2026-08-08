@@ -276,9 +276,8 @@ dashboard.
   9:16 (1080x1920), the only ratio `RenderRecipe` supports. The render route validates every
   shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no music to
   paper over a gap. `RenderVideoPanel.tsx` polls `GET /api/cards/[cardId]/render` every 2s while a
-  job is queued/rendering, showing `RenderingAnimation.tsx` (a purely cosmetic 4-step sequence - it
-  doesn't track real backend progress, since queued/rendering/complete/failed is all the status the
-  API exposes) full-screen via `createPortal(..., document.body)` instead of inline in the panel -
+  job is queued/rendering, showing `RenderingAnimation.tsx` full-screen via `createPortal(...,
+  document.body)` instead of inline in the panel -
   the edit is the product's main event, not a background task, so it takes over the whole viewport
   (with body scroll locked for the duration) rather than playing out in a small card. That full-screen
   takeover enforces a **hard 5-second minimum display time** for the animation, gated off the render
@@ -288,9 +287,29 @@ dashboard.
   `setTimeout` until 5s have elapsed since `created_at`, even though the mock provider itself finishes
   in ~4s (a real Creatomate render can easily take longer, in which case this minimum is a no-op - the
   gate only ever adds wait time, never cuts a real render short) - a render that visibly resolves in
-  under a second reads as fake, not fast. The sweeping progress bar inside `RenderingAnimation.tsx`
-  uses a `.render-sweep` keyframe in `globals.css`, following the same `prefers-reduced-motion` guard
-  pattern as `.glow-orb`/`.bg-blueprint-grid`. **Cross-page render notifications**
+  under a second reads as fake, not fast. **`RenderingAnimation.tsx`'s percent bar** - added per an
+  explicit client request to "design it so people will want to wait" - is a designed curve, not a
+  measurement: the backend only ever reports queued/rendering/complete/failed, never a real
+  percentage, same constraint as before. `progressAt()` is an asymptotic curve
+  (`CEILING_PERCENT * (1 - e^(-elapsed / PROGRESS_TIME_CONSTANT_MS))`, ceiling 96%) - fast in the
+  first couple seconds (an immediate reward right after clicking "Create edited video"), then
+  slower and slower, deliberately never reaching 100% on its own. That shape is what makes it work
+  for both a ~4s mock render and a multi-minute real one without ever looking stalled or racing
+  ahead of the real result: the number is always still visibly climbing, however long the real job
+  actually takes, right up until it's told the truth. `startedAt` is the job's real `created_at`
+  (not component-mount time, matching `MIN_DISPLAY_MS`'s existing gate a few lines up) so a
+  mid-render page refresh resumes the curve near the right point instead of visibly restarting at
+  0%. Once the real job is actually done (`isReallyDone`, sourced from `job.status`, the true polled
+  state - not `displayJob.status`, which is still deliberately being held back by the reveal gate),
+  the slow asymptotic climb is replaced with a fast fixed-step climb to 100% - a quick, satisfying
+  finish beat instead of an abrupt cut from "83%" straight to the finished video with no resolution.
+  The step list below the bar derives its active index from the same percent value
+  (`percent / CEILING_PERCENT`) rather than its own independent timer, so the number and the
+  checklist read as one cohesive progress story instead of two unrelated indicators that happen to
+  sit near each other. This replaced the earlier indeterminate `.render-sweep` CSS keyframe (a
+  bar-width sweep with no number) - removed from `globals.css` along with its
+  `prefers-reduced-motion` guard entry now that the percent bar's own `transition-[width]` carries
+  that job. **Cross-page render notifications**
   (`RenderNotifications.tsx`, `GET /api/render-jobs/active`) - `RenderVideoPanel`'s own polling stops
   the moment its component unmounts, so a render started on one card and then navigated away from
   (increasingly likely once a real vendor's renders take longer than the mock's ~4s) would otherwise
