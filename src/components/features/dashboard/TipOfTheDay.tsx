@@ -10,7 +10,7 @@ const TIPS = [
   "Don't love an idea? Regenerate just that one card instead of the whole week - it keeps the same link and leaves your other days untouched.",
   'Your onboarding answers shape every idea we generate. The more specific you were about your business, the more personalized your videos will be.',
   "Every card comes with a ready-to-post caption and hashtags - copy them straight from the card page once you're ready to publish.",
-  "You can skip a shot or voiceover line in Filming Mode and come back to it later - nothing is lost, and you'll get a reminder at the end.",
+  'Captions in your auto-edited video appear word-by-word - for the best sync, read voiceover lines at a steady, even pace when you record them.',
   'Filming on your phone but planning from a laptop? Scan the QR code in Filming Mode to keep going from your phone - it signs you in instantly.',
   'Recording a voiceover line happens right in your browser - no separate recording app needed, just hit record and read the line.',
   "Once every shot and voiceover line has a clip, hit \"Create edited video\" - we'll cut them together and burn in captions automatically.",

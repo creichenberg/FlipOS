@@ -81,10 +81,13 @@ dashboard.
   to `pending_detail`. The button only shows the destructive-action confirmation dialog when there's
   actually a `video_details` row (i.e. a shot list/script/possibly filmed clips) to lose; before that
   it regenerates immediately with no dialog since nothing is at stake yet.
-- `src/components/features/filming-mode/FilmingModeFlow.tsx` - the guided shot-by-shot flow.
-  Client-side reducer for the step machine, but every "mark done" persists to
-  `shot_progress`/`voiceover_progress` immediately so a mid-session refresh resumes correctly
-  (hydrated from server data, not localStorage). `ClipUpload.tsx` sits inside each step and splits by
+- `src/components/features/filming-mode/FilmingModeFlow.tsx` - the guided shot-by-shot flow. A plain
+  `useState` index into the ordered shot/voiceover-line list - every step must be completed in order,
+  there's no skip/resume (removed per explicit client feedback that skipping undermined the guided
+  flow; a `useReducer` + done/skipped `Set`s tracked that before, which is why this is a plain index
+  now instead). Every "mark done" persists to `shot_progress`/`voiceover_progress` immediately so a
+  mid-session refresh resumes correctly (hydrated from server data via `initialDone`, not localStorage
+  or client-only state). `ClipUpload.tsx` sits inside each step and splits by
   target kind: shots use a plain `<input type="file" accept="video/*" capture="environment">` (opens
   the phone's native camera app directly - reliable and needs no `getUserMedia` code to maintain);
   voiceover lines record in-browser instead via `getUserMedia`/`MediaRecorder`, because the `capture`
@@ -226,8 +229,9 @@ dashboard.
   dashboard, below the card grid, picked deterministically from a fixed list by day-of-year
   (`Date.UTC`-based, no client state) so it's stable across refreshes without needing to persist
   anything. Tips are specifically about getting more out of Blueprint Studio's own features
-  (regenerating a single card, Filming Mode's skip/resume, QR auto-login, in-browser voiceover
-  recording, the auto-edit trigger and its script-sourced captions, cross-page render notifications,
+  (regenerating a single card, word-by-word auto-edit captions and the steady-pace recording tip that
+  supports them, QR auto-login, in-browser voiceover recording, the auto-edit trigger and its
+  script-sourced captions, cross-page render notifications,
   the editing-suggestions field) rather than generic filming/social-media advice - each one should be
   checkable against a real feature. Unboxed - a `border-t` hairline divider and plain text rather than
   its own bordered card, since it's a minor aside, not primary content; originally sat boxed at the
@@ -385,7 +389,7 @@ label instead of an `aria-label`-only chip (`VideoCardTile`'s goal icon, `TipOfT
 the login page's magic-link confirmation, the card page's "Ready to film?" banner, Filming Mode's
 per-step Camera/Mic icon), and `RenderingAnimation`'s 4 step icons became a real stepper (solid fill
 once done/active, bordered-transparent otherwise) instead of a static tinted circle. Legitimate
-terminal/transient result icons (Filming Mode's skipped/all-done/`justCompleted` states,
+terminal/transient result icons (Filming Mode's all-done/`justCompleted` states,
 `ShotListItem`'s numbered index circle) were left alone - the goal was removing decoration, not every
 icon. The card detail page (`cards/[cardId]/page.tsx`) collapsed from 9 independently-boxed sections
 at 3 different radii into 4 visual zones for the same reason: a CTA banner, a Hook section marked by a
