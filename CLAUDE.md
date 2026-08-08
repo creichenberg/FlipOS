@@ -183,7 +183,13 @@ dashboard.
   picked over onboarding a real ASR vendor, not a stand-in that pretends to be the real thing. Falls
   back to one whole-line text element (the original behavior) if a line somehow splits into zero words
   - practically unreachable since `voiceover_lines.text` always comes from the AI's generated script,
-  but a composition can't render with no visual content on that track. Source clips are read via signed URLs from the private `clips` bucket
+  but a composition can't render with no visual content on that track. Because the timing is
+  even-per-word rather than real ASR, a steadily-paced take stays in sync noticeably better than one
+  with long pauses or a rushed ending - so `FilmingModeFlow.tsx`'s voiceover step now shows a small
+  hint ("Read it at a steady, even pace...") directly under the line's script, right where the person
+  is about to hit record. This is UX guidance for a real technical constraint, not filler copy - if
+  real word-level ASR timing is ever added, this hint stops being necessary and should come out with
+  it. Source clips are read via signed URLs from the private `clips` bucket
   (1hr TTL, enough for Creatomate to fetch them even if queued); output aspect ratio is locked to
   9:16 (1080x1920), the only ratio `RenderRecipe` supports. The render route validates every
   shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no music to

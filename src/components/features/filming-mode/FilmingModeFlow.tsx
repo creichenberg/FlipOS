@@ -266,6 +266,9 @@ export function FilmingModeFlow({
                 Voiceover line {current.line.line_number}
               </p>
               <p className="mt-2 text-lg leading-snug">&ldquo;{current.line.text}&rdquo;</p>
+              <p className="mt-1 text-xs text-text-secondary">
+                Read it at a steady, even pace - the auto-edit&apos;s captions time themselves off this recording.
+              </p>
             </>
           )}
         </div>
