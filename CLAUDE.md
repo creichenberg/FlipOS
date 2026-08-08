@@ -348,6 +348,30 @@ dashboard.
   directly via the service-role client, bypassing Stripe entirely. Both are inert unless explicitly
   set, and neither should ever be set on a deploy with real customers - `MOCK_BILLING` in particular
   lets any signed-in user grant themselves a paid tier for free.
+- **Error monitoring** (`src/instrumentation.ts`, `src/instrumentation-client.ts`,
+  `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/app/global-error.tsx`,
+  `next.config.ts`) - `@sentry/nextjs`, wired following the exact same optionality pattern as
+  `CREATOMATE_API_KEY`/`MOCK_AI`/`MOCK_BILLING` above: every `Sentry.init()` call is gated behind
+  `NEXT_PUBLIC_SENTRY_DSN`, so with it unset (the default in dev/CI/this repo) nothing is ever
+  initialized and nothing is ever reported - confirmed by a full production build with no DSN set
+  producing identical route output to before. One env var covers client, server, and edge - a Sentry
+  DSN isn't secret (it's meant to ship in a public bundle, like a Stripe publishable key), so there's
+  no need for a separate server-only variable. `next.config.ts`'s `withSentryConfig` wrap (which
+  handles source map upload via `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN`) is itself skipped
+  entirely when the DSN is unset, rather than always wrapping with empty org/project - so a build
+  with no Sentry account configured never touches the Sentry build plugin at all, nothing to fail
+  even without an auth token. `global-error.tsx` is Sentry's documented App Router pattern for
+  catching errors that escape a route's own `error.tsx` boundary (this app doesn't have any yet -
+  none of its routes have historically needed one) - `Sentry.captureException` inside it is the same
+  no-op-without-a-client as everywhere else. One accepted tradeoff, not a bug: the client SDK import
+  in `instrumentation-client.ts` is static (Next.js's own documented pattern - it needs a real
+  `onRouterTransitionStart` function reference synchronously, so it can't be lazily imported behind
+  the DSN check the way the `.init()` call itself is), so `@sentry/nextjs`'s base client bundle ships
+  to every visitor's browser regardless of whether Sentry is configured, adding real weight to First
+  Load JS - standard, documented behavior for any Next.js app that integrates Sentry at all, not
+  something specific to how this was wired. Deliberately left off session replay and the feedback
+  widget integrations Sentry's own setup docs default to - both are much heavier and neither was
+  asked for; this is bare exception/error capture only.
 - **Settings/Billing de-templating pass** - these two pages had the same "looks AI-made" tells as the
   screens covered by the earlier systematic pass (see the addendum below) but were explicitly out of
   scope for it at the time; addressed here. `EditBusinessForm.tsx` was previously one flat `space-y-4`
