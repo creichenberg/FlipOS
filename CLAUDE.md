@@ -69,10 +69,17 @@ dashboard.
   new admin/flagging infrastructure nobody has needed yet. Linked from the landing page footer
   alongside Privacy Policy, and registered in the same two path lists `/privacy` is (`PUBLIC_PATHS` in
   `src/lib/supabase/middleware.ts`, `LIGHT_ONLY_PATHS` in `src/components/providers.tsx`).
-- `src/lib/ai/{client,brandContext,generatePlan,generateVideoDetail}.ts` - the Claude integration.
-  Uses `output_config.format` + `zodOutputFormat()` + `client.messages.parse()` (current structured
-  outputs API - not the deprecated prefill-forced-JSON pattern), and a `cache_control` breakpoint
-  after the per-business brand context block so repeated calls for the same business are cheap.
+- `src/lib/ai/{client,brandContext,generatePlan,generateVideoDetail,regenerateCardIdea}.ts` - the
+  Claude integration. Uses `output_config.format` + `zodOutputFormat()` + `client.messages.parse()`
+  (current structured outputs API - not the deprecated prefill-forced-JSON pattern), and a
+  `cache_control` breakpoint after the per-business brand context block so repeated calls for the
+  same business are cheap. All three generation calls pass `thinking: { type: 'disabled' }` - the
+  model (`claude-sonnet-5`) runs adaptive thinking by default even with no `thinking` param set at
+  all, silently spending extra latency and billed output tokens reasoning before ever producing the
+  structured JSON. None of these three calls need that: the ideas/script are already grounded by
+  `brandContext`/the system instructions and shaped by the Zod schema, not by multi-step reasoning,
+  so disabling it is a straight win on both speed and cost - not a quality-for-speed tradeoff like
+  swapping to a cheaper model would be.
 - `src/app/api/plans/[businessId]/generate` and `src/app/api/cards/[cardId]/generate-detail` - the
   two generation endpoints. Both are synchronous (single Claude call each) - no queue needed for
   Phase 1. Video detail is generated lazily on first card open, not eagerly for all 7. Both loading

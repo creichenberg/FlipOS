@@ -56,6 +56,13 @@ export async function generateWeeklyPlan(business: Business, videosPerWeek: numb
   const response = await client.messages.parse({
     model: MODEL,
     max_tokens: 4096,
+    // Sonnet 5 runs adaptive thinking by default even with no `thinking` param
+    // set - extra latency and billed output tokens spent reasoning before
+    // producing structured output. Not needed here: the ideas are grounded by
+    // brandContext/systemInstructions and shaped by the Zod schema, not by
+    // multi-step reasoning, so disabling it is a straight win on both speed
+    // and cost, not a quality/cost tradeoff.
+    thinking: { type: 'disabled' },
     system: [
       { type: 'text', text: brandContext, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: systemInstructions(videosPerWeek) },

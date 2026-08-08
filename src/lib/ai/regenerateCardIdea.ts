@@ -41,6 +41,8 @@ export async function regenerateCardIdea(business: Business, card: VideoCard, ot
   const response = await client.messages.parse({
     model: MODEL,
     max_tokens: 1024,
+    // See the matching comment in generatePlan.ts.
+    thinking: { type: 'disabled' },
     system: [
       { type: 'text', text: brandContext, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: SYSTEM_INSTRUCTIONS },

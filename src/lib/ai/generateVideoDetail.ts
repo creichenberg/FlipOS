@@ -59,6 +59,11 @@ export async function generateVideoDetail(business: Business, card: VideoCard): 
   const response = await client.messages.parse({
     model: MODEL,
     max_tokens: 8192,
+    // See the matching comment in generatePlan.ts - Sonnet 5 thinks by
+    // default even with no `thinking` param set, which costs both latency
+    // and billed output tokens. Not needed for turning one already-chosen
+    // idea into a shot list/script against a fixed schema.
+    thinking: { type: 'disabled' },
     system: [
       { type: 'text', text: brandContext, cache_control: { type: 'ephemeral' } },
       { type: 'text', text: SYSTEM_INSTRUCTIONS },
