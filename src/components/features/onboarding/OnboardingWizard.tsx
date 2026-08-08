@@ -310,11 +310,12 @@ export function OnboardingWizard() {
           <Button
             onClick={() => setStep((s) => s + 1)}
             disabled={(step === 0 && !step0Valid) || (step === 1 && !step1Valid)}
+            className="disabled:opacity-70"
           >
             Continue
           </Button>
         ) : (
-          <Button onClick={handleSubmit} disabled={!step2Valid || submitting}>
+          <Button onClick={handleSubmit} disabled={!step2Valid || submitting} className="disabled:opacity-70">
             {submitting ? 'Setting up…' : 'Finish setup'}
           </Button>
         )}
