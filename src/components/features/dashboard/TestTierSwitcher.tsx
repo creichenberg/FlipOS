@@ -35,7 +35,7 @@ export function TestTierSwitcher({ currentTier }: { currentTier: PlanTier | null
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4">
+    <div className="space-y-3 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4">
       <div>
         <p className="text-sm font-medium">Test mode</p>
         <p className="text-xs text-text-secondary">

@@ -246,6 +246,27 @@ dashboard.
   directly via the service-role client, bypassing Stripe entirely. Both are inert unless explicitly
   set, and neither should ever be set on a deploy with real customers - `MOCK_BILLING` in particular
   lets any signed-in user grant themselves a paid tier for free.
+- **Settings/Billing de-templating pass** - these two pages had the same "looks AI-made" tells as the
+  screens covered by the earlier systematic pass (see the addendum below) but were explicitly out of
+  scope for it at the time; addressed here. `EditBusinessForm.tsx` was previously one flat `space-y-4`
+  stack of 9 fields with `shadow-sm`; it's now grouped into 3 labeled sections ("About you & your
+  business", "Your offering", "Brand") separated by `border-t border-border-subtle pt-6` dividers,
+  matching the card detail page's Zone 3 consolidated-card pattern (one bordered shell, dividers
+  between logical groups, not one box per field). `billing/page.tsx`'s plan-details box and
+  `TestTierSwitcher.tsx`'s dev-only banner both dropped to plain `rounded-xl` with no `shadow-sm`,
+  matching the rest of the app's "borders over shadows" rule.
+- **Landing page trust signal + FAQ** - added per an explicit client request for social proof, with an
+  equally explicit instruction not to fabricate anything. There's no real customer base yet
+  (pre-launch), so rather than invent testimonials/logos/customer counts, this is grounded entirely in
+  real, already-shipped functionality: a short trust-signal line under the hero CTA ("Cancel anytime ·
+  Your data stays private · Secure billing via Stripe" - each claim traceable to actual code: Stripe
+  Billing Portal cancellation, the `clips` bucket's RLS, Stripe Checkout), and a `FAQS`-array-driven
+  `#faq` section (linked from the header nav) answering questions about the real product only -
+  Filming Mode's no-experience-needed design, the auto-edit using real filmed clips (not synthetic AI
+  video), single-card regenerate, clip privacy, cancellation, and music being explicitly out of scope
+  for now (matching the "Music is explicitly out of scope" note at the top of this file, not glossing
+  over it). If a testimonial/logo section is ever added for real, it needs actual customers first -
+  don't backfill placeholder ones.
 
 ## Gotchas already hit
 

@@ -87,6 +87,33 @@ const PLANS = [
   },
 ];
 
+const FAQS = [
+  {
+    q: 'Do I need any video editing experience?',
+    a: 'No. Filming Mode walks you through every shot and voiceover line one at a time, with the exact camera angle, shot type, and duration to use - built for someone who has never filmed before.',
+  },
+  {
+    q: 'Is the auto-edited video AI-generated, or my real footage?',
+    a: "It's your real filmed clips, cut together in the right order with captions burned in from your script - not synthetic AI video. You're still the one on camera.",
+  },
+  {
+    q: "What if I don't like one of the ideas?",
+    a: 'Regenerate just that card from its page - it keeps the same link and leaves the rest of your week untouched.',
+  },
+  {
+    q: 'Is my footage private?',
+    a: 'Yes. Uploaded clips are stored in a private bucket only your account can access - see our Privacy Policy for the full breakdown of what we collect and why.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes, anytime from the billing page - no long-term contract.',
+  },
+  {
+    q: 'Does the edited video include music?',
+    a: "Not yet - right now the auto-edit focuses on cutting your clips together with captions burned in from your exact script. Music licensing is something we're still working through before adding it.",
+  },
+];
+
 const PREVIEW_CARDS = [
   {
     day: 'Monday',
@@ -133,6 +160,9 @@ export default async function LandingPage() {
             <Link href="#pricing" className="text-sm text-text-secondary hover:text-foreground">
               Pricing
             </Link>
+            <Link href="#faq" className="text-sm text-text-secondary hover:text-foreground">
+              FAQ
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
@@ -166,6 +196,9 @@ export default async function LandingPage() {
             <Link href="#how-it-works">See how it works</Link>
           </Button>
         </div>
+        <p className="animate-in fade-in mt-4 text-xs text-text-secondary delay-300 duration-700 fill-mode-both">
+          Cancel anytime · Your data stays private · Secure billing via Stripe
+        </p>
 
         <Parallax speed={0.1} className="mt-16 w-full max-w-3xl">
           <div className="animate-in fade-in zoom-in-95 overflow-hidden rounded-2xl border border-border-subtle bg-surface text-left shadow-2xl delay-500 duration-700 fill-mode-both">
@@ -306,6 +339,23 @@ export default async function LandingPage() {
                     <Link href="/login">Get started</Link>
                   </Button>
                 </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="border-t border-border-subtle px-6 py-20">
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-[0.15em] text-primary">FAQ</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Questions you might have</h2>
+          </div>
+          <div className="mt-12 grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2">
+            {FAQS.map((faq, i) => (
+              <Reveal key={faq.q} delay={i * 60}>
+                <h3 className="text-base font-medium">{faq.q}</h3>
+                <p className="mt-1.5 text-sm text-text-secondary">{faq.a}</p>
               </Reveal>
             ))}
           </div>

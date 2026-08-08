@@ -88,49 +88,62 @@ export function EditBusinessForm({ business }: { business: Business }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-border-subtle bg-surface p-6 shadow-sm">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="owner-name">Your name</Label>
-          <Input id="owner-name" value={form.ownerName} onChange={(e) => update('ownerName', e.target.value)} />
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-border-subtle bg-surface p-6">
+      <div>
+        <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">About you &amp; your business</h2>
+        <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="owner-name">Your name</Label>
+            <Input id="owner-name" value={form.ownerName} onChange={(e) => update('ownerName', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Business name</Label>
+            <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="industry">Industry</Label>
+            <Input id="industry" value={form.industry} onChange={(e) => update('industry', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input id="location" value={form.location} onChange={(e) => update('location', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="website">Website</Label>
+            <Input id="website" value={form.website} onChange={(e) => update('website', e.target.value)} placeholder="https://" />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="name">Business name</Label>
-          <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} />
+      </div>
+
+      <div className="border-t border-border-subtle pt-6">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Your offering</h2>
+        <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="description">What you do</Label>
+            <Textarea id="description" rows={3} value={form.description} onChange={(e) => update('description', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="products">Products/services</Label>
+            <Textarea id="products" rows={3} value={form.productsServices} onChange={(e) => update('productsServices', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="audience">Target audience</Label>
+            <Textarea id="audience" rows={3} value={form.targetAudience} onChange={(e) => update('targetAudience', e.target.value)} />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="industry">Industry</Label>
-          <Input id="industry" value={form.industry} onChange={(e) => update('industry', e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input id="location" value={form.location} onChange={(e) => update('location', e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">What you do</Label>
-          <Textarea id="description" rows={3} value={form.description} onChange={(e) => update('description', e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="products">Products/services</Label>
-          <Textarea id="products" rows={3} value={form.productsServices} onChange={(e) => update('productsServices', e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="audience">Target audience</Label>
-          <Textarea id="audience" rows={3} value={form.targetAudience} onChange={(e) => update('targetAudience', e.target.value)} />
-        </div>
-        <div className="space-y-2">
+      </div>
+
+      <div className="border-t border-border-subtle pt-6">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Brand</h2>
+        <div className="mt-3 space-y-2">
           <Label htmlFor="personality">Brand personality (comma separated)</Label>
           <Input id="personality" value={form.brandPersonality} onChange={(e) => update('brandPersonality', e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="website">Website</Label>
-          <Input id="website" value={form.website} onChange={(e) => update('website', e.target.value)} placeholder="https://" />
         </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 border-t border-border-subtle pt-6">
         <Button type="submit" disabled={!valid || status === 'saving'} className="disabled:opacity-70">
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </Button>

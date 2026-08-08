@@ -28,7 +28,7 @@ export default async function BillingPage() {
 
       {process.env.MOCK_BILLING === 'true' && <TestTierSwitcher currentTier={tier} />}
 
-      <div className="space-y-4 rounded-xl border border-border-subtle bg-surface p-6 shadow-sm">
+      <div className="space-y-4 rounded-xl border border-border-subtle bg-surface p-6">
         <div className="flex items-center justify-between">
           <span className="text-sm text-text-secondary">Plan</span>
           <span className="text-sm font-medium">{tier ? `${PLAN_TIERS[tier].label} - $${PLAN_TIERS[tier].price}/mo` : '—'}</span>
