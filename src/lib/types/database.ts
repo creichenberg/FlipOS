@@ -165,6 +165,13 @@ export type RenderJob = {
   updated_at: string;
 }
 
+export type RateLimitEvent = {
+  id: string;
+  user_id: string;
+  action: string;
+  created_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -197,6 +204,12 @@ export type Database = {
       stripe_events: { Row: StripeEvent; Insert: Partial<StripeEvent>; Update: Partial<StripeEvent>; Relationships: [] };
       qr_login_tokens: { Row: QrLoginToken; Insert: Partial<QrLoginToken>; Update: Partial<QrLoginToken>; Relationships: [] };
       render_jobs: { Row: RenderJob; Insert: Partial<RenderJob>; Update: Partial<RenderJob>; Relationships: [] };
+      rate_limit_events: {
+        Row: RateLimitEvent;
+        Insert: Partial<RateLimitEvent> & Pick<RateLimitEvent, 'user_id' | 'action'>;
+        Update: Partial<RateLimitEvent>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

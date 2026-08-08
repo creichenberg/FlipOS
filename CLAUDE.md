@@ -372,6 +372,32 @@ dashboard.
   something specific to how this was wired. Deliberately left off session replay and the feedback
   widget integrations Sentry's own setup docs default to - both are much heavier and neither was
   asked for; this is bare exception/error capture only.
+- **Rate limiting** (`src/lib/rateLimit.ts`, `rate_limit_events` table -
+  `supabase/migrations/0006_rate_limit_events.sql`) - per-user throttling on the four routes that hit
+  a real paid API: `POST /api/plans/[businessId]/generate` (regenerate/retry path only - a plain
+  generate against an already-`ready` plan returns the cached plan without touching Claude, so that
+  path isn't counted), `POST /api/cards/[cardId]/generate-detail` (only the first, real generation per
+  card counts - a card that already has a `video_details` row returns it directly), `POST
+  /api/cards/[cardId]/regenerate` (every call is both a real Claude call *and* destructive - it wipes
+  the card's existing detail/shots/clips - so this gets the tightest limit), and `POST
+  /api/cards/[cardId]/render` (every submission spends real render-provider credits - a finite trial
+  balance, then real money; the `GET` status-polling handler on the same route is deliberately not
+  throttled, since polling never triggers a new render). Backed by a plain append-only Postgres table
+  (`assertNotRateLimited` counts a user's rows for a given action in a trailing window, then inserts
+  one) rather than an in-memory counter or a new caching layer like Redis/Upstash - an in-memory count
+  isn't reliable across separate serverless function instances, and these are already deliberately
+  occasional, expensive actions where a database round trip's latency is a non-issue. `rate_limit_events`
+  is owner-scoped via RLS like most tables here (not the zero-policy service-role-only pattern
+  `qr_login_tokens`/`stripe_events` use) - there's nothing sensitive about a user seeing their own
+  throttle timestamps - but only `select`/`insert` policies exist, deliberately no `update`/`delete`,
+  so a user can't clear their own history to defeat the limit via direct PostgREST access. Limits are
+  deliberately generous enough not to interfere with real usage (a business only has 5-10 cards/week
+  to begin with) while still bounding worst-case cost from a stuck retry loop or a scripted abuse
+  attempt: plan generate 5/10min, card detail generate 15/10min, card regenerate 5/10min, render
+  submit 5/15min. A limited user gets a plain 429 with a "too many requests" message - every calling
+  component already surfaces `body.error` from a non-2xx response as a toast (the same generic
+  fetch-error-handling pattern every mutation in this app already uses), so no client-side changes
+  were needed for the message to show up correctly.
 - **Settings/Billing de-templating pass** - these two pages had the same "looks AI-made" tells as the
   screens covered by the earlier systematic pass (see the addendum below) but were explicitly out of
   scope for it at the time; addressed here. `EditBusinessForm.tsx` was previously one flat `space-y-4`

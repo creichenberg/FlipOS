@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateVideoDetail } from '@/lib/ai/generateVideoDetail';
 import { AnthropicNotConfiguredError } from '@/lib/ai/client';
+import { assertNotRateLimited, RateLimitError, RATE_LIMITED_ACTIONS } from '@/lib/rateLimit';
 import type { Business, VideoCard } from '@/lib/types/database';
 
 export const maxDuration = 60;
@@ -25,6 +26,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ car
     const { data: shots } = await supabase.from('shots').select('*').eq('video_card_id', cardId).order('order_index');
     const { data: voiceoverLines } = await supabase.from('voiceover_lines').select('*').eq('video_card_id', cardId).order('order_index');
     return NextResponse.json({ detail: existingDetail, shots, voiceoverLines });
+  }
+
+  // Below this point reaches Claude - a card only ever generates its detail
+  // once (the existingDetail check above makes every later open of the same
+  // card free), so this only throttles genuinely new generations/retries
+  // across a business's cards.
+  try {
+    await assertNotRateLimited(supabase, user.id, RATE_LIMITED_ACTIONS.cardDetailGenerate, { maxCalls: 15, windowMinutes: 10 });
+  } catch (err) {
+    if (err instanceof RateLimitError) return NextResponse.json({ error: err.message }, { status: 429 });
+    throw err;
   }
 
   try {

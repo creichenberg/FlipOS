@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getRenderProvider, type RenderRecipe } from '@/lib/video/render';
 import { buildRenderRecipe, missingClipCounts } from '@/lib/video/recipeBuilder';
+import { assertNotRateLimited, RateLimitError, RATE_LIMITED_ACTIONS } from '@/lib/rateLimit';
 import type { MediaUpload, Shot, VideoCard, VoiceoverLine } from '@/lib/types/database';
 
 async function loadCardContext(supabase: Awaited<ReturnType<typeof createClient>>, cardId: string, userId: string) {
@@ -45,6 +46,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ car
       { error: `Upload every clip in Filming Mode first - ${missing.shots} shot(s) and ${missing.voiceover} line(s) still need one.` },
       { status: 400 },
     );
+  }
+
+  // Every submission spends real render-provider credits (a finite trial
+  // balance, then real money) - throttle submissions, not the GET status
+  // polling below, which never triggers a new render.
+  try {
+    await assertNotRateLimited(supabase, user.id, RATE_LIMITED_ACTIONS.renderSubmit, { maxCalls: 5, windowMinutes: 15 });
+  } catch (err) {
+    if (err instanceof RateLimitError) return NextResponse.json({ error: err.message }, { status: 429 });
+    throw err;
   }
 
   const recipe = buildRenderRecipe(card, shots, voiceoverLines, uploads);

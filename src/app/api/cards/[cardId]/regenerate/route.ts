@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { regenerateCardIdea } from '@/lib/ai/regenerateCardIdea';
 import { AnthropicNotConfiguredError } from '@/lib/ai/client';
+import { assertNotRateLimited, RateLimitError, RATE_LIMITED_ACTIONS } from '@/lib/rateLimit';
 import type { Business, VideoCard } from '@/lib/types/database';
 
 export const maxDuration = 30;
@@ -19,6 +20,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ car
 
   const { data: business } = await supabase.from('businesses').select('*').eq('id', card.business_id).eq('user_id', user.id).maybeSingle();
   if (!business) return NextResponse.json({ error: 'Video not found' }, { status: 404 });
+
+  // Every call here is a real Claude call *and* destroys any existing
+  // detail/shots/clips for the card (see the deletes below) - the single
+  // most expensive and destructive action in this route set per call, so
+  // it gets the tightest limit of the four.
+  try {
+    await assertNotRateLimited(supabase, user.id, RATE_LIMITED_ACTIONS.cardRegenerate, { maxCalls: 5, windowMinutes: 10 });
+  } catch (err) {
+    if (err instanceof RateLimitError) return NextResponse.json({ error: err.message }, { status: 429 });
+    throw err;
+  }
 
   const { data: siblingCards } = await supabase
     .from('video_cards')

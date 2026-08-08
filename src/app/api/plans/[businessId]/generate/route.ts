@@ -4,6 +4,7 @@ import { generateWeeklyPlan } from '@/lib/ai/generatePlan';
 import { AnthropicNotConfiguredError } from '@/lib/ai/client';
 import { currentWeekStart } from '@/lib/week';
 import { PLAN_TIERS, DEFAULT_TIER, isPlanTier } from '@/lib/plans';
+import { assertNotRateLimited, RateLimitError, RATE_LIMITED_ACTIONS } from '@/lib/rateLimit';
 import type { Business } from '@/lib/types/database';
 
 export const maxDuration = 60;
@@ -43,6 +44,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ bus
   if (existing && existing.status === 'ready' && !regenerate) {
     const { data: existingCards } = await supabase.from('video_cards').select('*').eq('weekly_plan_id', existing.id).order('day_of_week');
     return NextResponse.json({ ...existing, video_cards: existingCards ?? [] });
+  }
+
+  // Below this point every path reaches Claude - a first-time generate, a
+  // retry of a failed one, or an explicit regenerate. Throttle here, not
+  // above, so the cached-plan return path above never counts against it.
+  try {
+    await assertNotRateLimited(supabase, user.id, RATE_LIMITED_ACTIONS.planGenerate, { maxCalls: 5, windowMinutes: 10 });
+  } catch (err) {
+    if (err instanceof RateLimitError) return NextResponse.json({ error: err.message }, { status: 429 });
+    throw err;
   }
 
   const { data: plan, error: planError } = await supabase
