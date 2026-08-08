@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,33 +16,57 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-export function GeneratePlanButton({ businessId, label = "Generate this week's plan" }: { businessId: string; label?: string }) {
+export function GeneratePlanButton({
+  businessId,
+  label = "Generate this week's plan",
+  autoStart = false,
+}: {
+  businessId: string;
+  label?: string;
+  // Set right after onboarding so the first plan starts generating
+  // immediately instead of requiring a separate manual click - see the
+  // effect below.
+  autoStart?: boolean;
+}) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(autoStart);
   const [error, setError] = useState<string | null>(null);
+  const autoStarted = useRef(false);
 
-  async function generate(regenerate = false) {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/plans/${businessId}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ regenerate }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? 'Failed to generate plan');
+  const generate = useCallback(
+    async (regenerate = false) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/plans/${businessId}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ regenerate }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? 'Failed to generate plan');
+        }
+        toast.success(regenerate ? "This week's plan was regenerated." : "This week's plan is ready.");
+        router.refresh();
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Failed to generate plan';
+        setError(message);
+        toast.error(message);
+        setLoading(false);
       }
-      toast.success(regenerate ? "This week's plan was regenerated." : "This week's plan is ready.");
-      router.refresh();
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Failed to generate plan';
-      setError(message);
-      toast.error(message);
-      setLoading(false);
-    }
-  }
+    },
+    [businessId, router],
+  );
+
+  useEffect(() => {
+    if (!autoStart || autoStarted.current) return;
+    autoStarted.current = true;
+    // Strip the query param immediately so a later refresh doesn't re-trigger
+    // generation.
+    router.replace('/dashboard');
+    void generate(false);
+  }, [autoStart, generate, router]);
 
   if (loading) {
     return (

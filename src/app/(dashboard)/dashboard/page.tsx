@@ -9,10 +9,11 @@ import { WeekProgress } from '@/components/design-system/WeekProgress';
 import { GeneratePlanButton, RegeneratePlanButton } from '@/components/features/dashboard/GeneratePlanButton';
 import { TipOfTheDay } from '@/components/features/dashboard/TipOfTheDay';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ onboarded?: string }> }) {
   const business = await requireBusiness();
   const supabase = await createClient();
   const weekStartDate = currentWeekStart();
+  const { onboarded } = await searchParams;
 
   const { data: plan } = await supabase
     .from('weekly_plans')
@@ -57,6 +58,12 @@ export default async function DashboardPage() {
           description="Something went wrong generating this week's plan. Try again."
           action={<GeneratePlanButton businessId={business.id} label="Try again" />}
         />
+      ) : onboarded === '1' ? (
+        // Fresh off onboarding - skip the "click to generate" empty state
+        // entirely and go straight into the loading UI, which needs the
+        // full page width for its skeleton card grid rather than the
+        // small centered slot EmptyState's `action` is sized for.
+        <GeneratePlanButton businessId={business.id} autoStart />
       ) : (
         <EmptyState
           icon={CalendarDays}

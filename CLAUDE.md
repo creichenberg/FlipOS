@@ -125,6 +125,43 @@ dashboard.
   green/grey regardless, only the in-progress segment's accent changes. Filming Mode (the only other
   caller) keeps the default blue pulse; onboarding passes `activeColor="emerald"` per a client
   request that its progress bar read as strictly grey-to-green with no blue accent introduced.
+- **Onboarding UX pass** (`OnboardingWizard.tsx`, `GeneratePlanButton.tsx`, `dashboard/page.tsx`) -
+  client feedback that onboarding "feels unsatisfying and annoying" turned out to be two separate,
+  concrete problems once diagnosed against the actual code, not one vague complaint: friction inside
+  the 3-step form itself, and an anticlimactic gap between finishing setup and seeing real content.
+  **Friction fixes**: steps 0 and 2 previously gave zero feedback about why Continue/Finish was
+  disabled (step 1's character-count hint was the only inline validation in the whole flow) - both now
+  show a small hint under the button naming exactly which field(s) still need input
+  (`missingStep0Fields`/`missingStep2Fields` + `joinMissing`). Every required field gets a small
+  `*` marker (muted, not alarming red - this app has no error-red convention and shouldn't invent one
+  just for this) so what's mandatory is predictable before hitting a wall, not just after. Brand
+  personality (12 chips, the most visually prominent element on step 2) used to look required but
+  wasn't - the much smaller goals checklist below it was the only thing actually gating submission;
+  it's now genuinely required (≥1 trait or a value in "Other"), matching the app's existing philosophy
+  that specific answers produce meaningfully better personalized output (the same reasoning already
+  behind step 1's 20-character minimums). Step transitions now use the same `animate-in fade-in
+  slide-in-from-right-2 duration-300` pattern (keyed on `step`) already proven in
+  `FilmingModeFlow.tsx`, closing the gap between the progress bar's smooth animated fill and the
+  content directly beneath it, which previously hard-cut with no transition at all. Form state
+  (all fields + current step) now persists to `localStorage` under a fixed key on every change and
+  restores on mount - a real, reproducible bug found during this pass: any refresh, back-navigation,
+  or the middleware's own "no business row -> force `/onboarding`" redirect (which fires on *every*
+  navigation until a business row exists) silently wiped a partially-filled form back to a blank step
+  0. Cleared on successful submit. **The payoff-gap fix**: "Finish setup" used to redirect straight to
+  a completely empty dashboard, with generating the first week's content left as a separate, unstated
+  manual "Generate this week's plan" click. It now redirects to `/dashboard?onboarded=1`, and the
+  dashboard auto-triggers that same generation call itself when it sees the flag and there's no plan
+  yet - `GeneratePlanButton.tsx` gained an `autoStart` prop that fires its existing `generate()` call
+  once on mount (guarded via a ref against double-fire) and strips the query param immediately via
+  `router.replace` so a later refresh doesn't regenerate. Reuses the exact same loading UI
+  (`Sparkles` + `SkeletonCardGrid`) already built for the manual-click path - no new loading state to
+  design. One layout wrinkle caught during visual verification: that loading UI is a full 7-card
+  responsive grid, sized for the page, not for `EmptyState`'s small centered `action` slot it normally
+  sits inside - stuffing it in there made it overflow the dashed-border box entirely. The fix was
+  structural, not cosmetic: the auto-start case in `dashboard/page.tsx` skips `EmptyState` altogether
+  and renders `GeneratePlanButton` directly in the page body (matching how the real populated card
+  grid renders once a plan exists), while the plain manual-click "no plan yet" state keeps its
+  `EmptyState` wrapper unchanged.
 - **QR auto-login** (`src/lib/qrLogin.ts`, `src/app/auth/qr/route.ts`,
   `supabase/migrations/0003_qr_login_tokens.sql`) - a real auth-bypass mechanism, built carefully on
   purpose: the token is 256 bits of `crypto.randomBytes` (not guessable), single-use (consumed via an

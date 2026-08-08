@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,12 +58,67 @@ const initialState: FormState = {
 // generic, unpersonalized content, undermining the entire product premise.
 const MIN_LENGTH = 20;
 
+// Survives a mid-flow refresh, back-navigation, or the middleware bouncing an
+// unauthenticated/no-business user back to /onboarding (which it does on
+// every navigation until a business row exists) - without this, any of those
+// wipe a partially-filled form completely. A fixed key is enough since only
+// one onboarding flow can be in progress per browser at a time.
+const DRAFT_KEY = 'blueprint-studio-onboarding-draft';
+
+function joinMissing(fields: string[]): string {
+  if (fields.length <= 1) return fields[0] ?? '';
+  if (fields.length === 2) return `${fields[0]} and ${fields[1]}`;
+  return `${fields.slice(0, -1).join(', ')}, and ${fields[fields.length - 1]}`;
+}
+
+function missingStep0Fields(form: FormState): string[] {
+  const missing: string[] = [];
+  if (!form.ownerName.trim()) missing.push('your name');
+  if (!form.name.trim()) missing.push('business name');
+  if (!form.industry.trim()) missing.push('industry');
+  if (!form.location.trim()) missing.push('location');
+  return missing;
+}
+
+function missingStep2Fields(form: FormState): string[] {
+  const missing: string[] = [];
+  const hasPersonality = form.brandPersonality.length > 0 || form.brandPersonalityOther.trim().length > 0;
+  if (!hasPersonality) missing.push('at least one brand personality trait');
+  if (form.goals.length === 0) missing.push('at least one goal');
+  return missing;
+}
+
 export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialState);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isFirstPersistRender = useRef(true);
+
+  // Restore an in-progress draft on mount, if one exists.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw) as { form: FormState; step: number };
+        setForm(draft.form);
+        setStep(draft.step);
+      }
+    } catch {
+      // Corrupt or incompatible draft - ignore and start fresh.
+    }
+  }, []);
+
+  // Persist on every change, skipping the initial mount so this doesn't
+  // immediately overwrite the draft the effect above just restored.
+  useEffect(() => {
+    if (isFirstPersistRender.current) {
+      isFirstPersistRender.current = false;
+      return;
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, step }));
+  }, [form, step]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -85,13 +140,11 @@ export function OnboardingWizard() {
     }));
   }
 
-  const step0Valid =
-    form.ownerName.trim().length > 0 &&
-    form.name.trim().length > 0 &&
-    form.industry.trim().length > 0 &&
-    form.location.trim().length > 0;
+  const step0Missing = missingStep0Fields(form);
+  const step0Valid = step0Missing.length === 0;
   const step1Valid = form.productsServices.trim().length >= MIN_LENGTH && form.targetAudience.trim().length >= MIN_LENGTH;
-  const step2Valid = form.goals.length > 0;
+  const step2Missing = missingStep2Fields(form);
+  const step2Valid = step2Missing.length === 0;
 
   // Surfaced under each field on step 1 so the Continue button's disabled
   // state is never a silent mystery - it previously required this same
@@ -130,7 +183,11 @@ export function OnboardingWizard() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? 'Something went wrong');
       }
-      router.push('/dashboard');
+      localStorage.removeItem(DRAFT_KEY);
+      // The dashboard picks up ?onboarded=1 and kicks off the first plan
+      // generation automatically - no separate manual click required right
+      // after finishing setup.
+      router.push('/dashboard?onboarded=1');
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
@@ -152,135 +209,161 @@ export function OnboardingWizard() {
         </div>
       </div>
 
-      {step === 0 && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="owner-name">Your name</Label>
-            <Input
-              id="owner-name"
-              value={form.ownerName}
-              onChange={(e) => update('ownerName', e.target.value)}
-              placeholder="Jamie Rivera"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="name">Business name</Label>
-            <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Riverside Plumbing Co." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="industry">Industry</Label>
-            <Input
-              id="industry"
-              value={form.industry}
-              onChange={(e) => update('industry', e.target.value)}
-              placeholder="Residential plumbing"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input id="location" value={form.location} onChange={(e) => update('location', e.target.value)} placeholder="Austin, TX" />
-          </div>
-        </div>
-      )}
-
-      {step === 1 && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="products">Products/services</Label>
-            <Textarea
-              id="products"
-              value={form.productsServices}
-              onChange={(e) => update('productsServices', e.target.value)}
-              placeholder="We're a family-owned plumbing company - drain cleaning, water heater installation, emergency leak repair..."
-              rows={3}
-            />
-            {remainingHint(form.productsServices) && (
-              <p className="text-xs text-text-secondary">{remainingHint(form.productsServices)}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="audience">Target audience</Label>
-            <Textarea
-              id="audience"
-              value={form.targetAudience}
-              onChange={(e) => update('targetAudience', e.target.value)}
-              placeholder="Homeowners aged 30-60 who want a reliable, trustworthy plumber..."
-              rows={3}
-            />
-            {remainingHint(form.targetAudience) && (
-              <p className="text-xs text-text-secondary">{remainingHint(form.targetAudience)}</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <Label>Brand personality</Label>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {PERSONALITY_OPTIONS.map((trait) => {
-                const selected = form.brandPersonality.includes(trait);
-                return (
-                  <button
-                    key={trait}
-                    type="button"
-                    onClick={() => togglePersonality(trait)}
-                    className={
-                      selected
-                        ? 'rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary'
-                        : 'rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-primary/40 hover:text-foreground'
-                    }
-                  >
-                    {trait}
-                  </button>
-                );
-              })}
+      <div key={step} className="animate-in fade-in slide-in-from-right-2 duration-300">
+        {step === 0 && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="owner-name">
+                Your name <span className="text-text-secondary">*</span>
+              </Label>
+              <Input
+                id="owner-name"
+                value={form.ownerName}
+                onChange={(e) => update('ownerName', e.target.value)}
+                placeholder="Jamie Rivera"
+              />
             </div>
-            <Input
-              id="personality-other"
-              value={form.brandPersonalityOther}
-              onChange={(e) => update('brandPersonalityOther', e.target.value)}
-              placeholder="Other (comma separated)"
-              className="mt-2"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Goals for social media</Label>
-            <div className="space-y-2.5 pt-1">
-              {GOAL_OPTIONS.map((goal) => (
-                <label key={goal} className="flex items-center gap-2.5 text-sm">
-                  <Checkbox checked={form.goals.includes(goal)} onCheckedChange={() => toggleGoal(goal)} />
-                  {goal}
-                </label>
-              ))}
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Business name <span className="text-text-secondary">*</span>
+              </Label>
+              <Input id="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Riverside Plumbing Co." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="industry">
+                Industry <span className="text-text-secondary">*</span>
+              </Label>
+              <Input
+                id="industry"
+                value={form.industry}
+                onChange={(e) => update('industry', e.target.value)}
+                placeholder="Residential plumbing"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">
+                Location <span className="text-text-secondary">*</span>
+              </Label>
+              <Input id="location" value={form.location} onChange={(e) => update('location', e.target.value)} placeholder="Austin, TX" />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="website">Website (optional)</Label>
-            <Input id="website" value={form.website} onChange={(e) => update('website', e.target.value)} placeholder="https://" />
+        )}
+
+        {step === 1 && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="products">
+                Products/services <span className="text-text-secondary">*</span>
+              </Label>
+              <Textarea
+                id="products"
+                value={form.productsServices}
+                onChange={(e) => update('productsServices', e.target.value)}
+                placeholder="We're a family-owned plumbing company - drain cleaning, water heater installation, emergency leak repair..."
+                rows={3}
+              />
+              {remainingHint(form.productsServices) && (
+                <p className="text-xs text-text-secondary">{remainingHint(form.productsServices)}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="audience">
+                Target audience <span className="text-text-secondary">*</span>
+              </Label>
+              <Textarea
+                id="audience"
+                value={form.targetAudience}
+                onChange={(e) => update('targetAudience', e.target.value)}
+                placeholder="Homeowners aged 30-60 who want a reliable, trustworthy plumber..."
+                rows={3}
+              />
+              {remainingHint(form.targetAudience) && (
+                <p className="text-xs text-text-secondary">{remainingHint(form.targetAudience)}</p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {step === 2 && (
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label>
+                Brand personality <span className="text-text-secondary">*</span>
+              </Label>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {PERSONALITY_OPTIONS.map((trait) => {
+                  const selected = form.brandPersonality.includes(trait);
+                  return (
+                    <button
+                      key={trait}
+                      type="button"
+                      onClick={() => togglePersonality(trait)}
+                      className={
+                        selected
+                          ? 'rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary'
+                          : 'rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-primary/40 hover:text-foreground'
+                      }
+                    >
+                      {trait}
+                    </button>
+                  );
+                })}
+              </div>
+              <Input
+                id="personality-other"
+                value={form.brandPersonalityOther}
+                onChange={(e) => update('brandPersonalityOther', e.target.value)}
+                placeholder="Other (comma separated)"
+                className="mt-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Goals for social media <span className="text-text-secondary">*</span>
+              </Label>
+              <div className="space-y-2.5 pt-1">
+                {GOAL_OPTIONS.map((goal) => (
+                  <label key={goal} className="flex items-center gap-2.5 text-sm">
+                    <Checkbox checked={form.goals.includes(goal)} onCheckedChange={() => toggleGoal(goal)} />
+                    {goal}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="website">Website (optional)</Label>
+              <Input id="website" value={form.website} onChange={(e) => update('website', e.target.value)} placeholder="https://" />
+            </div>
+          </div>
+        )}
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex items-center justify-between pt-2">
-        <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
-          Back
-        </Button>
-        {step < TOTAL_STEPS - 1 ? (
-          <Button
-            onClick={() => setStep((s) => s + 1)}
-            disabled={(step === 0 && !step0Valid) || (step === 1 && !step1Valid)}
-            className="disabled:opacity-70"
-          >
-            Continue
+      <div className="space-y-2 pt-2">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
+            Back
           </Button>
-        ) : (
-          <Button onClick={handleSubmit} disabled={!step2Valid || submitting} className="disabled:opacity-70">
-            {submitting ? 'Setting up…' : 'Finish setup'}
-          </Button>
+          {step < TOTAL_STEPS - 1 ? (
+            <Button
+              onClick={() => setStep((s) => s + 1)}
+              disabled={(step === 0 && !step0Valid) || (step === 1 && !step1Valid)}
+              className="disabled:opacity-70"
+            >
+              Continue
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={!step2Valid || submitting} className="disabled:opacity-70">
+              {submitting ? 'Setting up…' : 'Finish setup'}
+            </Button>
+          )}
+        </div>
+        {step === 0 && step0Missing.length > 0 && (
+          <p className="text-right text-xs text-text-secondary">Add {joinMissing(step0Missing)} to continue.</p>
+        )}
+        {step === 2 && step2Missing.length > 0 && (
+          <p className="text-right text-xs text-text-secondary">Add {joinMissing(step2Missing)} to continue.</p>
         )}
       </div>
     </div>
