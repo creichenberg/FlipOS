@@ -168,14 +168,22 @@ dashboard.
   static; every clip but the first also gets a quick 0.25s crossfade (`type: "fade", transition:
   true`, the Creatomate mechanism for bridging two consecutive elements on the same track) instead of
   a hard cut, so shot changes read as an edit rather than a slideshow. All three are purely mechanical
-  RenderScript properties verified against Creatomate's docs - no new vendor, no added cost. The
-  actual word-by-word animated-caption look most real UGC content has is a bigger lift deliberately
-  not done here: it needs real word-level timing (ASR), which is the same deferred transcription-
-  vendor decision as the no-Deepgram note above, not something these three tweaks substitute for.
-  Each voiceover line becomes its own `composition` element on track 2 pairing that line's audio with
-  a caption `text` element - grouping them lets Creatomate derive the caption's on-screen duration from the
-  audio's real length automatically, without us computing any timing ourselves (consistent with the
-  no-ASR decision above). Source clips are read via signed URLs from the private `clips` bucket
+  RenderScript properties verified against Creatomate's docs - no new vendor, no added cost.
+  **Word-by-word captions**: each voiceover line becomes its own `composition` element on track 2
+  pairing that line's audio with one `text` element *per word* (split on whitespace) instead of one
+  text element for the whole line. There's still no real word-level timing (ASR) - per the standing
+  no-ASR decision, that's a real vendor/cost call the client hasn't made, not something to sneak in as
+  a side effect of a styling change. Instead every word gets an equal `"1 fr"` fractional duration,
+  Creatomate's own mechanism (confirmed against their docs, not guessed) for splitting a track's time
+  evenly among siblings without knowing the total ahead of time - the words all share one explicit
+  local track (`CAPTION_WORD_TRACK`) so they queue up in sequence, while the audio is left on its own
+  auto-assigned track so it still drives the composition's real duration, same as before. This
+  approximates natural word-by-word pacing (assumes even timing per word, not actually synced to
+  pauses/emphasis in the real take) rather than truly transcribing it - a deliberate, explicit tradeoff
+  picked over onboarding a real ASR vendor, not a stand-in that pretends to be the real thing. Falls
+  back to one whole-line text element (the original behavior) if a line somehow splits into zero words
+  - practically unreachable since `voiceover_lines.text` always comes from the AI's generated script,
+  but a composition can't render with no visual content on that track. Source clips are read via signed URLs from the private `clips` bucket
   (1hr TTL, enough for Creatomate to fetch them even if queued); output aspect ratio is locked to
   9:16 (1080x1920), the only ratio `RenderRecipe` supports. The render route validates every
   shot/voiceover line has an uploaded clip first (`missingClipCounts`) before starting - no music to

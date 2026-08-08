@@ -25,6 +25,35 @@ const CUT_TRANSITION_SECONDS = 0.25;
 // plays on every single clip in the video, not just one hero shot.
 const ZOOM_START_SCALE = '100%';
 const ZOOM_END_SCALE = '106%';
+// Shared local track number for a caption's word elements (scoped to that
+// one composition's own elements array, unrelated to the top-level track
+// numbers the shot clips/caption compositions use) - every word needs the
+// *same* explicit track so they queue up one after another instead of each
+// getting auto-assigned its own overlaid track.
+const CAPTION_WORD_TRACK = 1;
+
+function splitIntoWords(text: string): string[] {
+  return text.split(/\s+/).filter(Boolean);
+}
+
+// Shared styling for both the per-word captions and the (defensive,
+// practically-unreachable) whole-line fallback below - only text/font_size
+// differ between the two.
+const CAPTION_TEXT_BASE = {
+  type: 'text',
+  width: '85%',
+  y: '80%',
+  x_alignment: '50%',
+  y_alignment: '100%',
+  fill_color: '#ffffff',
+  font_family: 'Inter',
+  font_weight: 700,
+  text_wrap: true,
+  background_color: 'rgba(0,0,0,0.65)',
+  background_x_padding: '30%',
+  background_y_padding: '18%',
+  background_border_radius: '20%',
+} as const;
 
 function apiKey(): string {
   const key = process.env.CREATOMATE_API_KEY;
@@ -82,37 +111,38 @@ export class CreatomateRenderProvider implements RenderProvider {
     );
 
     // Voiceover + caption track: each line's recording paired with its
-    // exact scripted text, grouped into a composition so the caption's
+    // exact scripted text, grouped into a composition so the captions'
     // on-screen time automatically matches that line's real audio length.
-    // We don't have (and per CLAUDE.md's no-ASR decision, don't need)
-    // word-level timing to compute this ourselves - Creatomate derives the
-    // composition's duration from its one determinate child (the audio),
-    // and the caption text (no intrinsic duration of its own) fills it.
+    // We still don't have (and per CLAUDE.md's no-ASR decision, don't need)
+    // real word-level timestamps - instead each word gets an equal "1 fr"
+    // fractional duration, Creatomate's own mechanism for splitting a
+    // track's time evenly among siblings without knowing the total
+    // duration in advance (the composition's real audio-driven length).
+    // This approximates a natural word-by-word caption (not perfectly
+    // synced to pacing/pauses in the actual take) without adding an ASR
+    // vendor. The words share one explicit track so they queue up in
+    // sequence; the audio is left on its own auto-assigned track so it
+    // still spans (and drives) the whole composition's duration.
     const captionElements = await Promise.all(
-      recipe.captions.map(async (caption) => ({
-        type: 'composition',
-        track: 2,
-        elements: [
-          { type: 'audio', source: await signedUrl(caption.storagePath) },
-          {
-            type: 'text',
-            text: caption.text,
-            width: '85%',
-            y: '80%',
-            x_alignment: '50%',
-            y_alignment: '100%',
-            fill_color: '#ffffff',
-            font_family: 'Inter',
-            font_weight: 700,
-            font_size: '6 vmin',
-            text_wrap: true,
-            background_color: 'rgba(0,0,0,0.65)',
-            background_x_padding: '30%',
-            background_y_padding: '18%',
-            background_border_radius: '20%',
-          },
-        ],
-      })),
+      recipe.captions.map(async (caption) => {
+        const words = splitIntoWords(caption.text);
+        const wordElements =
+          words.length > 0
+            ? words.map((word) => ({
+                ...CAPTION_TEXT_BASE,
+                track: CAPTION_WORD_TRACK,
+                duration: '1 fr',
+                text: word,
+                font_size: '7 vmin',
+              }))
+            : [{ ...CAPTION_TEXT_BASE, text: caption.text, font_size: '6 vmin' }];
+
+        return {
+          type: 'composition',
+          track: 2,
+          elements: [{ type: 'audio', source: await signedUrl(caption.storagePath) }, ...wordElements],
+        };
+      }),
     );
 
     if (visualElements.length === 0 && captionElements.length === 0) {
