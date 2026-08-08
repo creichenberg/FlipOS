@@ -56,6 +56,19 @@ dashboard.
   Linked from the landing page footer. Public and light-only, same as the rest of the pre-auth pages
   (`PUBLIC_PATHS` in `src/lib/supabase/middleware.ts`, `LIGHT_ONLY_PATHS` in
   `src/components/providers.tsx`).
+- `src/app/terms/page.tsx` - Terms of Service, identical structural/visual pattern to `/privacy`
+  (same header, `max-w-3xl` container, "Legal" eyebrow, dynamic "Last updated" line, `h2`/`p`/`ul`
+  section list). Content is grounded in real product mechanics rather than generic SaaS boilerplate:
+  the actual Base/Pro pricing and video counts (pulled live from `PLAN_TIERS` in `src/lib/plans.ts`,
+  not hand-typed, so it can't drift out of sync with a future pricing change), cancellation via the
+  Stripe billing portal taking effect at period end with no proration, a content-ownership/limited-
+  license clause covering uploaded clips and the render provider, and an acceptable-use clause
+  prohibiting illegal/infringing/deceptive content - this last one is the whole "content moderation"
+  answer for now, matching the original architecture plan's explicit stance ("ToS + a reactive review
+  queue is the pragmatic approach, revisit with a moderation API if abuse becomes real") rather than
+  new admin/flagging infrastructure nobody has needed yet. Linked from the landing page footer
+  alongside Privacy Policy, and registered in the same two path lists `/privacy` is (`PUBLIC_PATHS` in
+  `src/lib/supabase/middleware.ts`, `LIGHT_ONLY_PATHS` in `src/components/providers.tsx`).
 - `src/lib/ai/{client,brandContext,generatePlan,generateVideoDetail}.ts` - the Claude integration.
   Uses `output_config.format` + `zodOutputFormat()` + `client.messages.parse()` (current structured
   outputs API - not the deprecated prefill-forced-JSON pattern), and a `cache_control` breakpoint

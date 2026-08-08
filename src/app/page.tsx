@@ -377,9 +377,14 @@ export default async function LandingPage() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 text-xs text-text-secondary sm:flex-row">
           <span>&copy; {new Date().getFullYear()} Blueprint Studio</span>
           <span>Made for small businesses that don&apos;t have time to be video editors.</span>
-          <Link href="/privacy" className="hover:text-foreground">
-            Privacy Policy
-          </Link>
+          <span className="flex items-center gap-3">
+            <Link href="/privacy" className="hover:text-foreground">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-foreground">
+              Terms of Service
+            </Link>
+          </span>
         </div>
       </footer>
     </div>

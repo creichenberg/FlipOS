@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/lib/types/database';
 
-const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth/qr', '/', '/pricing', '/privacy'];
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth/qr', '/', '/pricing', '/privacy', '/terms'];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.includes(pathname);
