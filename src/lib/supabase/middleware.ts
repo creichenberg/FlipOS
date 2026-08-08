@@ -60,7 +60,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname !== '/onboarding' && !isPublicPath(pathname)) {
+  // /admin is for the operator's own account, which won't necessarily have
+  // a business row of its own (it isn't a customer) - exempt it from the
+  // "must have a business" bounce below. It still requires a session (the
+  // !user check above already covers that) and does its own real
+  // authorization check server-side (requireAdmin() in src/lib/admin.ts).
+  if (user && pathname !== '/onboarding' && !pathname.startsWith('/admin') && !isPublicPath(pathname)) {
     const { data: business } = await supabase.from('businesses').select('id').eq('user_id', user.id).maybeSingle();
 
     if (!business) {

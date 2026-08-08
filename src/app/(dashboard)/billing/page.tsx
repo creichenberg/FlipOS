@@ -4,15 +4,7 @@ import { PageHeader } from '@/components/design-system/PageHeader';
 import { StatusBadge } from '@/components/design-system/StatusBadge';
 import { BillingActions } from '@/components/features/dashboard/BillingActions';
 import { TestTierSwitcher } from '@/components/features/dashboard/TestTierSwitcher';
-import { PLAN_TIERS, isPlanTier } from '@/lib/plans';
-
-const STATUS_LABELS: Record<string, string> = {
-  trialing: 'Trial',
-  active: 'Active',
-  past_due: 'Past due',
-  canceled: 'Canceled',
-  incomplete: 'Incomplete',
-};
+import { PLAN_TIERS, SUBSCRIPTION_STATUS_LABELS, isPlanTier } from '@/lib/plans';
 
 export default async function BillingPage() {
   const user = await requireUser();
@@ -42,7 +34,7 @@ export default async function BillingPage() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-text-secondary">Status</span>
           <StatusBadge
-            label={subscription ? (STATUS_LABELS[subscription.status] ?? subscription.status) : 'No subscription'}
+            label={subscription ? (SUBSCRIPTION_STATUS_LABELS[subscription.status] ?? subscription.status) : 'No subscription'}
             variant={isActive ? 'accent' : 'neutral'}
           />
         </div>

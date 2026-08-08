@@ -47,6 +47,9 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+  const { data: latestRating } = latestRenderJob
+    ? await supabase.from('video_ratings').select('rating, feedback').eq('render_job_id', latestRenderJob.id).maybeSingle()
+    : { data: null };
 
   const missing = missingClipCounts((shots as Shot[]) ?? [], (voiceoverLines as VoiceoverLine[]) ?? [], (uploads as MediaUpload[]) ?? []);
   const canRender = missing.shots === 0 && missing.voiceover === 0;
@@ -176,7 +179,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         cardId={cardId}
         canRender={canRender}
         missingSummary={missingSummary}
-        initialJob={latestRenderJob as RenderJob | null}
+        initialJob={latestRenderJob ? { ...(latestRenderJob as RenderJob), rating: latestRating ?? null } : null}
         defaultProviderIsMock={!process.env.CREATOMATE_API_KEY}
       />
     </div>

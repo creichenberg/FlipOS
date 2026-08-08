@@ -7,7 +7,14 @@ import { RefreshCw, TriangleAlert, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { RenderingAnimation } from './RenderingAnimation';
-import type { RenderJob } from '@/lib/types/database';
+import { VideoRating } from './VideoRating';
+import type { RenderJob, VideoRatingValue } from '@/lib/types/database';
+
+// The GET /api/cards/[cardId]/render route joins in this job's rating (see
+// withRating() there) - not a real render_jobs column, so it's kept as a
+// client-side-only extension of the shared RenderJob type rather than
+// polluting that type everywhere else it's used.
+type RenderJobWithRating = RenderJob & { rating: { rating: VideoRatingValue; feedback: string | null } | null };
 
 const POLL_INTERVAL_MS = 2000;
 // However fast the real (or mock) render finishes, keep the loading
@@ -25,7 +32,7 @@ export function RenderVideoPanel({
   cardId: string;
   canRender: boolean;
   missingSummary: string | null;
-  initialJob: RenderJob | null;
+  initialJob: RenderJobWithRating | null;
   defaultProviderIsMock: boolean;
 }) {
   const [job, setJob] = useState(initialJob);
@@ -45,7 +52,7 @@ export function RenderVideoPanel({
   // "in flight" for at least MIN_DISPLAY_MS, measured from the job's real
   // created_at - so a page refresh mid-render still gates correctly instead
   // of restarting the 5-second window from scratch.
-  function revealWhenReady(nextJob: RenderJob) {
+  function revealWhenReady(nextJob: RenderJobWithRating) {
     const elapsed = Date.now() - new Date(nextJob.created_at).getTime();
     const remaining = MIN_DISPLAY_MS - elapsed;
     if (revealTimeoutRef.current) clearTimeout(revealTimeoutRef.current);
@@ -93,8 +100,11 @@ export function RenderVideoPanel({
       const res = await fetch(`/api/cards/${cardId}/render`, { method: 'POST' });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? 'Failed to start render');
-      setJob(body);
-      setDisplayJob(body);
+      // A freshly submitted render is always a brand new render_jobs row, so
+      // it never has a prior rating to carry over.
+      const newJob: RenderJobWithRating = { ...body, rating: null };
+      setJob(newJob);
+      setDisplayJob(newJob);
       pollUntilDone();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to start render');
@@ -187,6 +197,7 @@ export function RenderVideoPanel({
               {starting ? 'Starting…' : 'Regenerate'}
             </Button>
           </div>
+          <VideoRating key={displayJob.id} jobId={displayJob.id} initialRating={displayJob.rating} />
         </div>
       )}
 

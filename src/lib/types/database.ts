@@ -8,6 +8,7 @@ export type WeeklyPlanStatus = 'generating' | 'ready' | 'failed';
 export type FilmingSessionStatus = 'in_progress' | 'complete';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete';
 export type RenderJobStatus = 'queued' | 'rendering' | 'complete' | 'failed';
+export type VideoRatingValue = 'up' | 'down';
 
 export type Business = {
   id: string;
@@ -172,6 +173,17 @@ export type RateLimitEvent = {
   created_at: string;
 }
 
+export type VideoRating = {
+  id: string;
+  render_job_id: string;
+  video_card_id: string;
+  business_id: string;
+  rating: VideoRatingValue;
+  feedback: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -208,6 +220,12 @@ export type Database = {
         Row: RateLimitEvent;
         Insert: Partial<RateLimitEvent> & Pick<RateLimitEvent, 'user_id' | 'action'>;
         Update: Partial<RateLimitEvent>;
+        Relationships: [];
+      };
+      video_ratings: {
+        Row: VideoRating;
+        Insert: Partial<VideoRating> & Pick<VideoRating, 'render_job_id' | 'video_card_id' | 'business_id' | 'rating'>;
+        Update: Partial<VideoRating>;
         Relationships: [];
       };
     };

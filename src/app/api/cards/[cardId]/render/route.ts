@@ -3,7 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { getRenderProvider, type RenderRecipe } from '@/lib/video/render';
 import { buildRenderRecipe, missingClipCounts } from '@/lib/video/recipeBuilder';
 import { assertNotRateLimited, RateLimitError, RATE_LIMITED_ACTIONS } from '@/lib/rateLimit';
-import type { MediaUpload, Shot, VideoCard, VoiceoverLine } from '@/lib/types/database';
+import type { MediaUpload, RenderJob, Shot, VideoCard, VoiceoverLine } from '@/lib/types/database';
+
+// Attaches this job's rating (if any) so the client can show the thumbs
+// up/down control's saved state without a second round trip. A freshly
+// created job (from POST below) never has one yet, so this is only used on
+// the GET path.
+async function withRating(supabase: Awaited<ReturnType<typeof createClient>>, job: RenderJob) {
+  const { data: rating } = await supabase.from('video_ratings').select('rating, feedback').eq('render_job_id', job.id).maybeSingle();
+  return { ...job, rating: rating ?? null };
+}
 
 async function loadCardContext(supabase: Awaited<ReturnType<typeof createClient>>, cardId: string, userId: string) {
   const { data: card } = await supabase.from('video_cards').select('*').eq('id', cardId).maybeSingle();
@@ -114,14 +123,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ card
   if (!business || business.user_id !== user.id) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   if (job.status === 'complete' || job.status === 'failed' || !job.provider_job_id) {
-    return NextResponse.json({ job });
+    return NextResponse.json({ job: await withRating(supabase, job as RenderJob) });
   }
 
   const provider = getRenderProvider();
   const result = await provider.getStatus(job.provider_job_id, job.recipe as unknown as RenderRecipe, job.created_at);
 
   if (result.status === job.status && !result.videoUrl && !result.errorMessage) {
-    return NextResponse.json({ job });
+    return NextResponse.json({ job: await withRating(supabase, job as RenderJob) });
   }
 
   const { data: updated } = await supabase
@@ -136,5 +145,5 @@ export async function GET(request: Request, { params }: { params: Promise<{ card
     .select()
     .single();
 
-  return NextResponse.json({ job: updated ?? job });
+  return NextResponse.json({ job: await withRating(supabase, (updated ?? job) as RenderJob) });
 }

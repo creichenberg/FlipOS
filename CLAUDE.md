@@ -442,6 +442,45 @@ dashboard.
   bare text for its loading state, called out as a follow-up in an earlier pass. The per-card
   `RegenerateCardButton.tsx` has the identical bare-text gap but is out of scope here since only the
   whole-plan button was asked for; worth the same fix in a future pass for consistency.
+- **Admin dashboard + video feedback** (`src/app/(dashboard)/admin/page.tsx`, `src/lib/admin.ts`,
+  `src/components/features/video-detail/VideoRating.tsx`,
+  `src/app/api/render-jobs/[jobId]/rating/route.ts`, `video_ratings` table -
+  `supabase/migrations/0007_video_ratings.sql`) - the operator's own view of every business on the
+  platform (plan, billing status, $ paid) plus a thumbs up/down feedback loop on finished videos,
+  requested together since the ratings are meant to surface *on* the admin view, not just be captured.
+  **Access control**: there's no staff/roles table in this app (one business row per customer, no
+  concept of "not a customer but still a real user"), so `/admin` is gated by a plain `ADMIN_EMAILS`
+  env var (comma-separated, checked case-insensitively in `src/lib/admin.ts`'s `requireAdmin()`) rather
+  than a new schema - same optionality shape as `CREATOMATE_API_KEY`/`MOCK_BILLING`, but for
+  authorization instead of a feature toggle. Unset, `/admin` is unreachable by anyone (redirects to
+  `/dashboard`). `src/lib/supabase/middleware.ts` exempts `/admin` from the usual "signed in but no
+  business row -> force `/onboarding`" redirect, since the operator's own account isn't a customer and
+  won't have one; the real gate is `requireAdmin()` itself, not the middleware bypass. `DashboardNav`
+  only shows the "Admin" link when `(dashboard)/layout.tsx` (now an async Server Component) resolves
+  the signed-in user's email against the same allowlist - a non-admin never sees the link exists,
+  though the page itself is the actual security boundary, not link visibility. **Data access**: the
+  page reads across every business via `createAdminClient()` (the service-role client, previously used
+  only by the Stripe webhook and QR login) instead of the request-scoped client every other page in
+  this app uses - this is the one page deliberately not RLS-scoped to a single user, and pulls owner
+  emails via `admin.auth.admin.listUsers()` since `businesses` has no email column of its own (Supabase
+  Auth already owns that). Shows a stat row (business count, paying count, MRR - computed from
+  `PLAN_TIERS` prices, not a stored dollar figure that could drift), a businesses table (plan, billing
+  status via the same `StatusBadge`/`SUBSCRIPTION_STATUS_LABELS` the billing page uses, now factored
+  into `src/lib/plans.ts` so the two can't disagree on how a status reads), and a recent-feedback feed.
+  **The rating itself**: `VideoRating.tsx` sits at the bottom of a completed render in
+  `RenderVideoPanel.tsx` - thumbs up/down, and clicking down reveals an optional feedback textarea
+  (skippable; the down vote itself is already saved the moment it's clicked, feedback is a separate,
+  optional follow-up send). One rating per **render job**, not per video card - a card can be
+  re-rendered, and each render is its own edit worth its own rating (`video_ratings.render_job_id` is
+  unique; rating the same job again upserts in place rather than duplicating). Every submission
+  replaces both fields together (rating + feedback), so switching from a down-vote-with-feedback back
+  to thumbs-up also clears the now-stale feedback text rather than leaving it orphaned. `GET
+  /api/cards/[cardId]/render` joins in the job's rating (`withRating()`) so the panel gets the saved
+  state for free on load/poll instead of a second request; the card detail page does the equivalent
+  join server-side for the initial page load. `video_ratings` is owner-scoped via RLS the same "for
+  all" pattern `render_jobs` itself uses (a business can only see/write its own ratings) - the admin
+  dashboard's cross-tenant read goes through the service-role client instead, same as everywhere else
+  on that page.
 
 ## Gotchas already hit
 

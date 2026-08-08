@@ -2,8 +2,16 @@ import Link from 'next/link';
 import { DashboardNav } from '@/components/features/dashboard/DashboardNav';
 import { Logo } from '@/components/design-system/Logo';
 import { RenderNotifications } from '@/components/features/dashboard/RenderNotifications';
+import { createClient } from '@/lib/supabase/server';
+import { isAdminEmail } from '@/lib/admin';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAdmin = isAdminEmail(user?.email);
+
   return (
     <div className="min-h-screen bg-canvas">
       <RenderNotifications />
@@ -13,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Logo className="h-6 w-6 rounded-md" />
             Blueprint Studio
           </Link>
-          <DashboardNav />
+          <DashboardNav isAdmin={isAdmin} />
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>

@@ -25,3 +25,14 @@ export function priceIdToTier(priceId: string | null | undefined): PlanTier | nu
 export function tierToPriceId(tier: PlanTier): string | undefined {
   return tier === 'pro' ? process.env.STRIPE_PRICE_ID_PRO : process.env.STRIPE_PRICE_ID_BASE;
 }
+
+// Shared between the billing page (a business's own subscription) and the
+// admin dashboard (every business's subscription) so the two never drift
+// out of sync on how a given SubscriptionStatus is labeled.
+export const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
+  trialing: 'Trial',
+  active: 'Active',
+  past_due: 'Past due',
+  canceled: 'Canceled',
+  incomplete: 'Incomplete',
+};
