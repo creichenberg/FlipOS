@@ -118,6 +118,7 @@ function RegenerateConfirmButton({ businessId, onDone }: { businessId: string; o
 
   return (
     <Button variant="destructive" onClick={regenerate} disabled={loading}>
+      {loading && <Sparkles className="h-3.5 w-3.5 animate-pulse motion-reduce:animate-none" />}
       {loading ? 'Regenerating…' : 'Regenerate plan'}
     </Button>
   );

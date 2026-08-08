@@ -267,6 +267,29 @@ dashboard.
   for now (matching the "Music is explicitly out of scope" note at the top of this file, not glossing
   over it). If a testimonial/logo section is ever added for real, it needs actual customers first -
   don't backfill placeholder ones.
+- **Custom 404** (`src/app/not-found.tsx`) - a real designed page instead of the framework default,
+  reusing existing primitives rather than introducing new ones: the same `.bg-blueprint-grid` texture
+  used on the dashboard empty state/landing/onboarding as a full-page backdrop, a plain (unchipped)
+  `Clapperboard` icon and a giant `font-display` (Archivo Black) "404" numeral as the one heavy display
+  moment for this screen, and the same hover-arrow micro-interaction as every other primary CTA in the
+  app. Copy leans into the video-production theme ("This scene didn't make the cut") rather than generic
+  404 copy. Deliberately does *not* reuse the login page's glassmorphism card/glow-orb treatment - that
+  stays scoped to the documented login exception, not a pattern to spread further. Renders outside the
+  `(dashboard)` layout (no nav header) since Next.js resolves the nearest `not-found.tsx` boundary
+  upward from wherever `notFound()` was called or a route fails to match, and there's no group-local one
+  - so both CTAs are real links (`/dashboard`, `/`) rather than relying on any layout chrome being
+  present. Covers both genuinely unmatched routes and this app's existing explicit `notFound()` calls
+  (bad `cardId` on the card detail/Filming Mode pages) for free, no route-specific wiring needed. Note:
+  middleware redirects *unauthenticated* requests on any non-public path to `/login` before Next.js gets
+  a chance to 404, so a logged-out visitor hitting a typo'd URL lands on login, not this page - this page
+  is reached by signed-in users (bad in-app link, stale bookmark, mistyped path) and by anyone hitting a
+  public-path 404, which is existing routing behavior this change doesn't alter.
+- The whole-week **`RegeneratePlanButton`**'s confirm button (`GeneratePlanButton.tsx`) now shows the
+  same pulsing `Sparkles` icon next to "Regenerating…" as `GeneratePlanButton`'s own initial-generate
+  loading state and `DetailGenerator.tsx` - it was the one AI-generation trigger in the app still using
+  bare text for its loading state, called out as a follow-up in an earlier pass. The per-card
+  `RegenerateCardButton.tsx` has the identical bare-text gap but is out of scope here since only the
+  whole-plan button was asked for; worth the same fix in a future pass for consistency.
 
 ## Gotchas already hit
 
