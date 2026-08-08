@@ -62,7 +62,13 @@ dashboard.
   after the per-business brand context block so repeated calls for the same business are cheap.
 - `src/app/api/plans/[businessId]/generate` and `src/app/api/cards/[cardId]/generate-detail` - the
   two generation endpoints. Both are synchronous (single Claude call each) - no queue needed for
-  Phase 1. Video detail is generated lazily on first card open, not eagerly for all 7.
+  Phase 1. Video detail is generated lazily on first card open, not eagerly for all 7. Both loading
+  states (`GeneratePlanButton.tsx`, `DetailGenerator.tsx`) pair their skeleton placeholder with a
+  small pulsing `Sparkles` icon next to the "Building..." text - `Sparkles` is the same icon already
+  used elsewhere for AI-generated-content moments (the card detail page's Hook eyebrow), so it reads
+  as a consistent "AI is working" marker rather than a one-off addition; guarded with
+  `motion-reduce:animate-none` directly on the element, the same per-element pattern
+  `RenderingAnimation.tsx`'s active-step icon already uses, rather than a global CSS override.
 - `src/app/api/cards/[cardId]/regenerate` (`src/lib/ai/regenerateCardIdea.ts`,
   `RegenerateCardButton.tsx`) - swaps out a single day's video idea in place, keeping the same
   `video_cards.id`/URL rather than the whole-week regenerate's delete-and-reinsert (which mints new

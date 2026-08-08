@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SkeletonShotList } from '@/components/design-system/SkeletonShotList';
 
@@ -46,7 +47,10 @@ export function DetailGenerator({ cardId }: { cardId: string }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-text-secondary">Building your shot list, script, and captions…</p>
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-4 w-4 animate-pulse text-primary motion-reduce:animate-none" />
+        <p className="text-sm text-text-secondary">Building your shot list, script, and captions…</p>
+      </div>
       <div className="rounded-lg border border-border-subtle bg-surface p-5">
         <SkeletonShotList />
       </div>

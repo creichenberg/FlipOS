@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { SkeletonCardGrid } from '@/components/design-system/SkeletonCardGrid';
@@ -47,7 +47,10 @@ export function GeneratePlanButton({ businessId, label = "Generate this week's p
   if (loading) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-text-secondary">Building this week&apos;s content plan…</p>
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 animate-pulse text-primary motion-reduce:animate-none" />
+          <p className="text-sm text-text-secondary">Building this week&apos;s content plan…</p>
+        </div>
         <SkeletonCardGrid />
       </div>
     );

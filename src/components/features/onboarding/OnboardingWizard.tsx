@@ -11,37 +11,6 @@ import { StepIndicator } from '@/components/design-system/StepIndicator';
 
 const GOAL_OPTIONS = ['Build brand awareness', 'Drive sales', 'Build trust/credibility', 'Grow engagement', 'Educate customers'];
 
-// Suggestions, not a restriction - the Industry field stays free text (via
-// <datalist>) and Brand personality keeps a free-text "Other" field too.
-// Prefilled/suggested options reduce the blank-page problem and nudge
-// toward more specific, usable answers than typing from scratch.
-const INDUSTRY_OPTIONS = [
-  'Residential plumbing',
-  'HVAC',
-  'Electrical services',
-  'Landscaping & lawn care',
-  'House cleaning',
-  'Auto repair',
-  'Hair salon',
-  'Barbershop',
-  'Nail salon',
-  'Med spa',
-  'Personal training',
-  'Yoga studio',
-  'Restaurant',
-  'Coffee shop',
-  'Bakery',
-  'Catering',
-  'Photography',
-  'Real estate',
-  'Law firm',
-  'Dental practice',
-  'Veterinary clinic',
-  'Pet grooming',
-  'Interior design',
-  'Bookkeeping & accounting',
-];
-
 const PERSONALITY_OPTIONS = [
   'Friendly',
   'Professional',
@@ -202,16 +171,10 @@ export function OnboardingWizard() {
             <Label htmlFor="industry">Industry</Label>
             <Input
               id="industry"
-              list="industry-options"
               value={form.industry}
               onChange={(e) => update('industry', e.target.value)}
               placeholder="Residential plumbing"
             />
-            <datalist id="industry-options">
-              {INDUSTRY_OPTIONS.map((option) => (
-                <option key={option} value={option} />
-              ))}
-            </datalist>
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
