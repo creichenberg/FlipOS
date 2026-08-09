@@ -58,6 +58,20 @@ const initialState: FormState = {
 // generic, unpersonalized content, undermining the entire product premise.
 const MIN_LENGTH = 20;
 
+// The base Button's default disabled:opacity-50 faded the primary blue
+// toward the near-black dark canvas enough to look gray/broken rather than
+// "a softer blue" - bumped to disabled:opacity-70 to fix that. But 70%
+// opacity turned out too close to the enabled button's full 100%, so a
+// genuinely-enabled "Continue"/"Finish setup" button barely looked different
+// from a moment ago when it was disabled - the exact "button still looks
+// inactive even though everything is filled out" report this fixes.
+// Opacity alone can't win both fights against a near-black canvas, so this
+// switches the disabled state to a solid, fully-opaque neutral (this app's
+// existing --secondary/--muted tokens) instead of a translucent primary -
+// unmistakably "not ready yet" without fading toward invisible, and a much
+// bigger, more obvious jump once the button actually becomes clickable.
+const DISABLED_BUTTON_CLASSNAME = 'disabled:bg-secondary disabled:text-secondary-foreground disabled:opacity-100';
+
 // Survives a mid-flow refresh, back-navigation, or the middleware bouncing an
 // unauthenticated/no-business user back to /onboarding (which it does on
 // every navigation until a business row exists) - without this, any of those
@@ -350,12 +364,12 @@ export function OnboardingWizard() {
             <Button
               onClick={() => setStep((s) => s + 1)}
               disabled={(step === 0 && !step0Valid) || (step === 1 && !step1Valid)}
-              className="disabled:opacity-70"
+              className={DISABLED_BUTTON_CLASSNAME}
             >
               Continue
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={!step2Valid || submitting} className="disabled:opacity-70">
+            <Button onClick={handleSubmit} disabled={!step2Valid || submitting} className={DISABLED_BUTTON_CLASSNAME}>
               {submitting ? 'Setting up…' : 'Finish setup'}
             </Button>
           )}

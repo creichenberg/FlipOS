@@ -223,7 +223,16 @@ export function EditBusinessForm({ business }: { business: Business }) {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex items-center gap-3 border-t border-border-subtle pt-6">
-        <Button type="submit" disabled={!valid || status === 'saving'} className="disabled:opacity-70">
+        {/* See OnboardingWizard.tsx's DISABLED_BUTTON_CLASSNAME comment - a
+            translucent disabled state (whether the base 50% or the 70% this
+            used before) can't look both "clearly not ready" and "clearly
+            different once enabled" against this app's near-black dark
+            canvas, so this uses a solid neutral instead. */}
+        <Button
+          type="submit"
+          disabled={!valid || status === 'saving'}
+          className="disabled:bg-secondary disabled:text-secondary-foreground disabled:opacity-100"
+        >
           {status === 'saving' ? 'Saving…' : 'Save changes'}
         </Button>
       </div>

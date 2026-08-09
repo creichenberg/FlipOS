@@ -635,6 +635,24 @@ dashboard.
   `eslint.config.mjs` uses `@eslint/eslintrc`'s `FlatCompat` bridge (`compat.extends(...)`), not a
   direct spread of the package export. Don't "simplify" this back to `import nextVitals from
   "eslint-config-next/core-web-vitals"` - it was the original scaffold default and doesn't work.
+- **Opacity alone can't signal "disabled" against this app's near-black dark canvas.** The base
+  `Button` component's default `disabled:opacity-50` faded the vivid `bg-primary` blue enough to
+  read as gray/broken rather than "a softened blue," so an earlier pass bumped
+  `OnboardingWizard.tsx`'s Continue/Finish buttons and `EditBusinessForm.tsx`'s Save button to
+  `disabled:opacity-70` to keep the color visible. That overcorrected: 70% opacity turned out close
+  enough to the enabled button's 100% that a genuinely-enabled button barely looked different from a
+  moment earlier when it was disabled - reported as "the button still looks inactive even though
+  everything is filled out," confirmed by comparing the two states' actual computed
+  `backgroundColor`/`opacity` via Playwright rather than guessing from a screenshot. Fixed by
+  swapping the disabled state to a solid, fully-opaque neutral instead of a translucent primary -
+  `disabled:bg-secondary disabled:text-secondary-foreground disabled:opacity-100`
+  (`DISABLED_BUTTON_CLASSNAME` in `OnboardingWizard.tsx`, inlined in `EditBusinessForm.tsx`) - reusing
+  this app's existing `--secondary`/`--muted` tokens rather than inventing a new color. A neutral
+  gray unambiguously reads as "not ready yet" without fading toward invisible, and the jump to the
+  vivid enabled blue is now large and obvious. If a disabled state ever needs adjusting again on a
+  dark canvas, reach for a genuinely different color rather than another opacity value - no single
+  opacity percentage can look both "clearly disabled" and "clearly different once enabled" when it's
+  blending the same saturated color toward the same near-black background in both directions.
 
 ## Design language
 
