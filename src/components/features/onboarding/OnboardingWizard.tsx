@@ -184,10 +184,11 @@ export function OnboardingWizard() {
         throw new Error(body.error ?? 'Something went wrong');
       }
       localStorage.removeItem(DRAFT_KEY);
-      // The dashboard picks up ?onboarded=1 and kicks off the first plan
+      // The dashboard itself detects "this business has never had a plan"
+      // (dashboard/page.tsx's isFirstEverPlan) and kicks off the first plan
       // generation automatically - no separate manual click required right
-      // after finishing setup.
-      router.push('/dashboard?onboarded=1');
+      // after finishing setup, and no query param needed to signal it.
+      router.push('/dashboard');
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');

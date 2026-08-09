@@ -14,9 +14,11 @@ const API_BASE = 'https://api.creatomate.com/v2';
 // the render sits in their queue for a while - these are input URLs it
 // reads from, unrelated to how long the finished output stays reachable.
 const SOURCE_URL_TTL_SECONDS = 60 * 60;
-// 9:16 - the only aspect ratio RenderRecipe supports today.
-const OUTPUT_WIDTH = 1080;
-const OUTPUT_HEIGHT = 1920;
+// 9:16 - the only aspect ratio RenderRecipe supports today. Exported so
+// src/lib/video/credits.ts can estimate render credit usage from the same
+// fixed output resolution every render actually uses.
+export const OUTPUT_WIDTH = 1080;
+export const OUTPUT_HEIGHT = 1920;
 // Per-business edit-intensity preference (businesses.edit_style) - a
 // client request for "customization of the video," scoped to what's
 // already fully mechanical here (motion amount, not a new capability).

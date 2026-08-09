@@ -9,11 +9,10 @@ import { WeekProgress } from '@/components/design-system/WeekProgress';
 import { GeneratePlanButton, RegeneratePlanButton } from '@/components/features/dashboard/GeneratePlanButton';
 import { TipOfTheDay } from '@/components/features/dashboard/TipOfTheDay';
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ onboarded?: string }> }) {
+export default async function DashboardPage() {
   const business = await requireBusiness();
   const supabase = await createClient();
   const weekStartDate = currentWeekStart();
-  const { onboarded } = await searchParams;
 
   const { data: plan } = await supabase
     .from('weekly_plans')
@@ -27,6 +26,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     : { data: null };
   const cards = cardsData ?? [];
 
+  // A durable "is this truly the user's first plan" signal, rather than a
+  // one-shot ?onboarded=1 query param that only covers the exact redirect
+  // from OnboardingWizard.tsx - this also self-heals any other path that
+  // lands on the dashboard before a plan has ever been generated (a QR
+  // scan, a bookmarked/refreshed link, etc). Only queried when this week
+  // has no plan row at all - if one already exists (ready/failed/
+  // generating), this business has necessarily generated a plan before.
+  const { data: anyPlanEver } = !plan
+    ? await supabase.from('weekly_plans').select('id').eq('business_id', business.id).limit(1).maybeSingle()
+    : { data: null };
+  const isFirstEverPlan = !plan && !anyPlanEver;
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -38,7 +49,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {plan?.status === 'ready' && cards.length > 0 ? (
         <>
           <WeekProgress cards={cards} />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-4">
             {cards.map((card, i) => (
               <div
                 key={card.id}
@@ -58,11 +69,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           description="Something went wrong generating this week's plan. Try again."
           action={<GeneratePlanButton businessId={business.id} label="Try again" />}
         />
-      ) : onboarded === '1' ? (
-        // Fresh off onboarding - skip the "click to generate" empty state
-        // entirely and go straight into the loading UI, which needs the
-        // full page width for its skeleton card grid rather than the
-        // small centered slot EmptyState's `action` is sized for.
+      ) : isFirstEverPlan ? (
+        // First plan this business has ever had - skip the "click to
+        // generate" empty state entirely and go straight into the loading
+        // UI, which needs the full page width for its skeleton card grid
+        // rather than the small centered slot EmptyState's `action` is
+        // sized for.
         <GeneratePlanButton businessId={business.id} autoStart />
       ) : (
         <EmptyState

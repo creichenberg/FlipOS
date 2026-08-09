@@ -3,7 +3,10 @@ import { requireAdmin } from '@/lib/admin';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PageHeader } from '@/components/design-system/PageHeader';
 import { StatusBadge } from '@/components/design-system/StatusBadge';
+import { Progress } from '@/components/ui/progress';
 import { PLAN_TIERS, SUBSCRIPTION_STATUS_LABELS, isPlanTier } from '@/lib/plans';
+import { CREATOMATE_FREE_TRIAL_CREDITS, estimateRenderCredits } from '@/lib/video/credits';
+import type { RenderRecipe } from '@/lib/video/render';
 
 // Operator-only - see src/lib/admin.ts for the ADMIN_EMAILS gate and
 // src/lib/supabase/middleware.ts for why /admin is exempt from the
@@ -15,11 +18,16 @@ export default async function AdminPage() {
   await requireAdmin();
   const admin = createAdminClient();
 
-  const [{ data: businesses }, { data: subscriptions }, { data: ratings }, usersResult] = await Promise.all([
+  const [{ data: businesses }, { data: subscriptions }, { data: ratings }, usersResult, { data: creatomateJobs }] = await Promise.all([
     admin.from('businesses').select('*').order('created_at', { ascending: false }),
     admin.from('subscriptions').select('*'),
     admin.from('video_ratings').select('*').order('created_at', { ascending: false }).limit(50),
     admin.auth.admin.listUsers({ perPage: 1000 }),
+    // Credits are spent per submission regardless of whether the render
+    // later succeeds or fails, so every provider='creatomate' job counts -
+    // see src/lib/video/credits.ts for why this is an estimate, not a real
+    // balance read (Creatomate's API doesn't expose one).
+    admin.from('render_jobs').select('recipe').eq('provider', 'creatomate'),
   ]);
 
   const emailByUserId = new Map((usersResult.data?.users ?? []).map((u) => [u.id, u.email ?? '—']));
@@ -49,6 +57,13 @@ export default async function AdminPage() {
   const thumbsUpCount = (ratings ?? []).filter((r) => r.rating === 'up').length;
   const thumbsDownCount = (ratings ?? []).filter((r) => r.rating === 'down').length;
 
+  const estimatedCredits = (creatomateJobs ?? []).reduce(
+    (sum, job) => sum + estimateRenderCredits(job.recipe as unknown as RenderRecipe),
+    0,
+  );
+  const onFreeTrial = estimatedCredits <= CREATOMATE_FREE_TRIAL_CREDITS;
+  const creditsPercent = Math.min(100, Math.round((estimatedCredits / CREATOMATE_FREE_TRIAL_CREDITS) * 100));
+
   return (
     <div className="space-y-10">
       <PageHeader title="Admin" description="Every business on Blueprint Studio, their plan, and video feedback." />
@@ -59,6 +74,25 @@ export default async function AdminPage() {
         <StatCard label="MRR" value={`$${mrr}`} />
         <StatCard label="Video ratings" value={`${thumbsUpCount} up · ${thumbsDownCount} down`} />
       </div>
+
+      {(creatomateJobs ?? []).length > 0 && (
+        <section className="rounded-xl border border-border-subtle p-4">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Render credits (Creatomate)</h2>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="shrink-0 text-sm text-text-secondary">
+              {onFreeTrial
+                ? `~${estimatedCredits} of ${CREATOMATE_FREE_TRIAL_CREDITS} free trial credits used`
+                : `~${estimatedCredits} credits used since going live`}
+            </span>
+            {onFreeTrial && <Progress value={creditsPercent} className="max-w-40" />}
+          </div>
+          <p className="mt-2 text-xs text-text-secondary">
+            Estimated from each render&apos;s actual output length at Creatomate&apos;s own documented rate (1 credit per
+            100M pixels, assuming 30fps) - Creatomate&apos;s API has no endpoint for a real account balance, so this can
+            drift slightly from the true number.
+          </p>
+        </section>
+      )}
 
       <section>
         <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Businesses</h2>

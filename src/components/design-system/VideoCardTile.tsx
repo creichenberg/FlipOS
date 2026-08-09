@@ -37,6 +37,11 @@ const STATUS_STEP: Record<VideoCardStatus, number> = {
 };
 const PROGRESS_STEPS = 4;
 
+// One card per dashboard row (see dashboard/page.tsx's now-single-column
+// grid) instead of the old 1/2/3-column tile grid, per a client request for
+// a more spacious feel - so this lays out horizontally at rest, using the
+// full row width, and only stacks vertically on narrow screens where a
+// horizontal split wouldn't have room to breathe.
 export function VideoCardTile({ card }: { card: VideoCard }) {
   const GoalIcon = GOAL_ICONS[card.content_goal] ?? Sparkles;
   const isToday = new Date().getDay() === card.day_of_week;
@@ -46,27 +51,26 @@ export function VideoCardTile({ card }: { card: VideoCard }) {
   return (
     <Link
       href={`/cards/${card.id}`}
-      className={`hover-lift group flex flex-col justify-between rounded-xl border border-border-subtle bg-surface p-5 hover:border-primary/40 ${
+      className={`hover-lift group flex flex-col gap-5 rounded-xl border border-border-subtle bg-surface p-6 hover:border-primary/40 sm:flex-row sm:items-center sm:gap-8 sm:p-8 ${
         isToday ? 'ring-1 ring-primary/25' : ''
       }`}
     >
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
-            <GoalIcon className="h-3.5 w-3.5" />
-            {GOAL_LABELS[card.content_goal] ?? card.content_goal}
-          </span>
-          <span
-            className={`text-xs uppercase tracking-wide ${isToday ? 'font-semibold text-primary' : 'text-text-secondary'}`}
-          >
-            {DAY_LABELS[card.day_of_week]}
-          </span>
-        </div>
-        <h3 className="mt-3 text-base font-semibold leading-snug">{card.title}</h3>
-        <p className="mt-2 line-clamp-3 text-sm text-text-secondary">{card.concept}</p>
+      <div className="flex items-center gap-3 sm:w-36 sm:shrink-0 sm:flex-col sm:items-start sm:gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+          <GoalIcon className="h-3.5 w-3.5" />
+          {GOAL_LABELS[card.content_goal] ?? card.content_goal}
+        </span>
+        <span className={`text-xs uppercase tracking-wide ${isToday ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
+          {DAY_LABELS[card.day_of_week]}
+        </span>
       </div>
 
-      <div className="mt-4">
+      <div className="min-w-0 flex-1">
+        <h3 className="text-lg font-semibold leading-snug sm:text-xl">{card.title}</h3>
+        <p className="mt-2 line-clamp-2 text-sm text-text-secondary">{card.concept}</p>
+      </div>
+
+      <div className="sm:w-56 sm:shrink-0">
         <div className="flex gap-1" aria-label={`Status: ${STATUS_LABELS[card.status] ?? card.status}`}>
           {Array.from({ length: PROGRESS_STEPS }, (_, i) => (
             <div

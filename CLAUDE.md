@@ -557,6 +557,50 @@ dashboard.
   close enough to target still uploads immediately, unchanged from before. This doesn't produce real
   word-level sync (the even-per-word caption split is unchanged) - it nudges the recording itself
   toward the steadier pace that split already assumes.
+- **Dashboard redesign: spacious one-per-row cards, robust first-plan auto-generate, render credit
+  meter** - a client dashboard-redesign request bundled three changes. **One card per row**
+  (`VideoCardTile.tsx`, `dashboard/page.tsx`) - the old responsive 1/2/3-column tile grid became a
+  single-column `flex flex-col` list of wider rows, since a client asked for the grid to "feel more
+  spacious." The tile itself changed from a compact vertical card to a horizontal row (`flex-col` on
+  mobile, `sm:flex-row` once there's width to use): goal chip + day label as a narrow fixed-width
+  leading column, title (bumped to `text-lg`/`sm:text-xl`) and concept in the middle taking the
+  remaining width, status/progress/CTA as a trailing fixed-width column - bigger type, more padding
+  (`p-6`/`sm:p-8` vs the old `p-5`), same status-progress-bar/CTA-arrow content as before, just laid
+  out for a full-width row instead of a narrow tile. Only used on the dashboard (confirmed no other
+  page imports `VideoCardTile`), so this was a direct redesign, not a new component. **Auto-generate
+  on first sign-in** (`dashboard/page.tsx`, `OnboardingWizard.tsx`) - this already existed, but was
+  gated on a one-shot `?onboarded=1` query param set only by the onboarding-wizard redirect, so any
+  other path to a first dashboard visit (a QR scan, a bookmarked/refreshed link) would silently miss
+  it. Replaced with a durable check - `isFirstEverPlan`, true only when there's no `weekly_plans` row
+  for the *current* week **and** none has ever existed for this business in *any* week (a cheap
+  `select id limit 1` with no week filter, only queried when the current week has no plan row at all)
+  - so the signal is a real fact about the business rather than a transient URL flag.
+  `OnboardingWizard.tsx`'s redirect simplified from `/dashboard?onboarded=1` to plain `/dashboard`
+  accordingly. **Render credit meter** (`src/lib/video/credits.ts`, `admin/page.tsx`) - Creatomate's
+  REST API has no endpoint that returns a real account credit balance (checked directly against their
+  docs - Renders, Webhooks, Templates, Authentication, and System are the only documented resource
+  categories; none of them account/billing), so a literal "credits remaining" readout isn't possible
+  without guessing an undocumented endpoint. Instead `estimateRenderCredits()` computes an *estimate*
+  from Creatomate's own documented, real formula (1 credit = 100,000,000 pixels of output = width ×
+  height × fps × duration seconds, rounded up, minimum 1 credit -
+  https://creatomate.com/docs/account/how-are-credits-calculated) applied to every render job's own
+  known output resolution (`OUTPUT_WIDTH`/`OUTPUT_HEIGHT`, now exported from `creatomateProvider.ts`)
+  and total clip duration (already stored in `render_jobs.recipe`) - the one unknown is frame rate,
+  since Creatomate defaults it to "the highest frame rate among input videos" (whatever a customer's
+  phone recorded at, which this app never inspects), so a stated 30fps assumption stands in, and the
+  UI always labels the number as an estimate, never a precise balance, same transparency standard as
+  `isMock` elsewhere in this app. Because Blueprint Studio runs on **one shared Creatomate account**
+  (one `CREATOMATE_API_KEY` for the whole platform, not one per business - see the Phase 2 notes at
+  the top of this file), credit usage is a platform-wide operator concern, not a per-business one, so
+  the meter lives on `/admin` (summed across every business's `provider='creatomate'` render_jobs via
+  the service-role client, same cross-tenant pattern the rest of that page already uses) rather than
+  the per-business dashboard - a reasonable render-team-scoped placement can never appear if credits
+  are billed to one platform-wide account. Below the documented 50-credit free-trial ceiling it shows
+  a progress bar framed against that ceiling (`~17 of 50 free trial credits used`); past it, the
+  ceiling framing is dropped for a plain running total (`~63 credits used since going live`), since
+  exceeding 50 implies the operator has already moved to a paid tier. Hidden entirely when no
+  `provider='creatomate'` jobs exist yet (still all mock renders), avoiding a "0 of 50" before real
+  rendering has started.
 
 ## Gotchas already hit
 
