@@ -601,6 +601,21 @@ dashboard.
   exceeding 50 implies the operator has already moved to a paid tier. Hidden entirely when no
   `provider='creatomate'` jobs exist yet (still all mock renders), avoiding a "0 of 50" before real
   rendering has started.
+- **Collapsed script/shot list reference on the card detail page** (`src/components/design-system/
+  ScriptDisclosure.tsx`, `cards/[cardId]/page.tsx`) - client feedback that the script, voiceover
+  lines, and everything else under the "Ready to film?" CTA felt "overwhelming and distracting."
+  The underlying cause was redundancy, not the content itself: Filming Mode already walks through
+  the exact same script/shot list/voiceover lines one step at a time in a focused guided flow (see
+  `FilmingModeFlow.tsx`), so showing all of it expanded again on the page *before* that flow just
+  duplicated it and front-loaded a wall of text before the person had even started. Zone 3 (Script/
+  Voiceover script/Shot list/Voiceover lines/On-screen text/Editing suggestions - previously always
+  expanded) is now collapsed by default behind `ScriptDisclosure`, a plain `useState` toggle (not a
+  new Radix accordion dependency - this is the only disclosure in the app and doesn't need
+  multi-panel coordination) showing just a summary line (`3 shots · ~15s total · 2 voiceover lines`,
+  computed from the same `shots`/`voiceover_lines` already fetched) until expanded. The Hook stays
+  visible outside the disclosure - it's short and worth seeing immediately, not part of what felt
+  overwhelming - and "Ready to post" (caption/hashtags/CTA) stays its own separate card below, since
+  it's categorically different output, not filming reference, matching the existing Zone framing.
 
 ## Gotchas already hit
 

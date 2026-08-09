@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/design-system/PageHeader';
 import { ShotListItem } from '@/components/design-system/ShotListItem';
 import { CopyButton } from '@/components/design-system/CopyButton';
+import { ScriptDisclosure } from '@/components/design-system/ScriptDisclosure';
 import { DetailGenerator } from '@/components/features/video-detail/DetailGenerator';
 import { RenderVideoPanel } from '@/components/features/video-detail/RenderVideoPanel';
 import { RegenerateCardButton } from '@/components/features/video-detail/RegenerateCardButton';
@@ -51,7 +52,11 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
     ? await supabase.from('video_ratings').select('rating, feedback').eq('render_job_id', latestRenderJob.id).maybeSingle()
     : { data: null };
 
-  const missing = missingClipCounts((shots as Shot[]) ?? [], (voiceoverLines as VoiceoverLine[]) ?? [], (uploads as MediaUpload[]) ?? []);
+  const shotList = (shots as Shot[]) ?? [];
+  const voiceoverLineList = (voiceoverLines as VoiceoverLine[]) ?? [];
+  const totalDurationSeconds = shotList.reduce((sum, s) => sum + s.duration_seconds, 0);
+
+  const missing = missingClipCounts(shotList, voiceoverLineList, (uploads as MediaUpload[]) ?? []);
   const canRender = missing.shots === 0 && missing.voiceover === 0;
   const missingSummary =
     missing.shots > 0 || missing.voiceover > 0
@@ -98,8 +103,15 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <p className="mt-2 text-lg leading-snug">{detail.hook}</p>
       </section>
 
-      {/* Zone 3 - consolidated reference card: script/shot list/voiceover/on-screen text/editing notes, one shell instead of six */}
-      <section className="rounded-xl border border-border-subtle bg-surface p-6">
+      {/* Zone 3 - script/shot list/voiceover/on-screen text/editing notes, collapsed
+          behind a summary by default (see ScriptDisclosure.tsx) - Filming Mode already
+          walks through the same material shot-by-shot, so showing it all expanded here
+          too just duplicated it and front-loaded a wall of text before filming starts. */}
+      <ScriptDisclosure
+        shotCount={shotList.length}
+        totalDurationSeconds={totalDurationSeconds}
+        voiceoverLineCount={voiceoverLineList.length}
+      >
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <div className="flex items-center justify-between">
@@ -120,7 +132,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <div className="mt-6 border-t border-border-subtle pt-6">
           <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Shot list</h2>
           <div className="mt-2">
-            {((shots as Shot[] | null) ?? []).map((shot) => (
+            {shotList.map((shot) => (
               <ShotListItem key={shot.id} shot={shot} />
             ))}
           </div>
@@ -129,7 +141,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         <div className="mt-6 border-t border-border-subtle pt-6">
           <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Voiceover lines</h2>
           <ol className="mt-3 space-y-2">
-            {((voiceoverLines as VoiceoverLine[] | null) ?? []).map((line) => (
+            {voiceoverLineList.map((line) => (
               <li key={line.id} className="text-sm text-text-secondary">
                 <span className="font-medium text-foreground">{line.line_number}.</span> {line.text}
               </li>
@@ -154,7 +166,7 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
             <p className="mt-2 text-sm leading-relaxed text-text-secondary">{detail.editing_suggestions}</p>
           </div>
         </div>
-      </section>
+      </ScriptDisclosure>
 
       {/* Zone 4 - Ready to post: categorically different (final output, not filming reference), stays its own card */}
       <section className="rounded-xl border border-border-subtle bg-surface p-6">
