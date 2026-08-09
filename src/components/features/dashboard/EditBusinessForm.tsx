@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import type { Business } from '@/lib/types/database';
+import type { Business, CaptionStyle, EditStyle } from '@/lib/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,8 @@ interface FormState {
   targetAudience: string;
   brandPersonality: string;
   website: string;
+  captionStyle: CaptionStyle;
+  editStyle: EditStyle;
 }
 
 function toFormState(business: Business): FormState {
@@ -32,8 +34,26 @@ function toFormState(business: Business): FormState {
     targetAudience: business.target_audience,
     brandPersonality: business.brand_personality.join(', '),
     website: business.website ?? '',
+    captionStyle: business.caption_style,
+    editStyle: business.edit_style,
   };
 }
+
+// Client feedback: the default caption look "looks very AI" and "customization
+// of the video would be nice." Scoped to what's already fully mechanical in
+// creatomateProvider.ts (motion amount, caption font/stroke/background) - see
+// CAPTION_STYLE_PRESETS/EDIT_STYLE_PRESETS there for the exact RenderScript
+// values behind each option.
+const CAPTION_STYLE_OPTIONS: { value: CaptionStyle; label: string; description: string }[] = [
+  { value: 'outline-pop', label: 'Outline', description: 'Bold white text with a black outline, no background box' },
+  { value: 'bold-pill', label: 'Bold pill', description: 'White text on a solid rounded background' },
+  { value: 'minimal', label: 'Minimal', description: 'Smaller outlined text near the top of the frame' },
+];
+
+const EDIT_STYLE_OPTIONS: { value: EditStyle; label: string; description: string }[] = [
+  { value: 'punchy', label: 'Punchy', description: 'Bigger zoom pushes and quicker cuts between shots' },
+  { value: 'subtle', label: 'Subtle', description: 'Gentler motion and a softer crossfade between shots' },
+];
 
 export function EditBusinessForm({ business }: { business: Business }) {
   const router = useRouter();
@@ -70,6 +90,8 @@ export function EditBusinessForm({ business }: { business: Business }) {
             .filter(Boolean),
           goals: business.goals,
           website: form.website,
+          captionStyle: form.captionStyle,
+          editStyle: form.editStyle,
         }),
       });
       if (!res.ok) {
@@ -138,6 +160,63 @@ export function EditBusinessForm({ business }: { business: Business }) {
         <div className="mt-3 space-y-2">
           <Label htmlFor="personality">Brand personality (comma separated)</Label>
           <Input id="personality" value={form.brandPersonality} onChange={(e) => update('brandPersonality', e.target.value)} />
+        </div>
+      </div>
+
+      <div className="border-t border-border-subtle pt-6">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Video style</h2>
+        <div className="mt-3 space-y-4">
+          <div className="space-y-2">
+            <Label>Caption style</Label>
+            <div className="flex flex-wrap gap-2">
+              {CAPTION_STYLE_OPTIONS.map((option) => {
+                const selected = form.captionStyle === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => update('captionStyle', option.value)}
+                    title={option.description}
+                    className={
+                      selected
+                        ? 'rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary'
+                        : 'rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-primary/40 hover:text-foreground'
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-text-secondary">
+              {CAPTION_STYLE_OPTIONS.find((o) => o.value === form.captionStyle)?.description}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Edit pacing</Label>
+            <div className="flex flex-wrap gap-2">
+              {EDIT_STYLE_OPTIONS.map((option) => {
+                const selected = form.editStyle === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => update('editStyle', option.value)}
+                    title={option.description}
+                    className={
+                      selected
+                        ? 'rounded-md border border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary'
+                        : 'rounded-md border border-border-subtle px-3 py-1.5 text-sm text-text-secondary hover:border-primary/40 hover:text-foreground'
+                    }
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-text-secondary">{EDIT_STYLE_OPTIONS.find((o) => o.value === form.editStyle)?.description}</p>
+          </div>
+          <p className="text-xs text-text-secondary">Applies to your next auto-edited video, not ones you&apos;ve already rendered.</p>
         </div>
       </div>
 

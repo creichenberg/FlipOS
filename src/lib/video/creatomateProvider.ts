@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import type { RenderProvider, RenderRecipe, RenderResult } from './render';
+import type { CaptionStyle, EditStyle } from '@/lib/types/database';
 
 export class CreatomateNotConfiguredError extends Error {
   constructor() {
@@ -16,19 +17,20 @@ const SOURCE_URL_TTL_SECONDS = 60 * 60;
 // 9:16 - the only aspect ratio RenderRecipe supports today.
 const OUTPUT_WIDTH = 1080;
 const OUTPUT_HEIGHT = 1920;
-// A quick crossfade instead of a hard cut between shots - long enough to
-// read as an intentional edit, short enough to still feel like a punchy
-// UGC cut rather than a slideshow dissolve.
-const CUT_TRANSITION_SECONDS = 0.25;
-// Continuous zoom over each clip's own duration ("Ken Burns") so static
-// handheld shots don't sit perfectly still. Alternates in/out by clip index
-// (see zoomRange() below) rather than always zooming in the same way on
-// every clip - identical motion repeated across 7-10 consecutive shots reads
-// as mechanical, not edited. The hook (first) clip gets a bigger push since
-// it's the scroll-stopping moment.
+// Per-business edit-intensity preference (businesses.edit_style) - a
+// client request for "customization of the video," scoped to what's
+// already fully mechanical here (motion amount, not a new capability).
+// 'punchy' is exactly the values this file shipped with originally, so
+// existing businesses (defaulted to 'punchy' by the migration) see no
+// change unless they opt into 'subtle'. Crossfade duration is long enough
+// to read as an intentional edit and short enough to still feel like a
+// punchy UGC cut rather than a slideshow dissolve; zoom keeps static
+// handheld shots from sitting perfectly still.
 const ZOOM_REST_SCALE = '100%';
-const ZOOM_PUSH_SCALE = '106%';
-const HOOK_ZOOM_PUSH_SCALE = '112%';
+const EDIT_STYLE_PRESETS: Record<EditStyle, { zoomPush: string; hookZoomPush: string; cutTransitionSeconds: number }> = {
+  punchy: { zoomPush: '106%', hookZoomPush: '112%', cutTransitionSeconds: 0.25 },
+  subtle: { zoomPush: '102.5%', hookZoomPush: '105%', cutTransitionSeconds: 0.4 },
+};
 // Shared local track number for a caption's word elements (scoped to that
 // one composition's own elements array, unrelated to the top-level track
 // numbers the shot clips/caption compositions use) - every word needs the
@@ -61,29 +63,76 @@ function hasDigit(word: string): boolean {
 // First-clip zoom pushes further than the rest (the hook deserves a bigger
 // moment); direction alternates by index so the motion doesn't repeat
 // identically down the whole shot list.
-function zoomRange(index: number): { start: string; end: string } {
-  const push = index === 0 ? HOOK_ZOOM_PUSH_SCALE : ZOOM_PUSH_SCALE;
+function zoomRange(index: number, editStyle: EditStyle): { start: string; end: string } {
+  const preset = EDIT_STYLE_PRESETS[editStyle];
+  const push = index === 0 ? preset.hookZoomPush : preset.zoomPush;
   return index % 2 === 0 ? { start: ZOOM_REST_SCALE, end: push } : { start: push, end: ZOOM_REST_SCALE };
 }
+
+// Per-business caption look (businesses.caption_style) - the other half of
+// the "customization" request, and also the fix for the specific "looks
+// very AI" complaint: 'outline-pop' (white text, black stroke, no
+// background box) is the new default for every business, existing ones
+// included, replacing the old black-rounded-pill 'bold-pill' look (kept
+// as an option for anyone who preferred it) - a bold stroke-outlined
+// caption with no background box is the standard look real caption/editing
+// apps use, not the pill-background look auto-caption tools default to.
+// Montserrat is confirmed as a real Creatomate-supported font straight from
+// their own auto-generated-subtitles example (docs, 2026), not guessed;
+// stroke_color/stroke_width are real RenderScript text properties from the
+// same example. Font/stroke/background are the only style axes touched -
+// deliberately not inventing shadow_* properties that aren't documented.
+const CAPTION_STYLE_PRESETS: Record<
+  CaptionStyle,
+  {
+    fontFamily: string;
+    y: string;
+    strokeColor?: string;
+    strokeWidth?: string;
+    backgroundColor?: string;
+    backgroundXPadding?: string;
+    backgroundYPadding?: string;
+    backgroundBorderRadius?: string;
+  }
+> = {
+  'outline-pop': { fontFamily: 'Montserrat', y: '80%', strokeColor: '#000000', strokeWidth: '1.6 vmin' },
+  'bold-pill': {
+    fontFamily: 'Inter',
+    y: '80%',
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundXPadding: '30%',
+    backgroundYPadding: '18%',
+    backgroundBorderRadius: '20%',
+  },
+  minimal: { fontFamily: 'Montserrat', y: '14%', strokeColor: '#000000', strokeWidth: '0.9 vmin' },
+};
 
 // Shared styling for both the per-word captions and the (defensive,
 // practically-unreachable) whole-line fallback below - only text/font_size
 // differ between the two.
-const CAPTION_TEXT_BASE = {
-  type: 'text',
-  width: '85%',
-  y: '80%',
-  x_alignment: '50%',
-  y_alignment: '100%',
-  fill_color: '#ffffff',
-  font_family: 'Inter',
-  font_weight: 700,
-  text_wrap: true,
-  background_color: 'rgba(0,0,0,0.65)',
-  background_x_padding: '30%',
-  background_y_padding: '18%',
-  background_border_radius: '20%',
-} as const;
+function captionTextBase(captionStyle: CaptionStyle) {
+  const preset = CAPTION_STYLE_PRESETS[captionStyle];
+  return {
+    type: 'text',
+    width: '85%',
+    y: preset.y,
+    x_alignment: '50%',
+    y_alignment: '100%',
+    fill_color: '#ffffff',
+    font_family: preset.fontFamily,
+    font_weight: 700,
+    text_wrap: true,
+    ...(preset.strokeColor ? { stroke_color: preset.strokeColor, stroke_width: preset.strokeWidth } : {}),
+    ...(preset.backgroundColor
+      ? {
+          background_color: preset.backgroundColor,
+          background_x_padding: preset.backgroundXPadding,
+          background_y_padding: preset.backgroundYPadding,
+          background_border_radius: preset.backgroundBorderRadius,
+        }
+      : {}),
+  };
+}
 
 function apiKey(): string {
   const key = process.env.CREATOMATE_API_KEY;
@@ -125,9 +174,10 @@ export class CreatomateRenderProvider implements RenderProvider {
     // by clip so the motion doesn't repeat identically down the whole shot
     // list; a short crossfade on every clip but the first turns the hard
     // cuts into a real edit.
+    const cutTransitionSeconds = EDIT_STYLE_PRESETS[recipe.editStyle].cutTransitionSeconds;
     const visualElements = await Promise.all(
       recipe.clips.map(async (clip, i) => {
-        const zoom = zoomRange(i);
+        const zoom = zoomRange(i, recipe.editStyle);
         return {
           type: 'video',
           track: 1,
@@ -138,7 +188,7 @@ export class CreatomateRenderProvider implements RenderProvider {
           animations: [
             { type: 'scale', scope: 'element', easing: 'linear', start_scale: zoom.start, end_scale: zoom.end, fade: false },
             ...(i > 0
-              ? [{ type: 'fade', transition: true, duration: CUT_TRANSITION_SECONDS, easing: 'linear' }]
+              ? [{ type: 'fade', transition: true, duration: cutTransitionSeconds, easing: 'linear' }]
               : []),
           ],
         };
@@ -163,6 +213,7 @@ export class CreatomateRenderProvider implements RenderProvider {
     // both purely mechanical, no ASR/AI call needed to pick them out. The
     // first line (the hook) gets a punchier pop and slightly bigger base
     // size, matching the bigger zoom the first clip gets above.
+    const captionBase = captionTextBase(recipe.captionStyle);
     const captionElements = await Promise.all(
       recipe.captions.map(async (caption, lineIndex) => {
         const isHookLine = lineIndex === 0;
@@ -173,7 +224,7 @@ export class CreatomateRenderProvider implements RenderProvider {
                 const emphasized = hasDigit(word);
                 const fontSize = emphasized ? (isHookLine ? '10 vmin' : '8.5 vmin') : isHookLine ? '8 vmin' : '7 vmin';
                 return {
-                  ...CAPTION_TEXT_BASE,
+                  ...captionBase,
                   ...(emphasized ? { fill_color: EMPHASIS_COLOR } : {}),
                   track: CAPTION_WORD_TRACK,
                   duration: '1 fr',
@@ -193,7 +244,7 @@ export class CreatomateRenderProvider implements RenderProvider {
                   ],
                 };
               })
-            : [{ ...CAPTION_TEXT_BASE, text: caption.text, font_size: '6 vmin' }];
+            : [{ ...captionBase, text: caption.text, font_size: '6 vmin' }];
 
         return {
           type: 'composition',

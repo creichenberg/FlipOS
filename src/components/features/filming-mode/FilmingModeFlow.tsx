@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Check, Camera, Mic } from 'lucide-react';
 import { toast } from 'sonner';
@@ -62,7 +62,20 @@ export function FilmingModeFlow({
   const current = steps[index];
   const isComplete = index >= steps.length;
 
-  async function markDone() {
+  // A step arrived at with a clip already on file (resumed from an earlier
+  // session, not just captured this render) has nothing new to confirm -
+  // give it a manual way to move on without forcing a re-record. Snapshotted
+  // once per step change, before any fresh upload on *this* step could land
+  // in clipNames, so it never flips true just because the current step's own
+  // capture succeeded.
+  const [resumedWithClip, setResumedWithClip] = useState(false);
+  useEffect(() => {
+    if (!current) return;
+    setResumedWithClip(!!clipNames[current.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id]);
+
+  async function markDone(showFlash: boolean) {
     if (!current) return;
     setSaving(true);
     try {
@@ -80,9 +93,10 @@ export function FilmingModeFlow({
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? 'Failed to save progress');
       }
-      // A clip was uploaded for this step - flash a checkmark before
-      // advancing so the upload feels confirmed, not just silently accepted.
-      if (clipNames[current.id]) {
+      // Flash a checkmark before advancing so a fresh capture feels
+      // confirmed, not just silently accepted - skipped for the "continue
+      // without re-recording" path, where nothing new just happened.
+      if (showFlash) {
         setJustCompleted(true);
         await new Promise((resolve) => setTimeout(resolve, 550));
         setJustCompleted(false);
@@ -129,6 +143,9 @@ export function FilmingModeFlow({
       <div>
         <p className="text-xs uppercase tracking-wide text-text-secondary">
           Step {index + 1} of {steps.length}
+          <span className="text-text-secondary/70"> · {shots.length} video clip{shots.length === 1 ? '' : 's'}, {voiceoverLines.length} voice line
+            {voiceoverLines.length === 1 ? '' : 's'}
+          </span>
         </p>
         <div className="mt-2">
           <StepIndicator current={index} total={steps.length} />
@@ -151,8 +168,13 @@ export function FilmingModeFlow({
                 <Camera className="h-3.5 w-3.5 text-primary" />
                 Shot {current.shot.shot_number} · {current.shot.camera_angle}
               </p>
+              {/* Duration made big and bold - once the phone's native camera
+                  app opens full-screen, everything else on this page (and
+                  this number in particular) is out of sight, so it needs to
+                  be memorable at a glance before tapping in. */}
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-primary">~{current.shot.duration_seconds}s</p>
               <p className="mt-2 text-lg leading-snug">{current.shot.description}</p>
-              <p className="mt-1 text-sm text-text-secondary">~{current.shot.duration_seconds}s · {current.shot.shot_type}</p>
+              <p className="mt-1 text-xs uppercase tracking-wide text-text-secondary">{current.shot.shot_type}</p>
             </>
           ) : (
             <>
@@ -175,14 +197,25 @@ export function FilmingModeFlow({
             videoCardId={cardId}
             targetId={current.id}
             targetKind={current.kind}
+            text={current.kind === 'voiceover' ? current.line.text : undefined}
             initialFileName={clipNames[current.id] ?? null}
-            onUploaded={(fileName) => setClipNames((names) => ({ ...names, [current.id]: fileName }))}
+            onUploaded={(fileName) => {
+              setClipNames((names) => ({ ...names, [current.id]: fileName }));
+              // The capture itself is the confirmation - no separate click
+              // needed. This also removes the earlier confusion where the
+              // always-visible "Mark done" button looked like the way to
+              // stop a voiceover recording in progress; there's no button
+              // to reach for now except the real Stop control.
+              void markDone(true);
+            }}
           />
         </div>
 
-        <Button className="mt-3 w-full" size="lg" onClick={markDone} disabled={saving}>
-          {saving ? 'Saving…' : 'Mark done'}
-        </Button>
+        {resumedWithClip && (
+          <Button className="mt-3 w-full" size="lg" variant="outline" onClick={() => markDone(false)} disabled={saving}>
+            {saving ? 'Saving…' : 'Already have this one - continue'}
+          </Button>
+        )}
       </div>
     </div>
   );

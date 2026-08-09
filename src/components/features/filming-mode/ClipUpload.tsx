@@ -5,12 +5,16 @@ import { Mic, Square, Upload, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { estimateSpeechSeconds, PACING_TOLERANCE } from '@/lib/video/pacing';
 
 interface ClipUploadProps {
   businessId: string;
   videoCardId: string;
   targetId: string;
   targetKind: 'shot' | 'voiceover';
+  // The voiceover line's exact script text - only relevant for that kind,
+  // used to estimate a target recording length (see src/lib/video/pacing.ts).
+  text?: string;
   initialFileName: string | null;
   onUploaded: (fileName: string) => void;
 }
@@ -21,6 +25,12 @@ function formatSeconds(total: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+interface PendingTake {
+  blob: Blob;
+  mimeType: string;
+  actualSeconds: number;
+}
+
 // Shots use a plain file input with `capture="environment"` - opens the
 // phone's native camera app directly and hands back a real file, which is
 // far more reliable across iOS/Android than a custom in-browser camera.
@@ -29,17 +39,27 @@ function formatSeconds(total: number): string {
 // audio" capture handler and silently falls back to the camera regardless
 // of `accept`), so those record in-browser via getUserMedia/MediaRecorder
 // instead, with a plain file picker as a fallback for unsupported browsers.
-export function ClipUpload({ businessId, videoCardId, targetId, targetKind, initialFileName, onUploaded }: ClipUploadProps) {
+export function ClipUpload({ businessId, videoCardId, targetId, targetKind, text, initialFileName, onUploaded }: ClipUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(initialFileName);
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [supportsRecording, setSupportsRecording] = useState(false);
+  // A finished take held back from upload because it drifted too far from
+  // the pacing target - the person picks retake or use-anyway before it
+  // goes anywhere. Stays null (upload happens immediately, same as before)
+  // whenever there's no target to check against or the take was close enough.
+  const [pendingTake, setPendingTake] = useState<PendingTake | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // recorder.onstop is defined once per recording and needs the *final*
+  // elapsed seconds - recordSeconds state itself is stale inside that
+  // closure, so the timer interval mirrors it into a ref as it counts.
+  const recordSecondsRef = useRef(0);
   const isAudio = targetKind === 'voiceover';
+  const targetSeconds = isAudio && text ? estimateSpeechSeconds(text) : null;
 
   useEffect(() => {
     setSupportsRecording(
@@ -90,6 +110,11 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
     await uploadFile(file);
   }
 
+  function uploadTake(take: PendingTake) {
+    const extension = take.mimeType.includes('mp4') || take.mimeType.includes('m4a') ? 'm4a' : 'webm';
+    void uploadFile(new File([take.blob], `voiceover-${Date.now()}.${extension}`, { type: take.mimeType }));
+  }
+
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -102,15 +127,27 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
         stream.getTracks().forEach((track) => track.stop());
         if (timerRef.current) clearInterval(timerRef.current);
         const mimeType = recorder.mimeType || 'audio/webm';
-        const extension = mimeType.includes('mp4') || mimeType.includes('m4a') ? 'm4a' : 'webm';
         const blob = new Blob(chunksRef.current, { type: mimeType });
-        void uploadFile(new File([blob], `voiceover-${Date.now()}.${extension}`, { type: mimeType }));
+        const take: PendingTake = { blob, mimeType, actualSeconds: recordSecondsRef.current };
+        const offTarget = targetSeconds != null && Math.abs(take.actualSeconds - targetSeconds) > targetSeconds * PACING_TOLERANCE;
+        if (offTarget) {
+          setPendingTake(take);
+        } else {
+          uploadTake(take);
+        }
       };
       mediaRecorderRef.current = recorder;
       recorder.start();
       setRecording(true);
       setRecordSeconds(0);
-      timerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+      recordSecondsRef.current = 0;
+      timerRef.current = setInterval(() => {
+        setRecordSeconds((s) => {
+          const next = s + 1;
+          recordSecondsRef.current = next;
+          return next;
+        });
+      }, 1000);
     } catch {
       toast.error('Could not access the microphone - check your browser permissions, or upload a file instead.');
     }
@@ -121,7 +158,38 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
     mediaRecorderRef.current?.stop();
   }
 
+  function retake() {
+    setPendingTake(null);
+    void startRecording();
+  }
+
+  function useTakeAnyway() {
+    if (!pendingTake) return;
+    uploadTake(pendingTake);
+    setPendingTake(null);
+  }
+
   if (isAudio) {
+    if (pendingTake && targetSeconds != null) {
+      const tooFast = pendingTake.actualSeconds < targetSeconds;
+      return (
+        <div className="space-y-2 text-left">
+          <p className="text-xs text-text-secondary">
+            That took {formatSeconds(pendingTake.actualSeconds)} - aiming for about {formatSeconds(targetSeconds)}. Try reading it a
+            little {tooFast ? 'slower' : 'faster'} so the captions line up better, or use this take anyway.
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={retake}>
+              Record again
+            </Button>
+            <Button type="button" className="flex-1" onClick={useTakeAnyway}>
+              Use this anyway
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div>
         <input ref={inputRef} type="file" accept="audio/*" className="hidden" onChange={handleFile} />
@@ -160,6 +228,9 @@ export function ClipUpload({ businessId, videoCardId, targetId, targetKind, init
             {fileName ? 'Replace' : 'Upload file'}
           </Button>
         </div>
+        {targetSeconds != null && !recording && !uploading && (
+          <p className="mt-2 text-xs text-text-secondary">Aim for about {formatSeconds(targetSeconds)}.</p>
+        )}
       </div>
     );
   }

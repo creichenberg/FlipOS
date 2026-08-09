@@ -9,6 +9,8 @@ export type FilmingSessionStatus = 'in_progress' | 'complete';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'incomplete';
 export type RenderJobStatus = 'queued' | 'rendering' | 'complete' | 'failed';
 export type VideoRatingValue = 'up' | 'down';
+export type CaptionStyle = 'outline-pop' | 'bold-pill' | 'minimal';
+export type EditStyle = 'subtle' | 'punchy';
 
 export type Business = {
   id: string;
@@ -25,6 +27,8 @@ export type Business = {
   website: string | null;
   logo_url: string | null;
   brand_colors: Record<string, string> | null;
+  caption_style: CaptionStyle;
+  edit_style: EditStyle;
   created_at: string;
   updated_at: string;
 }

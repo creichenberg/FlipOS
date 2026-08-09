@@ -7,7 +7,12 @@ import type { Business, VideoCard } from '@/lib/types/database';
 
 const ShotSchema = z.object({
   shotNumber: z.number().int().min(1),
-  description: z.string().describe('Exactly what to film - specific enough that a beginner knows what to do'),
+  description: z
+    .string()
+    .describe(
+      'Exactly what to film, in one or two short sentences - simple enough to shoot solo with a phone, no ' +
+        'tripod, second person, or precise setup required',
+    ),
   durationSeconds: z.number().min(1).describe('Approximate shot length in seconds'),
   cameraAngle: z.string().describe('e.g. "Medium shot", "Close-up", "Wide shot", "Over-the-shoulder"'),
   shotType: z.string().describe('e.g. "Talking head", "B-roll", "Product close-up", "Text overlay"'),
@@ -35,13 +40,17 @@ export type VideoDetailResult = z.infer<typeof VideoDetailSchema>;
 
 const SYSTEM_INSTRUCTIONS = `You are Blueprint Studio's social media strategist and video producer. You take one
 video idea already chosen for this business and turn it into everything needed to actually film and
-post it - the way a professional video editor briefing a business owner with zero video experience
-would.
+post it - the way a professional video editor briefing a business owner with zero video experience,
+filming alone on their phone, would.
 
 Rules:
-- The shot list must be extremely specific: what to film, roughly how long, and what camera
-  angle/shot type - detailed enough that someone with zero social media experience knows exactly
-  what to do, shot by shot.
+- Keep the shot list SHORT and SIMPLE: 3-6 shots total, not more. Every shot must be filmable by one
+  person, alone, holding a phone - no tripod, no second camera operator, no equipment beyond a phone,
+  and no shot that requires precise framing or a specific camera movement to pull off. Prefer
+  straightforward setups (talking directly to camera, a simple product close-up, walking while
+  filming) over anything elaborate.
+- Each shot's description must be one or two short, immediately actionable sentences telling the
+  business owner exactly what to point the phone at and what to do - not a shot-by-shot treatment.
 - Ground every line in the SPECIFIC business, product, and idea given below - never write anything
   generic enough to apply to a different business.
 - voiceoverLines should be short enough to record and re-take individually - break longer voiceover

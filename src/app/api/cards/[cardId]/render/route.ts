@@ -16,7 +16,9 @@ async function withRating(supabase: Awaited<ReturnType<typeof createClient>>, jo
 
 async function loadCardContext(supabase: Awaited<ReturnType<typeof createClient>>, cardId: string, userId: string) {
   const { data: card } = await supabase.from('video_cards').select('*').eq('id', cardId).maybeSingle();
-  const { data: business } = card ? await supabase.from('businesses').select('user_id').eq('id', card.business_id).maybeSingle() : { data: null };
+  const { data: business } = card
+    ? await supabase.from('businesses').select('user_id, caption_style, edit_style').eq('id', card.business_id).maybeSingle()
+    : { data: null };
   if (!card || !business || business.user_id !== userId) return null;
 
   const [{ data: shots }, { data: voiceoverLines }, { data: uploads }] = await Promise.all([
@@ -27,6 +29,7 @@ async function loadCardContext(supabase: Awaited<ReturnType<typeof createClient>
 
   return {
     card: card as VideoCard,
+    business,
     shots: (shots as Shot[]) ?? [],
     voiceoverLines: (voiceoverLines as VoiceoverLine[]) ?? [],
     uploads: (uploads as MediaUpload[]) ?? [],
@@ -43,7 +46,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ car
 
   const context = await loadCardContext(supabase, cardId, user.id);
   if (!context) return NextResponse.json({ error: 'Video not found' }, { status: 404 });
-  const { card, shots, voiceoverLines, uploads } = context;
+  const { card, business, shots, voiceoverLines, uploads } = context;
 
   if (shots.length === 0 && voiceoverLines.length === 0) {
     return NextResponse.json({ error: 'Generate the shot list before creating a video' }, { status: 400 });
@@ -67,7 +70,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ car
     throw err;
   }
 
-  const recipe = buildRenderRecipe(card, shots, voiceoverLines, uploads);
+  const recipe = buildRenderRecipe(card, shots, voiceoverLines, uploads, business);
   const provider = getRenderProvider();
 
   const { data: job, error: insertError } = await supabase

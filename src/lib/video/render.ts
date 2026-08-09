@@ -1,5 +1,6 @@
 import { MockRenderProvider } from './mockProvider';
 import { CreatomateRenderProvider } from './creatomateProvider';
+import type { CaptionStyle, EditStyle } from '@/lib/types/database';
 
 // A pure, provider-agnostic description of what to render - built by
 // recipeBuilder.ts from the card's shots/voiceover lines/uploaded clips.
@@ -8,6 +9,12 @@ export interface RenderRecipe {
   videoCardId: string;
   businessId: string;
   aspectRatio: '9:16';
+  // The business's own style preferences (businesses.caption_style/
+  // edit_style) - baked into the recipe at build time rather than read by
+  // the provider separately, so a provider only ever needs the recipe to
+  // know exactly what to render, same as everything else here.
+  captionStyle: CaptionStyle;
+  editStyle: EditStyle;
   clips: {
     shotId: string;
     shotNumber: number;

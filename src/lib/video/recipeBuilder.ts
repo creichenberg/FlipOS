@@ -1,4 +1,4 @@
-import type { MediaUpload, Shot, VideoCard, VoiceoverLine } from '@/lib/types/database';
+import type { Business, MediaUpload, Shot, VideoCard, VoiceoverLine } from '@/lib/types/database';
 import type { RenderRecipe } from './render';
 
 function latestUploadFor(uploads: MediaUpload[], predicate: (u: MediaUpload) => boolean): MediaUpload | undefined {
@@ -30,6 +30,7 @@ export function buildRenderRecipe(
   shots: Shot[],
   voiceoverLines: VoiceoverLine[],
   uploads: MediaUpload[],
+  business: Pick<Business, 'caption_style' | 'edit_style'>,
 ): RenderRecipe {
   const clips = shots
     .slice()
@@ -53,6 +54,8 @@ export function buildRenderRecipe(
     videoCardId: card.id,
     businessId: card.business_id,
     aspectRatio: '9:16',
+    captionStyle: business.caption_style,
+    editStyle: business.edit_style,
     clips,
     captions,
   };

@@ -507,6 +507,56 @@ dashboard.
   all" pattern `render_jobs` itself uses (a business can only see/write its own ratings) - the admin
   dashboard's cross-tenant read goes through the service-role client instead, same as everywhere else
   on that page.
+- **Real-world testing feedback pass** (caption style/edit pacing customization, shot-list
+  simplification, Filming Mode redesign, pacing-based caption-sync mitigation) - a client did a full
+  end-to-end test with a real business and reported several concrete problems together, addressed as
+  one batch since most touch the same files. **Video style customization**
+  (`businesses.caption_style`/`edit_style` - `supabase/migrations/0008_video_style_preferences.sql`,
+  `EditBusinessForm.tsx`'s new "Video style" chip-button section, `POST /api/business`) answers both
+  the "customization would be nice" request and the separate "captions look very AI" complaint at
+  once: `caption_style` defaults to the new `'outline-pop'` preset for every business (including
+  existing ones) - bold white text with a black stroke and no background box, Creatomate's own
+  documented example pattern, replacing the old solid-black-pill-background look that read as a
+  generic auto-caption tool - with `'bold-pill'` (the old look, now opt-in) and `'minimal'` (smaller,
+  near the top of frame) as alternatives; `edit_style` (`'punchy'` default, unchanged behavior, or
+  `'subtle'` - gentler zoom pushes, slower crossfades) controls motion intensity. Both preferences
+  flow business -> `buildRenderRecipe()` -> `RenderRecipe.captionStyle`/`editStyle` ->
+  `creatomateProvider.ts`'s `CAPTION_STYLE_PRESETS`/`EDIT_STYLE_PRESETS` lookup tables, the same
+  threading pattern the render pipeline already uses for every other card-scoped input. Explicitly
+  does not touch music - still out of scope, not one of the two customization options the client
+  picked when asked. **Simpler shot lists** (`generateVideoDetail.ts`) - the generated shot list was
+  "too complicated and specific, hard to film"; `SYSTEM_INSTRUCTIONS` now leads with a hard cap (3-6
+  shots, not the previous unbounded count) and a filmable-alone-on-a-phone constraint (no tripod,
+  no second operator, no precise framing/camera-movement requirement), and each shot's `description`
+  is now one or two short, immediately actionable sentences rather than a fuller treatment. This is
+  prompt-instruction text only, not a Zod `.max()` on the `shots` array - structured-outputs strips
+  numeric/array constraints from what's actually sent to the model (still enforced client-side by
+  `.parse()`), so a schema-level cap wouldn't have guided generation at all, just silently risked a
+  validation failure. **Filming Mode redesign** (`FilmingModeFlow.tsx`, `ClipUpload.tsx`) answers three
+  reported problems together since they're all about the same "extra click"/"lost context" friction:
+  a step's video-clip/voice-line breakdown now shows up front (`Step 1 of 3 · 2 video clips, 1 voice
+  line`) so the client isn't overwhelmed not knowing how much is left; a shot step's duration renders
+  as a large `~5s` number above the description specifically because it's the one thing still worth
+  remembering once the phone's native camera app takes over the whole screen and everything else on
+  this page goes out of sight; the always-visible "Mark done" button is gone entirely - a real upload
+  now auto-advances the flow itself (`onUploaded` calls `markDone(true)`), which fixes both "mark done
+  is a redundant click" and "tempted to hit mark done instead of stop" (there's no button to reach for
+  during a voiceover recording now except the real Stop control). The one case still needing a manual
+  advance - a step resumed with a clip already on file from an earlier session, nothing new to confirm
+  - keeps a narrow `"Already have this one - continue"` button, shown only via `resumedWithClip` (a
+  snapshot taken once per step change, before this step's own fresh upload could land, so it never
+  flips true just because the current capture succeeded). **Pacing-based caption-sync mitigation**
+  (`src/lib/video/pacing.ts`, `ClipUpload.tsx`) - directly implements the client's own proposed fix for
+  "captions not synced to video" rather than a real ASR vendor (still out of scope, no new cost):
+  `estimateSpeechSeconds()` estimates a voiceover line's expected recording length from its word count
+  at a standard spoken pace (150wpm, no AI call). After stopping a recording, if the actual length
+  drifts more than 30% (`PACING_TOLERANCE`) from that estimate, the take is held back
+  (`pendingTake` state) instead of uploading immediately, and the UI shows the exact actual-vs-target
+  timing with a "try reading it a little faster/slower" nudge (faster if the take ran long, slower if
+  it ran short - exactly the client's own framing) plus "Record again"/"Use this anyway" - a take
+  close enough to target still uploads immediately, unchanged from before. This doesn't produce real
+  word-level sync (the even-per-word caption split is unchanged) - it nudges the recording itself
+  toward the steadier pace that split already assumes.
 
 ## Gotchas already hit
 
