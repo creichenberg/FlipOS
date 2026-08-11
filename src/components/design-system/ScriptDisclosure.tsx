@@ -35,17 +35,29 @@ export function ScriptDisclosure({
         aria-controls={contentId}
         className="flex w-full items-center justify-between gap-4 text-left"
       >
-        <div>
-          <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Script &amp; shot list</h2>
-          <p className="mt-1 text-sm text-text-secondary">
-            {shotCount} shot{shotCount === 1 ? '' : 's'} · ~{totalDurationSeconds}s total
-            {voiceoverLineCount > 0 && (
-              <>
-                {' '}
-                · {voiceoverLineCount} voiceover line{voiceoverLineCount === 1 ? '' : 's'}
-              </>
-            )}
-          </p>
+        <div className="flex items-center gap-3">
+          {/* Decorative - the summary text below already states the shot count
+              for screen readers, so this solid-fill numbered badge is purely a
+              visual marker (part of the "confident details" pass replacing thin
+              tinted outlines with real filled accents - see cards/[cardId]/page.tsx). */}
+          <span
+            aria-hidden="true"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+          >
+            {shotCount}
+          </span>
+          <div>
+            <h2 className="text-xs font-medium uppercase tracking-wide text-text-secondary">Script &amp; shot list</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              {shotCount} shot{shotCount === 1 ? '' : 's'} · ~{totalDurationSeconds}s total
+              {voiceoverLineCount > 0 && (
+                <>
+                  {' '}
+                  · {voiceoverLineCount} voiceover line{voiceoverLineCount === 1 ? '' : 's'}
+                </>
+              )}
+            </p>
+          </div>
         </div>
         <ChevronDown className={`h-4 w-4 shrink-0 text-text-secondary transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>

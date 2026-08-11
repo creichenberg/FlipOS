@@ -71,22 +71,29 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         actions={<RegenerateCardButton cardId={cardId} hasProgress={true} />}
       />
 
-      {/* Zone 1 - CTA banner: the page's one intentional rounded-2xl showcase outlier, a nav/CTA element rather than a content-display section */}
+      {/* Zone 1 - CTA banner: a filled gradient rather than a thin primary/5 tint - a
+          real hero moment instead of a whisper-quiet outline, still the page's one
+          rounded-2xl showcase outlier (a nav/CTA element, not a content-display section). */}
       <Link
         href={`/cards/${cardId}/film`}
-        className="hover-lift group flex flex-col items-center gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-6 text-center sm:flex-row sm:justify-between sm:text-left"
+        className="hover-lift group flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br from-primary to-[color-mix(in_oklch,var(--primary),black_30%)] p-6 text-center text-primary-foreground sm:flex-row sm:justify-between sm:text-left"
       >
         <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <Camera className="h-7 w-7 shrink-0 text-primary" />
+          <Camera className="h-7 w-7 shrink-0" />
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Ready to film?</h2>
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-primary-foreground/85">
               A guided, step-by-step flow walks you through every shot and line - then we&apos;ll auto-edit your clips
               into a finished video with captions.
             </p>
           </div>
         </div>
-        <Button asChild size="lg" className="w-full shrink-0 sm:w-auto" tabIndex={-1}>
+        <Button
+          asChild
+          size="lg"
+          className="w-full shrink-0 bg-primary-foreground text-primary hover:bg-primary-foreground/90 sm:w-auto"
+          tabIndex={-1}
+        >
           <span>
             Start filming
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -94,13 +101,18 @@ export default async function VideoCardPage({ params }: { params: Promise<{ card
         </Button>
       </Link>
 
-      {/* Zone 2 - Hook: a hairline accent rule instead of a second filled spotlight card */}
-      <section className="rounded-xl border border-l-2 border-border-subtle border-l-primary bg-surface p-6">
-        <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-primary">
+      {/* Zone 2 - Hook: keeps the hairline left-accent rule, plus a large translucent
+          quote-mark watermark - a real craft detail a generic scaffold never has,
+          instead of a second filled spotlight card. */}
+      <section className="relative overflow-hidden rounded-xl border border-l-2 border-border-subtle border-l-primary bg-surface p-6">
+        <span aria-hidden="true" className="pointer-events-none absolute -top-6 -right-2 z-0 font-serif text-8xl text-primary/10 select-none">
+          &rdquo;
+        </span>
+        <div className="relative z-10 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-primary">
           <Sparkles className="h-3.5 w-3.5" />
           Hook · first 3 seconds
         </div>
-        <p className="mt-2 text-lg leading-snug">{detail.hook}</p>
+        <p className="relative z-10 mt-2 text-lg leading-snug">{detail.hook}</p>
       </section>
 
       {/* Zone 3 - script/shot list/voiceover/on-screen text/editing notes, collapsed

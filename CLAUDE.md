@@ -616,6 +616,30 @@ dashboard.
   visible outside the disclosure - it's short and worth seeing immediately, not part of what felt
   overwhelming - and "Ready to post" (caption/hashtags/CTA) stays its own separate card below, since
   it's categorically different output, not filming reference, matching the existing Zone framing.
+- **"Confident details" pass on the card detail page** (`cards/[cardId]/page.tsx`,
+  `ScriptDisclosure.tsx`) - client feedback that clicking into a video idea "looks so obviously AI
+  slop." Diagnosed against the actual rendered page rather than guessed at: the real tell wasn't the
+  copy, it was structural - every section (CTA, Hook, script disclosure, "Ready to post") used the
+  exact same `rounded-xl border` + uppercase-gray-eyebrow template, and the accent color only ever
+  appeared as thin 5%-tint outlines/borders, never a real filled moment - the unmistakable visual
+  signature of an unstyled shadcn scaffold. Presented three real mockup directions via
+  `AskUserQuestion` previews (drop the boxes entirely for an editorial layout; keep boxes but vary
+  each section's treatment and lean into a film-production motif; keep today's structure and add
+  real craft details) rather than guessing at a direction - the client picked the third, lowest-risk
+  option. Zone 1's CTA banner changed from a `border-primary/30 bg-primary/5` outline to a filled
+  `bg-gradient-to-br from-primary to-[color-mix(in_oklch,var(--primary),black_30%)]` panel with
+  inverted `bg-primary-foreground text-primary` button text - a real hero moment instead of a
+  whisper-quiet tint, built with `color-mix()` off the existing `--primary` token rather than a new
+  hardcoded color, the same technique `globals.css` already uses everywhere else for derived shades.
+  Zone 2's Hook section keeps its existing shape (rounded-xl + left accent border, deliberately not
+  restructured, per the "keep today's structure" pick) but gains a large translucent serif quote-mark
+  watermark (`text-primary/10`, absolutely positioned, `aria-hidden`) behind the text - a detail a
+  generic scaffold wouldn't have, needing an explicit `z-10` on the real content since an
+  absolutely-positioned decorative element with `z-index: auto` would otherwise paint above in-flow
+  siblings by default. `ScriptDisclosure`'s summary line gained a solid-fill `bg-primary` circular
+  badge showing the shot count next to the existing text summary - also `aria-hidden` since the
+  summary text already states the count for screen readers, so the badge is a pure visual marker, not
+  a second source of truth.
 
 ## Gotchas already hit
 
